@@ -38,6 +38,9 @@ class ProductProduct(models.Model):
             # merge product in stock move
             self.env.cr.execute(
                 'UPDATE stock_move SET product_id=%i where product_id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
+            # merge product in stock inventory line
+            self.env.cr.execute(
+                'UPDATE stock_inventory_line SET product_id=%i where product_id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
             # merge product in stock quant
             self.env.cr.execute(
                 'UPDATE stock_quant SET product_id=%i where product_id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
