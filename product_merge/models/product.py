@@ -12,6 +12,8 @@ _logger = logging.getLogger(__name__)
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
+# PM: label CCO Jerrycan
+# RM: Cempo Hitam Unpolished | Pecah Kulit
 
     def merge_product(self):
         total = len(self.search([('create_uid', '=', 17)]))
@@ -62,3 +64,16 @@ class ProductProduct(models.Model):
             loop += 1
             _logger.error(
                 '== MERGE PROGRESS: %i%% ==' % int(loop / total * 100))
+
+    def set_available_in_pos(self):
+        total = len(self.search([('sale_ok', '=', True)]))
+        loop = 0
+        for prod_to_update in self.search([('sale_ok', '=', True)]):
+            # find original variant from its template
+            tmpl = prod_to_update.product_tmpl_id
+            # set available in pos
+            self.env.cr.execute(
+                'UPDATE product_template SET available_in_pos=true where id=%i' % prod_to_update.product_tmpl_id.id)
+            loop += 1
+            _logger.error(
+                '== UPDATE PROGRESS: %i%% ==' % int(loop / total * 100))
