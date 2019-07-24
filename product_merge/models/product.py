@@ -73,7 +73,7 @@ class ProductProduct(models.Model):
             tmpl = prod_to_update.product_tmpl_id
             # set available in pos
             self.env.cr.execute(
-                'UPDATE product_template SET available_in_pos=1 where id=%i' % prod_to_update.product_tmpl_id.id)
+                'UPDATE product_template SET available_in_pos=true where id=%i' % prod_to_update.product_tmpl_id.id)
             loop += 1
             _logger.error(
                 '== UPDATE PROGRESS: %i%% ==' % int(loop / total * 100))
