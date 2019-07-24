@@ -22,7 +22,7 @@ class ProductProduct(models.Model):
             prod_to_merge = [
                 prod for prod in tmpl.product_variant_ids if prod.id != prod_to_del.id]
             if not prod_to_merge:
-                _logger.error('\n==== PRODUCT NAME: %S ====' % prod_to_del.name)
+                _logger.error('\n==== PRODUCT NAME: %s ====' % prod_to_del.name)
             # set not available in pos
             self.env.cr.execute(
                 'UPDATE product_template SET available_in_pos=null where id=%i' % prod_to_del.product_tmpl_id.id)
