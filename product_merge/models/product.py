@@ -34,13 +34,13 @@ class ProductProduct(models.Model):
                 'UPDATE product_template SET available_in_pos=null where id=%i' % prod_to_del.product_tmpl_id.id)
             # merge product in pos order line
             self.env.cr.execute(
-                'UPDATE pos_order_line SET product_id=%i where id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
+                'UPDATE pos_order_line SET product_id=%i where product_id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
             # merge product in stock move
             self.env.cr.execute(
-                'UPDATE stock_move SET product_id=%i where id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
+                'UPDATE stock_move SET product_id=%i where product_id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
             # merge product in stock quant
             self.env.cr.execute(
-                'UPDATE stock_quant SET product_id=%i where id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
+                'UPDATE stock_quant SET product_id=%i where product_id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
             loop += 1
             _logger.error(
                 '== MERGE PROGRESS: %i%% ==' % int(loop / total * 100))
