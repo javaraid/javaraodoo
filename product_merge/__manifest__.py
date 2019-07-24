@@ -27,7 +27,9 @@
     'license': 'AGPL-3',
     'website': 'https://arkana.co.id',
     'depends': [
-        'product',
+        'point_of_sale',
+        'purchase',
+        'sale',
     ],
     'data': [
     ],
