@@ -29,4 +29,4 @@ class ProductProduct(models.Model):
                 'UPDATE pos_order_line SET product_id=%i where id=%i' % (prod_to_merge.id, prod_to_del.id,))
             loop += 1
             progress = loop / total * 100
-            _logger.error('==== MERGE POS ORDER LINE PROGRESS: %i%' % int(progress))
+            _logger.error('==== MERGE POS ORDER LINE PROGRESS: %i %% ====' % int(progress))
