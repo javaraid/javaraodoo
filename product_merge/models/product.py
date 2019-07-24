@@ -38,6 +38,9 @@ class ProductProduct(models.Model):
             # merge product in stock move
             self.env.cr.execute(
                 'UPDATE stock_move SET product_id=%i where id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
+            # merge product in stock quant
+            self.env.cr.execute(
+                'UPDATE stock_quant SET product_id=%i where id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
             loop += 1
             _logger.error(
                 '== MERGE PROGRESS: %i%% ==' % int(loop / total * 100))
