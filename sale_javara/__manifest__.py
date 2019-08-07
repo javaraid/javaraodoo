@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
 {
     'name': 'Sale Javara',
     'summary': 'Custom Sale Management for Javara',
@@ -13,6 +11,8 @@
         'sale',
     ],
     'data': [
+        'security/ir.model.access.csv',
+        'views/sale_view.xml',
     ],
     'demo': [],
     'test': [
