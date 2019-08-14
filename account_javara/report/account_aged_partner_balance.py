@@ -14,7 +14,6 @@ class ReportAgedPartnerBalance(models.AbstractModel):
 
     def _get_partner_move_lines(self, account_type, date_from, target_move, period_length):
         if self.env.context.get('ttf'):
-            # with ttf date
             periods = {}
             start = datetime.strptime(date_from, "%Y-%m-%d")
             for i in range(5)[::-1]:
@@ -61,7 +60,7 @@ class ReportAgedPartnerBalance(models.AbstractModel):
                     AND ''' + reconciliation_clause + '''
                     AND (l.date <= %s)
                     AND l.company_id IN %s
-                    AND l.invoice_id != null
+                    AND l.invoice_id IS NOT NULL
                 ORDER BY UPPER(res_partner.name)'''
             cr.execute(query, arg_list)
 
@@ -79,15 +78,15 @@ class ReportAgedPartnerBalance(models.AbstractModel):
             # This dictionary will store the not due amount of all partners
             undue_amounts = {}
             query = '''SELECT l.id
-                    FROM account_move_line AS l, account_account, account_move am, account_invoice ai
-                    WHERE (l.account_id = account_account.id) AND (l.move_id = am.id) AND (l.account_invoice = ai.id)
+                    FROM account_move_line AS l, account_account, account_move am
+                    WHERE (l.account_id = account_account.id) AND (l.move_id = am.id)
                         AND (am.state IN %s)
                         AND (account_account.internal_type IN %s)
-                        AND (COALESCE(l.date_maturity,l.date) >= %s)\
+                        AND (COALESCE(l.date_maturity_ttf,COALESCE(l.date_maturity,l.date)) >= %s)\
                         AND ((l.partner_id IN %s) OR (l.partner_id IS NULL))
                     AND (l.date <= %s)
                     AND l.company_id IN %s
-                    AND l.invoice_id != null'''
+                    AND l.invoice_id IS NOT NULL'''
             cr.execute(query, (tuple(move_state), tuple(account_type), date_from, tuple(partner_ids), date_from, tuple(company_ids)))
             aml_ids = cr.fetchall()
             aml_ids = aml_ids and [x[0] for x in aml_ids] or []
@@ -117,7 +116,7 @@ class ReportAgedPartnerBalance(models.AbstractModel):
             history = []
             for i in range(5):
                 args_list = (tuple(move_state), tuple(account_type), tuple(partner_ids),)
-                dates_query = '(COALESCE(l.date_maturity,l.date)'
+                dates_query = '(COALESCE(l.date_maturity_ttf,COALESCE(l.date_maturity,l.date))'
 
                 if periods[str(i)]['start'] and periods[str(i)]['stop']:
                     dates_query += ' BETWEEN %s AND %s)'
@@ -131,15 +130,15 @@ class ReportAgedPartnerBalance(models.AbstractModel):
                 args_list += (date_from, tuple(company_ids))
 
                 query = '''SELECT l.id
-                        FROM account_move_line AS l, account_account, account_move am, account_invoice ai
-                        WHERE (l.account_id = account_account.id) AND (l.move_id = am.id) AND (l.account_invoice = ai.id)
+                        FROM account_move_line AS l, account_account, account_move am
+                        WHERE (l.account_id = account_account.id) AND (l.move_id = am.id)
                             AND (am.state IN %s)
                             AND (account_account.internal_type IN %s)
                             AND ((l.partner_id IN %s) OR (l.partner_id IS NULL))
                             AND ''' + dates_query + '''
                         AND (l.date <= %s)
                         AND l.company_id IN %s
-                        AND l.invoice_id != null'''
+                        AND l.invoice_id IS NOT NULL'''
                 cr.execute(query, args_list)
                 partners_amount = {}
                 aml_ids = cr.fetchall()
@@ -207,7 +206,6 @@ class ReportAgedPartnerBalance(models.AbstractModel):
 
             return res, total, lines
         else:
-            # with invoice date
             periods = {}
             start = datetime.strptime(date_from, "%Y-%m-%d")
             for i in range(5)[::-1]:
@@ -254,7 +252,7 @@ class ReportAgedPartnerBalance(models.AbstractModel):
                     AND ''' + reconciliation_clause + '''
                     AND (l.date <= %s)
                     AND l.company_id IN %s
-                    AND l.invoice_id != null
+                    AND l.invoice_id IS NOT NULL
                 ORDER BY UPPER(res_partner.name)'''
             cr.execute(query, arg_list)
 
@@ -280,7 +278,7 @@ class ReportAgedPartnerBalance(models.AbstractModel):
                         AND ((l.partner_id IN %s) OR (l.partner_id IS NULL))
                     AND (l.date <= %s)
                     AND l.company_id IN %s
-                    AND l.invoice_id != null'''
+                    AND l.invoice_id IS NOT NULL'''
             cr.execute(query, (tuple(move_state), tuple(account_type), date_from, tuple(partner_ids), date_from, tuple(company_ids)))
             aml_ids = cr.fetchall()
             aml_ids = aml_ids and [x[0] for x in aml_ids] or []
@@ -332,8 +330,7 @@ class ReportAgedPartnerBalance(models.AbstractModel):
                             AND ''' + dates_query + '''
                         AND (l.date <= %s)
                         AND l.company_id IN %s
-                        AND l.invoice_id != null
-                        '''
+                        AND l.invoice_id IS NOT NULL'''
                 cr.execute(query, args_list)
                 partners_amount = {}
                 aml_ids = cr.fetchall()
@@ -400,4 +397,5 @@ class ReportAgedPartnerBalance(models.AbstractModel):
                     res.append(values)
 
             return res, total, lines
+
 
