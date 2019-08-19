@@ -4,6 +4,7 @@ from odoo.exceptions import UserError
 
 class ProductStatus(models.Model):
     _name = 'product.status'
+    _description = 'Product Status'
 
     name = fields.Char('Product Status', required=True, )
 
