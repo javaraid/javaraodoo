@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    © 2017 Creu Blanca
+    License AGPL-3.0 or later (https://www.gnuorg/licenses/agpl.html).
+    -->
+    <report
+        id="partner_xlsx"
+        model="date.report.wizard"
+        string="Print to XLSX"
+        report_type="xlsx"
+        name="report_xlsx.partner_xlsx"
+        file="date_report_wizard"
+        attachment_use="False"
+    />
+
+    <menuitem
+        parent="sale.menu_sale_report"
+        action="act_date_report_wizard"
+        id="menu_report_account"
+        sequence="10"
+    />
+</odoo>
