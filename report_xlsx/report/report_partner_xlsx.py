@@ -44,6 +44,12 @@ class PartnerXlsx(models.AbstractModel):
         col = 1
         for obj in objects:
             sheet = workbook.add_worksheet('Report')
+            sheet.panes_frozen = True
+            sheet.remove_splits = True
+            sheet.portrait = 0
+            sheet.fit_width_to_pages = 1
+            sheet.freeze_panes(5, 0)
+            
             sheet.merge_range('B2:D2', 'REKAPITULASI PIUTANG DAGANG', style['title_bold'])
             sheet.write('B3', 'Tanggal: %s - %s' % (objects['date_from'], objects['date_to']))
             sheet.write(row, col, 'Customer', style['normal_center'])
@@ -248,11 +254,15 @@ class PartnerXlsx(models.AbstractModel):
 
             teams = self.env['crm.team'].search([])
             idx = 0
+            pp = 0
+            value = []
             gt_saldo_awal = 0
             gt_penambahan = 0
             gt_bank = 0
             gt_dp = 0
             gt_retur = 0
+            gt_pp = 0
+            
             for team in teams:
                 partners = self.env['res.partner'].search([
                             ('team_id', '=', team.id),
@@ -263,13 +273,18 @@ class PartnerXlsx(models.AbstractModel):
 
                 sheet.merge_range(cell_merge_sales_channel1 + ':' + cell_merge_sales_channel2, team.name, style['normal_bold'])
                 row+=1
+                row_start = row
                 for rec in res:
                 # # Kondisi Pengisian Kolom
                     partner_value = res[rec]['saldo_awal'] or res[rec]['penambahan'] or res[rec]['bank'] or res[rec]['dp'] or res[rec]['retur'] or res[rec]['saldo_akhir']
 
                     # Format Sum Saldo Akhir 
-                    cell_row_start = xl_rowcol_to_cell(row+1, col+1)
-                    cell_row_end = xl_rowcol_to_cell(row+1, col+5)
+                    cell_saldo_awal = xl_rowcol_to_cell(row+1, col+1)
+                    cell_penambahan = xl_rowcol_to_cell(row+1, col+2)
+                    cell_bank = xl_rowcol_to_cell(row+1, col+3)
+                    cell_dp = xl_rowcol_to_cell(row+1, col+4)
+                    cell_retur = xl_rowcol_to_cell(row+1, col+5)
+                    cell_saldo_akhir = xl_rowcol_to_cell(row+1, col+7)
 
                     # Kolom Customer                
                     partner = self.env['res.partner'].browse(rec)    
@@ -282,6 +297,13 @@ class PartnerXlsx(models.AbstractModel):
                             sheet.write(row+1, col+3, res[rec]['bank'], style['normal_right'])
                             sheet.write(row+1, col+4, res[rec]['dp'], style['normal_right'])
                             sheet.write(row+1, col+5, res[rec]['retur'], style['normal_right'])
+                            sheet.write(
+                                row+1, col+6, '=' +
+                                cell_saldo_awal + '+' + cell_penambahan + '-' + 
+                                cell_bank + '-' + cell_dp + '-' + 
+                                cell_retur + '-' + cell_saldo_akhir, 
+                                style['normal_right']
+                            )
                             sheet.write(row+1, col+7, res[rec]['saldo_akhir'], style['normal_right'])
                             row+=1
                             
@@ -289,35 +311,47 @@ class PartnerXlsx(models.AbstractModel):
                             gt_penambahan += res[rec]['penambahan']         
                             gt_bank += res[rec]['bank']         
                             gt_dp += res[rec]['dp']         
-                            gt_retur += res[rec]['retur']         
+                            gt_retur += res[rec]['retur']
+
+                            # gt_pp += pemotongan_pembayaran
                             # gt_saldo_akhir += res[rec]['saldo_akhir']         
 
                 cell_col_saldo_awal_1 = xl_rowcol_to_cell(row, col+1)
-                cell_col_saldo_awal_2 = xl_rowcol_to_cell(row+1-len(partners.ids), col+1)
-
+                cell_col_saldo_awal_2 = xl_rowcol_to_cell(row_start, col+1)
+               
                 cell_penambahan_1 = xl_rowcol_to_cell(row, col+2)
-                cell_penambahan_2 = xl_rowcol_to_cell(row+1-len(partners.ids), col+2)
+                cell_penambahan_2 = xl_rowcol_to_cell(row_start, col+2)
                 
                 cell_bank_1 = xl_rowcol_to_cell(row, col+3)
-                cell_bank_2 = xl_rowcol_to_cell(row+1-len(partners.ids), col+3)
+                cell_bank_2 = xl_rowcol_to_cell(row_start, col+3)
                 
                 cell_dp_1 = xl_rowcol_to_cell(row, col+4)
-                cell_dp_2 = xl_rowcol_to_cell(row+1-len(partners.ids), col+4)
+                cell_dp_2 = xl_rowcol_to_cell(row_start, col+4)
                 
                 cell_retur_1 = xl_rowcol_to_cell(row, col+5)
-                cell_retur_2 = xl_rowcol_to_cell(row+1-len(partners.ids), col+5)
+                cell_retur_2 = xl_rowcol_to_cell(row_start, col+5)
+
+                cell_pp_1 = xl_rowcol_to_cell(row, col+6)
+                cell_pp_2 = xl_rowcol_to_cell(row_start, col+6)
 
                 cell_total_1 = xl_rowcol_to_cell(row, col+7)
-                cell_total_2 = xl_rowcol_to_cell(row+1-len(partners.ids), col+7)
-                sum_cell_total = '=SUM(' + cell_total_1 + ':' + cell_total_2 + ')'
-                
+                cell_total_2 = xl_rowcol_to_cell(row_start, col+7)
+
+                # for value in cell_pp_1:
+                #     pp += value
+                # for value in cell_pp_1:
+                #     value += cell_pp_1 + '+'  
+
+
                 sheet.write(row+1, col, "Total %s " % team.name, style['normal_center'])
                 sheet.write(row+1, col+1, '=SUM(' + cell_col_saldo_awal_1 + ':' + cell_col_saldo_awal_2 + ')', style['normal_bold_right'])
                 sheet.write(row+1, col+2, '=SUM(' + cell_penambahan_1 + ':' + cell_penambahan_2 + ')', style['normal_bold_right'])
                 sheet.write(row+1, col+3, '=SUM(' + cell_bank_1 + ':' + cell_bank_2 + ')', style['normal_bold_right'])
                 sheet.write(row+1, col+4, '=SUM(' + cell_dp_1 + ':' + cell_dp_2 + ')', style['normal_bold_right'])
                 sheet.write(row+1, col+5, '=SUM(' + cell_retur_1 + ':' + cell_retur_2 + ')', style['normal_bold_right'])
-                sheet.write(row+1, col+7, sum_cell_total, style['normal_bold_right'])
+                sheet.write(row+1, col+6, '=SUM(' + cell_pp_1 + ':' + cell_pp_2 + ')', style['normal_bold_right'])
+                value.append((row+1, col+6))
+                sheet.write(row+1, col+7, '=SUM(' + cell_total_1 + ':' + cell_total_2 + ')', style['normal_bold_right'])
                 row+=1
             
             gt_saldo_akhir = gt_saldo_awal + gt_penambahan + gt_bank + gt_dp + gt_retur
@@ -327,6 +361,15 @@ class PartnerXlsx(models.AbstractModel):
             sheet.write(row+1, col+3, gt_bank, style['normal_bold_right'])
             sheet.write(row+1, col+4, gt_dp, style['normal_bold_right'])
             sheet.write(row+1, col+5, gt_retur, style['normal_bold_right'])
+            new_value = []
+            for coor in value:
+                coor_string = xl_rowcol_to_cell(coor[0], coor[1])
+                new_value.append(coor_string)
+
+            value = [xl_rowcol_to_cell(coor[0], coor[1]) for coor in value]
+            pp_value = '=' + '+'.join(value)
+
+            sheet.write(row+1, col+6, pp_value, style['normal_bold_right'])
             sheet.write(row+1, col+7, '=SUM(' + xl_rowcol_to_cell(row+1, col+1) + ':' + xl_rowcol_to_cell(row+1, col+6) + ')', style['normal_bold_right'])
                     
             
