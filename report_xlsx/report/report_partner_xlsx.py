@@ -78,14 +78,14 @@ class PartnerXlsx(models.AbstractModel):
                     from 
                         account_move_line 
                     where 
-                        account_id=7 
+                        account_id = 1928 or account_id = 1929 
                         and date < '%s'
                     group by partner_id
                 ) as saldo 
                 on 
                     saldo.partner_id = aml.partner_id
 	            where 
-                    account_id=7
+                    account_id = 1928 or account_id = 1929
                 """ % objects['date_from'])
             saldo_awal = dict(self.env.cr.fetchall())
             
@@ -103,7 +103,7 @@ class PartnerXlsx(models.AbstractModel):
                     from 
                         account_move_line 
                     where 
-                        account_id=7 
+                        account_id = 1928 or account_id = 1929 
                         and date >= '%s'
                         and date <= '%s'
                     group by partner_id
@@ -111,7 +111,7 @@ class PartnerXlsx(models.AbstractModel):
                 on 
                     saldo.partner_id = aml.partner_id
 	            where 
-                    account_id=7  
+                    account_id = 1928 or account_id = 1929  
             """ % (objects['date_from'], objects['date_to']))
             penambahan = dict(self.env.cr.fetchall())
 
@@ -130,14 +130,14 @@ class PartnerXlsx(models.AbstractModel):
                 			account_move_line aml
                 			join account_journal aj on aj.id = aml.journal_id and aj."type" = 'bank'
                 		where
-                            aml.account_id = 7
+                            aml.account_id = 1928 or aml.account_id = 1929
                 			and aml.date >= '%s' 
                             and aml.date <= '%s'  
                 		group by
                 			aml.partner_id
                 		) aml on aml.partner_id = rp.id 
                 where 
-                	rp.id in (select partner_id from account_move_line where account_id = 7 group by partner_id)
+                	rp.id in (select partner_id from account_move_line where account_id = 1928 or account_id = 1929 group by partner_id)
                 group by
                 	rp.id;
             """ % (objects['date_from'], objects['date_to']))
@@ -157,7 +157,7 @@ class PartnerXlsx(models.AbstractModel):
             		from 
             			account_move_line aml
             		where
-                        aml.account_id = 7 
+                        aml.account_id = 1928 or aml.account_id = 1929 
                         and aml.product_id = 28
             			and aml.date >= '%s' 
             			and aml.date <= '%s' 
@@ -165,7 +165,7 @@ class PartnerXlsx(models.AbstractModel):
             			aml.partner_id
             		) aml on aml.partner_id = rp.id 
             where 
-            	rp.id in (select partner_id from account_move_line where account_id = 7 group by partner_id)
+            	rp.id in (select partner_id from account_move_line where account_id = 1928 or account_id = 1929 group by partner_id)
             group by
             	rp.id;
             """ % (objects['date_from'], objects['date_to']))
@@ -186,14 +186,14 @@ class PartnerXlsx(models.AbstractModel):
             			account_move_line aml
             			join account_invoice ai on ai.id = aml.invoice_id and ai."type" = 'out_refund'
             		where
-            			aml.account_id = 7
+            			aml.account_id = 1928 or aml.account_id = 1929
                         and aml.date >= '%s'
                         and aml.date <= '%s'
             		group by
             			aml.partner_id
             		) aml on aml.partner_id = rp.id 
             where 
-            	rp.id in (select partner_id from account_move_line where account_id = 7 group by partner_id)
+            	rp.id in (select partner_id from account_move_line where account_id = 1928 or account_id = 1929 group by partner_id)
             group by
             	rp.id;
             """ % (objects['date_from'], objects['date_to']))
@@ -213,14 +213,14 @@ class PartnerXlsx(models.AbstractModel):
                 from 
                     account_move_line 
                 where 
-                    account_id=7 
+                    account_id = 1928 or account_id = 1929 
                     and date <= '%s'
                 group by partner_id
             ) as saldo 
             on 
                 saldo.partner_id = aml.partner_id
 	        where 
-                account_id=7;
+                account_id = 1928 or account_id = 1929;
             """ % objects['date_to'])
             saldo_akhir = dict(self.env.cr.fetchall())
             
