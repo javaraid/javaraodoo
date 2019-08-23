@@ -23,9 +23,7 @@
     'data': [
         'views/webclient_templates.xml',
         'views/wizard_date_report.xml',
-    ],
-    'demo': [
-        'demo/report.xml',
+        'views/report.xml',
     ],
     'installable': True,
 }
