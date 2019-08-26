@@ -291,13 +291,6 @@ class PartnerXlsx(models.AbstractModel):
 
                     # import ipdb; ipdb.set_trace()
                     # Format Sum Saldo Akhir 
-                    cell_saldo_awal = xl_rowcol_to_cell(row+1, col+1)
-                    cell_penambahan = xl_rowcol_to_cell(row+1, col+2)
-                    cell_bank = xl_rowcol_to_cell(row+1, col+3)
-                    cell_dp = xl_rowcol_to_cell(row+1, col+4)
-                    cell_retur = xl_rowcol_to_cell(row+1, col+5)
-                    cell_saldo_akhir = xl_rowcol_to_cell(row+1, col+7)
-
                     # Kolom Customer                
                     partner = self.env['res.partner'].browse(rec)    
 
@@ -317,6 +310,13 @@ class PartnerXlsx(models.AbstractModel):
                             sheet.write(row+1, col+3, res[rec]['bank'], style['normal_right'])
                             sheet.write(row+1, col+4, res[rec]['dp'], style['normal_right'])
                             sheet.write(row+1, col+5, res[rec]['retur'], style['normal_right'])
+                            
+                            cell_saldo_awal = xl_rowcol_to_cell(row+1, col+1)
+                            cell_penambahan = xl_rowcol_to_cell(row+1, col+2)
+                            cell_bank = xl_rowcol_to_cell(row+1, col+3)
+                            cell_dp = xl_rowcol_to_cell(row+1, col+4)
+                            cell_retur = xl_rowcol_to_cell(row+1, col+5)
+                            cell_saldo_akhir = xl_rowcol_to_cell(row+1, col+7)
                             sheet.write(
                                 row+1, col+6, '=' +
                                 cell_saldo_awal + '+' + cell_penambahan + '-' + 
