@@ -148,7 +148,9 @@ class PartnerXlsx(models.AbstractModel):
                 	rp.id;
             """ % (objects['date_from'], objects['date_to']))
             bank = dict(self.env.cr.fetchall())
-            
+
+            product_id = self.env['ir.config_parameter'].sudo().get_param('sale.default_deposit_product_id')
+            rec_product_id = int(product_id)
             # Kolom Others/DP
             self.env.cr.execute("""
             select 
@@ -164,7 +166,7 @@ class PartnerXlsx(models.AbstractModel):
             			account_move_line aml
             		where
                         aml.account_id = 1928 or aml.account_id = 1929 
-                        and aml.product_id = 28
+                        and aml.product_id = %d
             			and aml.date >= '%s' 
             			and aml.date <= '%s' 
             		group by
@@ -174,7 +176,7 @@ class PartnerXlsx(models.AbstractModel):
             	rp.id in (select partner_id from account_move_line where account_id = 1928 or account_id = 1929 group by partner_id)
             group by
             	rp.id;
-            """ % (objects['date_from'], objects['date_to']))
+            """ % (rec_product_id, objects['date_from'], objects['date_to']))
             dp = dict(self.env.cr.fetchall())
                 
             # Kolom Retur

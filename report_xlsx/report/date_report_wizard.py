@@ -5,8 +5,8 @@ class DateReportWizard(models.TransientModel):
     _name = 'date.report.wizard'
 
     name = fields.Char('Name')
-    date_from = fields.Date('Mulai Tanggal')
-    date_to = fields.Date('Sampai Tanggal')
+    date_from = fields.Date('Mulai Tanggal', required=True)
+    date_to = fields.Date('Sampai Tanggal', required=True)
 
     # @api.multi
     # def pdf_bank_customer_report(self):
