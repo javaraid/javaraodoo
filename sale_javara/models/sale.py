@@ -41,3 +41,29 @@ class SaleTarget(models.Model):
 
             amount_target = target.amount_target
             target.parcentage = amount_actual / amount_target if amount_target > 0 else 0
+
+
+class SaleOrder(models.Model):
+    _inherit = 'sale.order'
+
+    delivery_state = fields.Selection([
+            ('no', 'Not Delivered'),
+            ('partial', 'Partially Delivered'),
+            ('delivered', 'Fully Delivered')
+        ], string='Delivery State', compute='_get_delivery', store='True')
+    
+    @api.depends('state', 'picking_ids.state')
+    def _get_delivery(self):
+        for order in self:
+            if order.state not in ('sale', 'done'):
+                delivery_state = 'no'
+            elif all(picking.state != 'done' for picking in order.picking_ids):
+                delivery_state = 'no'
+            elif all(picking.state in ('done', 'cancel') for picking in order.picking_ids):
+                delivery_state = 'delivered'
+            else:
+                delivery_state = 'partial'
+
+            order.update({
+                'delivery_state': delivery_state
+            })
