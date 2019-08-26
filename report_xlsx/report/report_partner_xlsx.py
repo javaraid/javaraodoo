@@ -84,7 +84,7 @@ class PartnerXlsx(models.AbstractModel):
                     from 
                         account_move_line 
                     where 
-                        account_id = 1928 or account_id = 1929 
+                        (account_id = 1928 or account_id = 1929)
                         and date < '%s'
                     group by partner_id
                 ) as saldo 
@@ -109,7 +109,7 @@ class PartnerXlsx(models.AbstractModel):
                     from 
                         account_move_line 
                     where 
-                        account_id = 1928 or account_id = 1929 
+                        (account_id = 1928 or account_id = 1929) 
                         and date >= '%s'
                         and date <= '%s'
                     group by partner_id
@@ -136,7 +136,7 @@ class PartnerXlsx(models.AbstractModel):
                 			account_move_line aml
                 			join account_journal aj on aj.id = aml.journal_id and aj."type" = 'bank'
                 		where
-                            aml.account_id = 1928 or aml.account_id = 1929
+                            (aml.account_id = 1928 or aml.account_id = 1929)
                 			and aml.date >= '%s' 
                             and aml.date <= '%s'  
                 		group by
@@ -165,7 +165,7 @@ class PartnerXlsx(models.AbstractModel):
             		from 
             			account_move_line aml
             		where
-                        aml.account_id = 1928 or aml.account_id = 1929 
+                        (aml.account_id = 1928 or aml.account_id = 1929) 
                         and aml.product_id = %d
             			and aml.date >= '%s' 
             			and aml.date <= '%s' 
@@ -194,7 +194,7 @@ class PartnerXlsx(models.AbstractModel):
             			account_move_line aml
             			join account_invoice ai on ai.id = aml.invoice_id and ai."type" = 'out_refund'
             		where
-            			aml.account_id = 1928 or aml.account_id = 1929
+            			(aml.account_id = 1928 or aml.account_id = 1929)
                         and aml.date >= '%s'
                         and aml.date <= '%s'
             		group by
@@ -221,7 +221,7 @@ class PartnerXlsx(models.AbstractModel):
                 from 
                     account_move_line 
                 where 
-                    account_id = 1928 or account_id = 1929 
+                    (account_id = 1928 or account_id = 1929) 
                     and date <= '%s'
                 group by partner_id
             ) as saldo 
