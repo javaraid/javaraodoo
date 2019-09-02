@@ -11,9 +11,11 @@
     'description': """Custom Accounting for Javara""",
     'depends': [
         'account_reports',
+        'sale',
     ],
     'data': [
         'wizard/view_aged_partner_wizard.xml',
+        'views/account_view.xml'
     ],
     'demo': [],
     'test': [
