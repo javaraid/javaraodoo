@@ -7,6 +7,9 @@
 		<field name="type">form</field>
 		<field name="arch" type="xml">
 			<form string="Aged Partner">
+				<group>
+					<field name="ttf" />
+				</group>
 				<footer>
 					<button name="generate" string="Generate"
 						type="object" default_focus="1" />
@@ -43,9 +46,4 @@
 	<record id="account_reports.menu_action_account_report_aged_payable" model="ir.ui.menu">
 		<field name="action" ref="action_account_aged_pay_wizard" />
 	</record>
-
-	<!-- <menuitem id="account_reports.menu_action_account_report_aged_receivable" name="General Ledger"
-		action="action_account_finglreport_wizard" parent="menu_account_finreport_financial"
-		sequence="102" groups="account.group_account_user" /> -->
-
 </odoo>
