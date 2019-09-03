@@ -11,4 +11,9 @@ class ProductStatus(models.Model):
 class ProductProduct(models.Model):
     _inherit = 'product.template'
 
-    product_status_id = fields.Many2one('product.status', 'Product Status', ondelete='cascade')                                                                                                                                                                                
+    product_status_id = fields.Many2one('product.status', 'Product Status', ondelete='cascade')          
+
+# class SaleOrderLine(models.Model):
+#     _inherit = 'sale.order.line'
+
+    # product_status_id
