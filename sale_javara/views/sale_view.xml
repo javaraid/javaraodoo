@@ -43,7 +43,7 @@
         <field name="arch" type="xml">
             <data>
                 <xpath expr="//field[@name='invoice_status']" position="after">
-                    <field name="delivery_state"/>
+                    <field name="delivery_status"/>
                 </xpath>
             </data>
         </field>
@@ -56,7 +56,7 @@
         <field name="arch" type="xml">
             <data>
 				<group name="sale_shipping" position="inside">
-					<field name="delivery_state"/>
+					<field name="delivery_status"/>
 				</group>
             </data>
         </field>

@@ -46,7 +46,7 @@ class SaleTarget(models.Model):
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    delivery_state = fields.Selection([
+    delivery_status = fields.Selection([
             ('no', 'Not Delivered'),
             ('partial', 'Partially Delivered'),
             ('delivered', 'Fully Delivered')
@@ -65,5 +65,5 @@ class SaleOrder(models.Model):
                 delivery_state = 'partial'
 
             order.update({
-                'delivery_state': delivery_state
+                'delivery_status': delivery_state
             })
