@@ -18,7 +18,7 @@ class AccountInvoiceImporPK(models.TransientModel):
         return {
             'type': 'ir.actions.act_url',
             'url': '/web/binary/download_imporpk?model=account.invoice&id=%s&filename=ImporPK.csv' % (str(invoices_with_taxes)),
-            'target': 'self',
+            'target': 'new',
         }
 
 
