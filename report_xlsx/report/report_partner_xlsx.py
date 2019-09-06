@@ -29,11 +29,13 @@ class PartnerXlsx(models.AbstractModel):
             'normal_border': workbook.add_format({'border': True, 'align': 'left', 'text_wrap': True}),
             'normal_right': workbook.add_format({'border': True, 'num_format': '#,##0.00', 'bold': False, 'align': 'right'}),
             'normal_bold_right': workbook.add_format({'border': True, 'num_format': '#,##0.00', 'bold': True, 'align': 'right'}),
+            'normal_bold_right_thick': workbook.add_format({'border': 2, 'num_format': '#,##0.00', 'bold': True, 'align': 'right'}),
             'normal_red': workbook.add_format({'border': True, 'num_format': '#,##0', 'bg_color': 'red'}),
             # 'normal_bold': workbook.add_format({'bold': True, 'border': True, 'num_format': '#,##0'}),
             'normal_bold_noborder': workbook.add_format({'bold': True, 'num_format': '#,##0'}),
             'normal_date': workbook.add_format({'bold': True}),
-            'normal_center': workbook.add_format({'align': 'center', 'valign': 'vcenter', 'text_wrap': True, 'border': True, 'bold': True}),
+            'normal_center': workbook.add_format({'align': 'center', 'valign': 'vcenter', 'text_wrap': True, 'border': 2, 'bold': True}),
+            'normal_vcenter': workbook.add_format({'align': 'left', 'valign': 'vcenter', 'text_wrap': True, 'border': True, 'bold': True}),
             'normal_center_noborder': workbook.add_format({'align': 'center', 'border': False}),
             'normal_italic': workbook.add_format({'italic': True, 'border': True}),
             'normal_percent': workbook.add_format({'num_format': '0.0%', 'border': True}),
@@ -97,27 +99,29 @@ class PartnerXlsx(models.AbstractModel):
             
             # Kolom Penambahan
             self.env.cr.execute("""
-                select distinct 
-                    aml.partner_id, 
-                    saldo.bal 
-                from 
-                    account_move_line as aml 
-	            left join (
-                    select 
-                        partner_id, 
-                        sum(balance) as bal 
-                    from 
-                        account_move_line 
-                    where 
-                        (account_id = 1928 or account_id = 1929) 
-                        and date >= '%s'
-                        and date <= '%s'
-                    group by partner_id
-                ) as saldo 
-                on 
-                    saldo.partner_id = aml.partner_id
-	            where 
-                    account_id = 1928 or account_id = 1929  
+                select 
+            	rp.id,
+            	sum(aml.bal)
+            from 
+            	res_partner rp
+            	left join(
+            		select 	
+            			aml.partner_id, 
+            			sum(aml.balance) as bal
+            		from 
+            			account_move_line aml
+            			join account_journal aj on aj.id = aml.journal_id and aj."type" = 'sale'
+            		where
+            			(aml.account_id = 1928 or aml.account_id = 1929)
+                        and aml.date >= '%s'
+                        and aml.date <= '%s'
+            		group by
+            			aml.partner_id
+            		) aml on aml.partner_id = rp.id 
+            where 
+            	rp.id in (select partner_id from account_move_line where account_id = 1928 or account_id = 1929 group by partner_id)
+            group by
+            	rp.id;  
             """ % (objects['date_from'], objects['date_to']))
             penambahan = dict(self.env.cr.fetchall())
 
@@ -134,7 +138,7 @@ class PartnerXlsx(models.AbstractModel):
                 			sum(aml.balance) as bal
                 		from 
                 			account_move_line aml
-                			join account_journal aj on aj.id = aml.journal_id and aj."type" = 'bank'
+                			join account_journal aj on aj.id = aml.journal_id and (aj."type" = 'bank' or aj."type" = 'cash') 
                 		where
                             (aml.account_id = 1928 or aml.account_id = 1929)
                 			and aml.date >= '%s' 
@@ -151,6 +155,7 @@ class PartnerXlsx(models.AbstractModel):
 
             product_id = self.env['ir.config_parameter'].sudo().get_param('sale.default_deposit_product_id')
             rec_product_id = int(product_id)
+            
             # Kolom Others/DP
             self.env.cr.execute("""
             select 
@@ -164,16 +169,15 @@ class PartnerXlsx(models.AbstractModel):
             			sum(aml.balance) as bal
             		from 
             			account_move_line aml
-            		where
-                        (aml.account_id = 1928 or aml.account_id = 1929) 
-                        and aml.product_id = %d
+            		where 
+                        aml.product_id = %d
             			and aml.date >= '%s' 
             			and aml.date <= '%s' 
             		group by
             			aml.partner_id
             		) aml on aml.partner_id = rp.id 
             where 
-            	rp.id in (select partner_id from account_move_line where account_id = 1928 or account_id = 1929 group by partner_id)
+            	rp.id in (select partner_id from account_move_line where account_id = 1989 or account_id = 2254 group by partner_id)
             group by
             	rp.id;
             """ % (rec_product_id, objects['date_from'], objects['date_to']))
@@ -195,6 +199,7 @@ class PartnerXlsx(models.AbstractModel):
             			join account_invoice ai on ai.id = aml.invoice_id and ai."type" = 'out_refund'
             		where
             			(aml.account_id = 1928 or aml.account_id = 1929)
+                        and (aml.name like '.' or aml.name is null)
                         and aml.date >= '%s'
                         and aml.date <= '%s'
             		group by
@@ -206,6 +211,34 @@ class PartnerXlsx(models.AbstractModel):
             	rp.id;
             """ % (objects['date_from'], objects['date_to']))
             retur = dict(self.env.cr.fetchall())
+
+            # Kolom Pemotongan Pembayaran
+            self.env.cr.execute("""
+            select 
+            	rp.id,
+            	sum(aml.bal)
+            from 
+            	res_partner rp
+            	left join(
+            		select 	
+            			aml.partner_id, 
+            			sum(aml.balance) as bal
+            		from 
+            			account_move_line aml
+            		where
+                        (aml.account_id = 1928 or aml.account_id = 1929) 
+                        and aml.journal_id = 23
+            			and aml.date >= '%s' 
+            			and aml.date <= '%s' 
+            		group by
+            			aml.partner_id
+            		) aml on aml.partner_id = rp.id 
+            where 
+            	rp.id in (select partner_id from account_move_line where account_id = 1928 or account_id = 1929 group by partner_id)
+            group by
+            	rp.id;
+            """ % (objects['date_from'], objects['date_to']))
+            pp = dict(self.env.cr.fetchall())
 
             # Kolom Saldo Akhir
             self.env.cr.execute("""
@@ -233,7 +266,7 @@ class PartnerXlsx(models.AbstractModel):
             saldo_akhir = dict(self.env.cr.fetchall())
             
             res = defaultdict(lambda:{
-                'saldo_awal':0, 'penambahan':0, 'bank':0, 'dp':0, 'retur':0, 'saldo_akhir':0})
+                'saldo_awal':0, 'penambahan':0, 'bank':0, 'dp':0, 'retur':0, 'pp':0, 'saldo_akhir':0})
             
             for p_id, values in saldo_awal.items() :
                 if not values: values = 0
@@ -250,6 +283,9 @@ class PartnerXlsx(models.AbstractModel):
             for p_id, values in retur.items():
                 if not values: values = 0
                 res[p_id]['retur'] += values
+            for p_id, values in pp.items():
+                if not values: values = 0
+                res[p_id]['pp'] += values
             for p_id, values in saldo_akhir.items():
                 if not values: values = 0
                 res[p_id]['saldo_akhir'] += values
@@ -258,6 +294,7 @@ class PartnerXlsx(models.AbstractModel):
             pp = 0
             value = []
             gt_saldo_awal = 0
+            gt_saldo_akhir = 0
             gt_penambahan = 0
             gt_bank = 0
             gt_dp = 0
@@ -287,7 +324,8 @@ class PartnerXlsx(models.AbstractModel):
                         'bank'] or res[rec][
                         'dp'] or res[rec][
                         'retur'] or res[rec][
-                        'saldo_akhir']
+                        'saldo_akhir'] or res[rec][
+                        'pp']
 
                     # import ipdb; ipdb.set_trace()
                     # Format Sum Saldo Akhir 
@@ -299,32 +337,34 @@ class PartnerXlsx(models.AbstractModel):
                             if idx == 0:
                                 print_total = True
                                 cell_merge_sales_channel1 = xl_rowcol_to_cell(row+1, col)
-                                cell_merge_sales_channel2 = xl_rowcol_to_cell(row+1, col+7)      
-                                sheet.merge_range(cell_merge_sales_channel1 + ':' + cell_merge_sales_channel2, team.name, style['normal_bold'])
+                                cell_merge_sales_channel2 = xl_rowcol_to_cell(row+1, col+7)
+                                sheet.set_row(row+1, 23)      
+                                sheet.merge_range(cell_merge_sales_channel1 + ':' + cell_merge_sales_channel2, team.name, style['normal_vcenter'])
                                 idx+=1
                                 row+=1
 
                             sheet.write(row+1, col, partner.name, style['normal_border']) 
                             sheet.write(row+1, col+1, res[rec]['saldo_awal'], style['normal_right']) 
-                            sheet.write(row+1, col+2, res[rec]['penambahan'], style['normal_right'])
-                            sheet.write(row+1, col+3, res[rec]['bank'], style['normal_right'])
-                            sheet.write(row+1, col+4, res[rec]['dp'], style['normal_right'])
-                            sheet.write(row+1, col+5, res[rec]['retur'], style['normal_right'])
-                            
-                            cell_saldo_awal = xl_rowcol_to_cell(row+1, col+1)
-                            cell_penambahan = xl_rowcol_to_cell(row+1, col+2)
-                            cell_bank = xl_rowcol_to_cell(row+1, col+3)
-                            cell_dp = xl_rowcol_to_cell(row+1, col+4)
-                            cell_retur = xl_rowcol_to_cell(row+1, col+5)
-                            cell_saldo_akhir = xl_rowcol_to_cell(row+1, col+7)
-                            sheet.write(
-                                row+1, col+6, '=' +
-                                cell_saldo_awal + '+' + cell_penambahan + '-' + 
-                                cell_bank + '-' + cell_dp + '-' + 
-                                cell_retur + '-' + cell_saldo_akhir, 
-                                style['normal_right']
-                            )
+                            sheet.write(row+1, col+2, res[rec]['penambahan'] - res[rec]['retur'] - res[rec]['dp'] - res[rec]['pp'], style['normal_right'])
+                            sheet.write(row+1, col+3, res[rec]['bank']*-1, style['normal_right'])
+                            sheet.write(row+1, col+4, res[rec]['dp']*-1, style['normal_right'])
+                            sheet.write(row+1, col+5, res[rec]['retur']*-1, style['normal_right'])
+                            sheet.write(row+1, col+6, res[rec]['pp']*-1, style['normal_right'])
                             sheet.write(row+1, col+7, res[rec]['saldo_akhir'], style['normal_right'])
+                            
+                            # cell_saldo_awal = xl_rowcol_to_cell(row+1, col+1)
+                            # cell_penambahan = xl_rowcol_to_cell(row+1, col+2)
+                            # cell_bank = xl_rowcol_to_cell(row+1, col+3)
+                            # cell_dp = xl_rowcol_to_cell(row+1, col+4)
+                            # cell_retur = xl_rowcol_to_cell(row+1, col+5)
+                            # cell_saldo_akhir = xl_rowcol_to_cell(row+1, col+7)
+                            # sheet.write(
+                            #     row+1, col+6, '=' +
+                            #     cell_saldo_awal + '+' + cell_penambahan + '-' + 
+                            #     cell_bank + '-' + cell_dp + '-' + 
+                            #     cell_retur + '-' + cell_saldo_akhir, 
+                            #     style['normal_right']
+                            # )
                             # cell_merge_sales_channel1 = xl_rowcol_to_cell(row_title, col)
                             # cell_merge_sales_channel2 = xl_rowcol_to_cell(row_title, col+7)
                             # sheet.merge_range(
@@ -335,7 +375,9 @@ class PartnerXlsx(models.AbstractModel):
                             gt_penambahan += res[rec]['penambahan']         
                             gt_bank += res[rec]['bank']         
                             gt_dp += res[rec]['dp']         
+                            gt_pp += res[rec]['pp']         
                             gt_retur += res[rec]['retur']
+                            gt_saldo_akhir += res[rec]['saldo_akhir']
                          
                 
                 cell_col_saldo_awal_1 = xl_rowcol_to_cell(row, col+1)
@@ -355,35 +397,35 @@ class PartnerXlsx(models.AbstractModel):
                 
                 if print_total:
                     sheet.write(row+1, col, "Total %s " % team.name, style['normal_center'])
-                    sheet.write(row+1, col+1, '=SUM(' + cell_col_saldo_awal_1 + ':' + cell_col_saldo_awal_2 + ')', style['normal_bold_right'])
-                    sheet.write(row+1, col+2, '=SUM(' + cell_penambahan_1 + ':' + cell_penambahan_2 + ')', style['normal_bold_right'])
-                    sheet.write(row+1, col+3, '=SUM(' + cell_bank_1 + ':' + cell_bank_2 + ')', style['normal_bold_right'])
-                    sheet.write(row+1, col+4, '=SUM(' + cell_dp_1 + ':' + cell_dp_2 + ')', style['normal_bold_right'])
-                    sheet.write(row+1, col+5, '=SUM(' + cell_retur_1 + ':' + cell_retur_2 + ')', style['normal_bold_right'])
-                    sheet.write(row+1, col+6, '=SUM(' + cell_pp_1 + ':' + cell_pp_2 + ')', style['normal_bold_right'])
+                    sheet.write(row+1, col+1, '=SUM(' + cell_col_saldo_awal_1 + ':' + cell_col_saldo_awal_2 + ')', style['normal_bold_right_thick'])
+                    sheet.write(row+1, col+2, '=SUM(' + cell_penambahan_1 + ':' + cell_penambahan_2 + ')', style['normal_bold_right_thick'])
+                    sheet.write(row+1, col+3, '=SUM(' + cell_bank_1 + ':' + cell_bank_2 + ')', style['normal_bold_right_thick'])
+                    sheet.write(row+1, col+4, '=SUM(' + cell_dp_1 + ':' + cell_dp_2 + ')', style['normal_bold_right_thick'])
+                    sheet.write(row+1, col+5, '=SUM(' + cell_retur_1 + ':' + cell_retur_2 + ')', style['normal_bold_right_thick'])
+                    sheet.write(row+1, col+6, '=SUM(' + cell_pp_1 + ':' + cell_pp_2 + ')', style['normal_bold_right_thick'])
                     value.append((row+1, col+6))
-                    sheet.write(row+1, col+7, '=SUM(' + cell_total_1 + ':' + cell_total_2 + ')', style['normal_bold_right'])
+                    sheet.write(row+1, col+7, '=SUM(' + cell_total_1 + ':' + cell_total_2 + ')', style['normal_bold_right_thick'])
                     row+=1
 
-            gt_saldo_akhir = gt_saldo_awal + gt_penambahan + gt_bank + gt_dp + gt_retur
+            sheet.set_row(row+1, 23)
             sheet.write(row+1, col, "Grand Total", style['normal_center'])    
-            sheet.write(row+1, col+1, gt_saldo_awal, style['normal_bold_right'])
-            sheet.write(row+1, col+2, gt_penambahan, style['normal_bold_right'])
-            sheet.write(row+1, col+3, gt_bank, style['normal_bold_right'])
-            sheet.write(row+1, col+4, gt_dp, style['normal_bold_right'])
-            sheet.write(row+1, col+5, gt_retur, style['normal_bold_right'])
-            new_value = []
-            for coor in value:
-                coor_string = xl_rowcol_to_cell(coor[0], coor[1])
-                new_value.append(coor_string)
+            sheet.write(row+1, col+1, gt_saldo_awal, style['normal_bold_right_thick'])
+            sheet.write(row+1, col+2, gt_penambahan - gt_retur - gt_dp - gt_pp, style['normal_bold_right_thick'])
+            sheet.write(row+1, col+3, gt_bank*-1, style['normal_bold_right_thick'])
+            sheet.write(row+1, col+4, gt_dp*-1, style['normal_bold_right_thick'])
+            sheet.write(row+1, col+5, gt_retur*-1, style['normal_bold_right_thick'])
+            # new_value = []
+            # for coor in value:
+            #     coor_string = xl_rowcol_to_cell(coor[0], coor[1])
+            #     new_value.append(coor_string)
 
-            value = [xl_rowcol_to_cell(coor[0], coor[1]) for coor in value]
-            pp_value = '=' + '+'.join(value)
+            # value = [xl_rowcol_to_cell(coor[0], coor[1]) for coor in value]
+            # pp_value = '=' + '+'.join(value)
 
-            sheet.write(row+1, col+6, pp_value, style['normal_bold_right'])
-            sheet.write(row+1, col+7, '=SUM(' + xl_rowcol_to_cell(row+1, col+1) + ':' + xl_rowcol_to_cell(row+1, col+6) + ')', style['normal_bold_right'])
+            sheet.write(row+1, col+6, gt_pp*-1, style['normal_bold_right_thick'])
+            sheet.write(row+1, col+7, gt_saldo_akhir, style['normal_bold_right_thick'])
                     
-            
+            # '=SUM(' + xl_rowcol_to_cell(row+1, col+1) + ':' + xl_rowcol_to_cell(row+1, col+6) + ')'
             # get all sales channel
             # for all sales channel
                 # cari semua customer utk 1 sales channel
