@@ -125,12 +125,12 @@ class Binary(http.Controller):
             date_format = fields.Date.from_string(inv.date_invoice)
             row_data = [
                 [
-                    'FK', '01', '0', inv.no_faktur, date_format.month, date_format.year,
-                    date_format.strftime("%d/%m/%Y"), 
-                    inv.partner_id.npwp or '',
-                    inv.partner_id.name,
-                    str(inv.partner_id.street or '') +
-                    ' Blok ' + str(inv.company_id.partner_id.blok or ''),
+                    'FK', '01', '0', inv.no_faktur, date_format and date_format.month or '',
+                    date_format and date_format.year or '',
+                    date_format and date_format.strftime("%d/%m/%Y") or '',
+                    inv.partner_id.npwp or '', inv.partner_id.name,
+                    str(inv.partner_id.street or '') + ' Blok ' +
+                    str(inv.company_id.partner_id.blok or ''),
                     int(inv.amount_untaxed), int(inv.amount_tax),
                     '0', '', '0', '0', '0', '0', inv.name
                 ],
@@ -139,7 +139,8 @@ class Binary(http.Controller):
                     str(inv.company_id.partner_id.street or '') +
                     ' Blok ' + str(inv.company_id.partner_id.blok or '') +
                     ' No ' + str(inv.company_id.partner_id.nomor or '') +
-                    ', ' + str(inv.company_id.partner_id.kecamatan_id.name or '')
+                    ', ' +
+                    str(inv.company_id.partner_id.kecamatan_id.name or '')
                 ],
             ]
             i = 1
