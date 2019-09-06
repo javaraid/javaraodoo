@@ -15,6 +15,9 @@
 				<button name="generate_csv_imporpm" type="object"
 					string="Impor PM" />
 			</button>
+			<field name="payment_term_id" position="after">
+				<field name="no_faktur" />
+			</field>
 		</field>
 	</record>
 </odoo>

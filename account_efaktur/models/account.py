@@ -8,6 +8,8 @@ import csv
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
     
+    no_faktur = fields.Char(string='No Faktur')
+
     @api.multi
     def generate_csv_imporbarang(self):
         return {
@@ -29,7 +31,7 @@ class AccountInvoice(models.Model):
         return {
              'type' : 'ir.actions.act_url',
              'url': '/web/binary/download_imporpk?model=account.invoice&id=%s&filename=ImporPK.csv' % (self.id),
-             'target': 'self',
+             'target': 'new',
         }
 
     @api.multi
