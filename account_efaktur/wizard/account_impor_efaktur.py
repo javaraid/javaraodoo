@@ -10,12 +10,15 @@ class AccountInvoiceImporPK(models.TransientModel):
     def invoice_imporpk(self):
         context = dict(self._context or {})
         active_ids = context.get('active_ids', []) or []
-        
+        Invoice = self.env['account.invoice']
+        invoices = Invoice.browse(active_ids)
+        invoices_with_taxes = [
+            inv.id for inv in invoices if inv.amount_tax > 0]
 #         self.env['account.invoice'].browse(active_ids).generate_csv_imporpk()
         return {
-             'type' : 'ir.actions.act_url',
-             'url': '/web/binary/download_imporpk?model=account.invoice&id=%s&filename=ImporPK.csv' % (str(active_ids)),
-             'target': 'self',
+            'type': 'ir.actions.act_url',
+            'url': '/web/binary/download_imporpk?model=account.invoice&id=%s&filename=ImporPK.csv' % (str(invoices_with_taxes)),
+            'target': 'new',
         }
 
 
@@ -35,6 +38,7 @@ class AccountInvoiceCancel(models.TransientModel):
 
         for record in self.env['account.invoice'].browse(active_ids):
             if record.state in ('cancel', 'paid'):
-                raise UserError(_("Selected invoice(s) cannot be cancelled as they are already in 'Cancelled' or 'Done' state."))
+                raise UserError(
+                    _("Selected invoice(s) cannot be cancelled as they are already in 'Cancelled' or 'Done' state."))
             record.action_invoice_cancel()
         return {'type': 'ir.actions.act_window_close'}

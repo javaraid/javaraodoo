@@ -1,4 +1,4 @@
-from odoo import http
+from odoo import http, fields
 from odoo.http import request
 from odoo.addons.web.controllers.main import serialize_exception, content_disposition
 import base64
@@ -122,27 +122,31 @@ class Binary(http.Controller):
         ]
         export_data = []
         for inv in records:
+            date_format = fields.Date.from_string(inv.date_invoice)
             row_data = [
                 [
-                    'FK', '01', '0', inv.number, '12', inv.date_invoice,
-                    inv.date_invoice, inv.company_id.partner_id.npwp or '',
-                    inv.company_id.partner_id.name,
-                    str(inv.company_id.partner_id.street or '') +
-                    ' Blok ' + str(inv.company_id.partner_id.blok or ''),
-                    inv.amount_total, inv.amount_tax
+                    'FK', '01', '0', inv.no_faktur, date_format and date_format.month or '',
+                    date_format and date_format.year or '',
+                    date_format and date_format.strftime("%d/%m/%Y") or '',
+                    inv.partner_id.npwp or '', inv.partner_id.name,
+                    str(inv.partner_id.street or '') + ' Blok ' +
+                    str(inv.company_id.partner_id.blok or ''),
+                    int(inv.amount_untaxed), int(inv.amount_tax),
+                    '0', '', '0', '0', '0', '0', inv.name
                 ],
                 [
-                    'FAPR', str(inv.partner_id.name or ''),
-                    str(inv.partner_id.street or '') +
-                    ' Blok ' + str(inv.partner_id.blok or '') +
-                    ' No ' + str(inv.partner_id.nomor or '') +
-                    ', ' + str(inv.partner_id.kecamatan_id.name or '')
+                    'FAPR', str(inv.company_id.partner_id.name or ''),
+                    str(inv.company_id.partner_id.street or '') +
+                    ' Blok ' + str(inv.company_id.partner_id.blok or '') +
+                    ' No ' + str(inv.company_id.partner_id.nomor or '') +
+                    ', ' +
+                    str(inv.company_id.partner_id.kecamatan_id.name or '')
                 ],
             ]
             i = 1
             for line in inv.invoice_line_ids:
-                row_data.append(['OF', '0' + str(i), line.product_id.name, line.price_unit, line.quantity, line.price_unit * line.quantity,
-                                 line.price_unit * line.quantity * line.discount / 100, line.price_subtotal, line.price_subtotal * 10 / 100, 0, 0.0])
+                row_data.append(['OF', line.product_id.barcode, line.product_id.name, int(line.price_unit), int(line.quantity), int(line.price_unit * line.quantity),
+                                 int(line.price_unit * line.quantity * line.discount / 100), int(line.price_subtotal), int(line.price_subtotal * 10 / 100), '0', '0'])
                 i += 1
             export_data.append(row_data)
 
