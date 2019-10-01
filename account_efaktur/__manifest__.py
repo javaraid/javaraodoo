@@ -6,6 +6,8 @@
     'name': 'Export e-Faktur',
     'version': '11.0',
     'category': 'Account',
+    'author': 'Arkana, Joenan <joenan@arkana.co.id>',
+    'website': 'https://www.arkana.co.id',
     'description': """
 Allows you to export e-Faktur.
 ==============================================================
