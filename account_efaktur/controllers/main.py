@@ -1,4 +1,4 @@
-from odoo import http, fields
+from odoo import http, fields, _
 from odoo.http import request
 from odoo.addons.web.controllers.main import serialize_exception, content_disposition
 import base64
@@ -9,6 +9,7 @@ except ImportError:
     from io import StringIO
 import csv
 from odoo.tools import pycompat
+from odoo.exceptions import ValidationError, UserError
 
 
 class Binary(http.Controller):
@@ -143,12 +144,23 @@ class Binary(http.Controller):
                     str(inv.company_id.partner_id.kecamatan_id.name or '')
                 ],
             ]
+            # catet jumlah isi list
+            len_row_data = len(row_data)
+
             i = 1
             for line in inv.invoice_line_ids:
+                if not line.invoice_line_tax_ids or \
+                        [sum(tax.amount) for tax in line.invoice_line_tax_ids] == 0:
+                    continue
                 row_data.append(['OF', line.product_id.barcode, line.product_id.name, int(line.price_unit), int(line.quantity), int(line.price_unit * line.quantity),
                                  int(line.price_unit * line.quantity * line.discount / 100), int(line.price_subtotal), int(line.price_subtotal * 10 / 100), '0', '0'])
                 i += 1
-            export_data.append(row_data)
+            # jika tdk ada penambahan maka hapus 2 row terakhir
+            if len(row_data) == len_row_data:
+                del(row_data[len_row_data - 1])
+                del(row_data[len_row_data - 2])
+            # if not row_data:
+            #     raise UserError(_("There is no taxable data to import."))
 
         if not filename:
             filename = '%s_%s' % (model.replace('.', '_'), id)
