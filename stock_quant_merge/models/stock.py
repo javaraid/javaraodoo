@@ -41,7 +41,8 @@ class StockQuant(models.Model):
                     quant = quants[0]
                     quants_to_del = \
                         [quants[i] for i in range(1, len(quants) - 1)]
-                    [quant_to_del.unlink() for quant_to_del in quants_to_del]
+                    for quant_to_del in quants_to_del:
+                        quant_to_del.unlink()
                     domain = [
                         ('product_id', '=', product_id),
                         ('lot_id', '=', quant.lot_id.id),
