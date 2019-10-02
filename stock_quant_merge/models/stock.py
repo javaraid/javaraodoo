@@ -40,7 +40,7 @@ class StockQuant(models.Model):
                 if len(quants) > 1:
                     quant = quants[0]
                     quants_to_del = \
-                        [quants[i] for i in range(1, len(quants) - 1)]
+                        [quants[i] for i in range(1, len(quants))]
                     for quant_to_del in quants_to_del:
                         quant_to_del.unlink()
                     domain = [
@@ -50,20 +50,20 @@ class StockQuant(models.Model):
                         ('package_id', '=', quant.package_id.id),
                         ('result_package_id', '=', quant.package_id.id),
                     ]
-                    lines_from_loc = MoveLine.search(
-                        domain + [('location_id', '=', location_id)])
-                    lines_to_loc = MoveLine.search(
-                        domain + [('location_dest_id', '=', location_id)])
                     # write quantity
+                    lines_from_loc = MoveLine.search(
+                        domain + [('location_id', '=', location_id)] + [('state', '=', 'done')])
+                    lines_to_loc = MoveLine.search(
+                        domain + [('location_dest_id', '=', location_id)] + [('state', '=', 'done')])
                     qty_from = sum([line.qty_done for line in lines_from_loc])
                     qty_to = sum([line.qty_done for line in lines_to_loc])
                     qty = qty_to - qty_from
                     # write reserved
+                    lines_from_loc = MoveLine.search(
+                        domain + [('location_id', '=', location_id)])
                     qty_reserved_from = sum(
                         [line.product_uom_qty for line in lines_from_loc])
-                    qty_reserved_to = sum(
-                        [line.product_uom_qty for line in lines_to_loc])
-                    qty_reserved = qty_reserved_to - qty_reserved_from
+                    qty_reserved = qty_reserved_from
                     quant.write({
                         'quantity': qty,
                         'reserved_quantity': qty_reserved,
