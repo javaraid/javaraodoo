@@ -28,7 +28,7 @@ class ProductProduct(models.Model):
                 self.env.cr.execute(
                     'UPDATE product_template SET available_in_pos=null where id=%i' % prod_to_del.product_tmpl_id.id)
                 loop += 1
-                _logger.error(
+                _logger.info(
                     '== MERGE PROGRESS: %i%% ==' % int(loop / total * 100))
                 continue
             # set not available in pos
@@ -62,7 +62,7 @@ class ProductProduct(models.Model):
             self.env.cr.execute(
                 'UPDATE purchase_order_line SET product_id=%i where product_id=%i' % (prod_to_merge[0].id, prod_to_del.id,))
             loop += 1
-            _logger.error(
+            _logger.info(
                 '== MERGE PROGRESS: %i%% ==' % int(loop / total * 100))
 
     def set_available_in_pos(self):
@@ -75,5 +75,5 @@ class ProductProduct(models.Model):
             self.env.cr.execute(
                 'UPDATE product_template SET available_in_pos=true where id=%i' % prod_to_update.product_tmpl_id.id)
             loop += 1
-            _logger.error(
+            _logger.info(
                 '== UPDATE PROGRESS: %i%% ==' % int(loop / total * 100))
