@@ -22,7 +22,7 @@ class StockQuant(models.Model):
         product_ids = [product_id] if product_id else \
             Product.search([]).ids
         location_ids = [location_id] if location_id else \
-            Location.search([]).ids
+            Location.search([('usage', '=', 'internal')]).ids
         # count total
         total = 0
         for product_id in product_ids:
