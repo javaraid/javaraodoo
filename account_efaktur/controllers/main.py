@@ -149,8 +149,7 @@ class Binary(http.Controller):
 
             i = 1
             for line in inv.invoice_line_ids:
-                if not line.invoice_line_tax_ids or \
-                        sum([tax.amount for tax in line.invoice_line_tax_ids]) == 0:
+                if not line.invoice_line_tax_ids:
                     continue
                 row_data.append(['OF', line.product_id.barcode, line.product_id.name, int(line.price_unit), int(line.quantity), int(line.price_unit * line.quantity),
                                  int(line.price_unit * line.quantity * line.discount / 100), int(line.price_subtotal), int(line.price_subtotal * 10 / 100), '0', '0'])
