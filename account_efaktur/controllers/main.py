@@ -161,6 +161,7 @@ class Binary(http.Controller):
                 del(row_data[len_row_data - 2])
             # if not row_data:
             #     raise UserError(_("There is no taxable data to import."))
+            export_data.append(row_data)
 
         if not filename:
             filename = '%s_%s' % (model.replace('.', '_'), id)
