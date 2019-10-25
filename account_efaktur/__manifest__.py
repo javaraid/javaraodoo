@@ -20,6 +20,7 @@ Allows you to export e-Faktur.
         'wizard/account_impor_efaktur_view.xml',
         'views/account_view.xml',
         'views/partner_view.xml',
+        'reports/report.xml'
     ],
     'demo': [],
     'test': [

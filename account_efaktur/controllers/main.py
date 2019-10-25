@@ -124,24 +124,38 @@ class Binary(http.Controller):
         export_data = []
         for inv in records:
             date_format = fields.Date.from_string(inv.date_invoice)
+            partner_company = inv.partner_id.parent_id if inv.partner_id.parent_id else inv.partner_id
             row_data = [
                 [
-                    'FK', '01', '0', inv.no_faktur, date_format and date_format.month or '',
+                    'FK', str('01'), '0', inv.no_faktur, date_format and date_format.month or '',
                     date_format and date_format.year or '',
                     date_format and date_format.strftime("%d/%m/%Y") or '',
                     inv.partner_id.npwp or '', inv.partner_id.name,
-                    str(inv.partner_id.street or '') + ' Blok ' +
-                    str(inv.company_id.partner_id.blok or ''),
+                    str(partner_company.street or '') + 
+                    ' Blok ' + str(partner_company.blok or '') + 
+                    ' No.' + str(partner_company.nomor or '') + 
+                    ' RT:' + str(partner_company.rt or '') + 
+                    ' RW:' + str(partner_company.rw or '') + 
+                    ' Kel.' + str(partner_company.kelurahan_id.name or '') + 
+                    ' Kec.' + str(partner_company.kecamatan_id.name or '') + 
+                    ' Kota/Kab.' + str(partner_company.city_id.name or '') + 
+                    str(partner_company.state_id.name or '') + 
+                    str(partner_company.zip or ''),
                     int(inv.amount_untaxed), int(inv.amount_tax),
                     '0', '', '0', '0', '0', '0', inv.name
                 ],
                 [
                     'FAPR', str(inv.company_id.partner_id.name or ''),
-                    str(inv.company_id.partner_id.street or '') +
-                    ' Blok ' + str(inv.company_id.partner_id.blok or '') +
-                    ' No ' + str(inv.company_id.partner_id.nomor or '') +
-                    ', ' +
-                    str(inv.company_id.partner_id.kecamatan_id.name or '')
+                    str(inv.company_id.partner_id.street or '') + 
+                    ' Blok ' + str(inv.company_id.partner_id.blok or '') + 
+                    ' No.' + str(inv.company_id.partner_id.nomor or '') + 
+                    ' RT:' + str(inv.company_id.partner_id.rt or '') + 
+                    ' RW:' + str(inv.company_id.partner_id.rw or '') + 
+                    ' Kel.' + str(inv.company_id.partner_id.kelurahan_id.name or '') + 
+                    ' Kec.' + str(inv.company_id.partner_id.kecamatan_id.name or '') + 
+                    ' Kota/Kab.' + str(inv.company_id.partner_id.city_id.name or '') + 
+                    str(inv.company_id.partner_id.state_id.name or '') + 
+                    str(inv.company_id.partner_id.zip or '')
                 ],
             ]
             # catet jumlah isi list

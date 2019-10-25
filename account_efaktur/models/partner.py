@@ -8,9 +8,10 @@ import csv
 class ResPartner(models.Model):
     _inherit = 'res.partner'
     
-    npwp = fields.Char(string='NPWP', size=15)
+    npwp = fields.Char(string='NPWP', size=15, placeholder="tanpa titik ataupun minus")
     blok = fields.Char(string='Blok')
     nomor = fields.Char(string='Nomor')
     rt = fields.Char(string='RT')
     rw = fields.Char(string='RW')
+    nik = fields.Char(string='NIK/Paspor', help="Dibutuhkan dalam Faktur Pajak untuk pembeli tanpa NPWP")
     
