@@ -70,11 +70,11 @@
                                 <div class="row">
                                     <label class="col-xs-2">Nama </label><span>: <span t-field="partner_company.name"/></span>
                                 </div>
-                                <t t-if="not partner_company.npwp">
+<!--                                 <t t-if="not partner_company.npwp">
                                     <div class="row">
                                         <label class="col-xs-2">NIK / Paspor </label><span>: <span t-field="partner_company.nik"/></span>
                                     </div>
-                                </t>
+                                </t> -->
                                 <div class="row">
                                     <label class="col-xs-2">Alamat </label><span>: <span t-field="partner_company.street"/>
                                     <span t-if="partner_company.blok"> Blok <span t-field="partner_company.blok"/></span>
