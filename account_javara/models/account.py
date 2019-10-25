@@ -11,8 +11,8 @@ class AccountMoveLine(models.Model):
     team_id = fields.Many2one(string='Sales Channel',
                               related='partner_id.team_id', store=True)
 
-    saleschannel_id = fields.Many2one('crm.team','Sales Channel',
-                              compute='_compute_saleschannel', store=True)
+#     saleschannel_id = fields.Many2one('crm.team','Sales Channel',
+#                               compute='_compute_saleschannel', store=True)
 
     # to add saleschannel in PoS transactions
     # used in reporting
