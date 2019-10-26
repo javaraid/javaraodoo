@@ -18,7 +18,7 @@
         ],
     },
     'depends': [
-        'base', 'web',
+        'base', 'web', 'sale',
     ],
     'data': [
         'views/webclient_templates.xml',
