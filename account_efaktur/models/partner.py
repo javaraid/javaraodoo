@@ -13,5 +13,5 @@ class ResPartner(models.Model):
     nomor = fields.Char(string='Nomor')
     rt = fields.Char(string='RT')
     rw = fields.Char(string='RW')
-    nik = fields.Char(string='NIK/Paspor', help="Dibutuhkan dalam Faktur Pajak untuk pembeli tanpa NPWP")
+#     nik = fields.Char(string='NIK/Paspor', help="Dibutuhkan dalam Faktur Pajak untuk pembeli tanpa NPWP")
     
