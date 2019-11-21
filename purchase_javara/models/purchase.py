@@ -3,7 +3,7 @@ from odoo.tools.float_utils import float_compare, float_round, float_is_zero
 from odoo.exceptions import UserError
 
 
-class SaleOrder(models.Model):
+class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 
     delivery_status = fields.Selection([
