@@ -11,6 +11,7 @@
                 </xpath>
                  <xpath expr="//field[@name='date_planned_start']" position="after">
                     <field name="done_at" attrs="{'invisible':[('state', '!=', 'done')]}"/>
+                    <field name="days" invisible="1"/>
                 </xpath>
                 <xpath expr="//notebook/page[3]" position="after">
                     <page string="Worker">
