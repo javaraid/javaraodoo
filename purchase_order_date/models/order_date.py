@@ -8,28 +8,51 @@ from dateutil.relativedelta import relativedelta
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
-    date_orders = fields.Datetime('Order Date', default=datetime.today())
+    # date_orders = fields.Datetime('Order Date', default=datetime.today())
     date_orders_old = fields.Datetime(string='Order Date', default=datetime.today())
 
     @api.multi
-    @api.onchange('date_orders')
+    @api.onchange('date_order')
     def _get_date(self):
         for record in self:
-            if record.date_orders_old != record.date_orders:
-                dates_new = datetime.strptime(str(record.date_orders), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m')
+            user = self.env['res.users'].browse(self.env.uid)
+            if not user.has_group('account.group_account_manager'):
+                dates_new = datetime.strptime(str(record.date_order), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m')
+                dates_new_day = datetime.strptime(str(record.date_order), '%Y-%m-%d %H:%M:%S').strftime('%d')
+                dates_new_month = datetime.strptime(str(record.date_order), '%Y-%m-%d %H:%M:%S').strftime('%m')
+                dates_new_year = datetime.strptime(str(record.date_order), '%Y-%m-%d %H:%M:%S').strftime('%Y')
                 dates_old = datetime.strptime(str(record.date_orders_old), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m')
+                dates_old_day = datetime.strptime(str(record.date_orders_old), '%Y-%m-%d %H:%M:%S').strftime('%d')
+                dates_old_month = datetime.strptime(str(record.date_orders_old), '%Y-%m-%d %H:%M:%S').strftime('%m')
+                dates_old_year = datetime.strptime(str(record.date_orders_old), '%Y-%m-%d %H:%M:%S').strftime('%Y')
                 dates_old_full = datetime.strptime(str(record.date_orders_old), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
-            
                 if dates_new < dates_old:
-                    raise UserError('Tidak boleh memilih bulan sebelumnya dari bulan sekarang!')
-                    record.date_orders = dates_old_full
-                # if dates_new < dates_old and dates_old_days <= '7':
-                #     dates_new_month = datetime.date(dates_new_year, dates_new_month, monthrange((dates_new_year), int(dates_new_month))[-1])
-                #     dates_new_month_day = mdays[datetime.record.dates_new.month]
-                #     dates_old = dates_old_s - timedelta(days=14) 
-                #     if dates_new < dates_old:
-                #         raise UserError('Tidak boleh memilih bulan sebelumnya dari bulan sekarang!')
-                #         record.date_orders = record.date_orders_old
+                    if  dates_old_day < '08':
+                        day = monthrange(int(dates_new_year), int(dates_new_month))[1]
+                        cal_day = day - 7
+                        if dates_new_day < str(cal_day):
+                            record.date_order = record.date_orders_old
+                            raise UserError('Tidak boleh memilih bulan sebelumnya dari bulan' + dates_old_month + ' dan tahun ' + dates_old_year)
+                    else :
+                        if dates_new_month < dates_old_month:
+                            record.date_order = record.date_orders_old
+                            raise UserError('Tidak boleh memilih bulan sebelumnya dari bulan' + dates_old_month + ' dan tahun ' + dates_old_year)
+    @api.multi
+    def write(self,values):
+        purchase_order_write = super(PurchaseOrder,self).write(values)
+        if self.date_orders_old != self.date_order:
+            self.date_orders_old = self.date_order
+            return purchase_order_write
+                        
+
+
+                    # if dates_new < dates_old and dates_old_days <= '7':
+                    #     dates_new_month = datetime.date(dates_new_year, dates_new_month, monthrange((dates_new_year), int(dates_new_month))[-1])
+                    #     dates_new_month_day = mdays[datetime.record.dates_new.month]
+                    #     dates_old = dates_old_s - timedelta(days=14) 
+                    #     if dates_new < dates_old:
+                    #         raise UserError('Tidak boleh memilih bulan sebelumnya dari bulan sekarang!')
+                    #         record.date_orders = record.date_orders_old
                   
 
 
