@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="mrp_production_custom_reports" inherit_id="mrp.report_mrporder">
+            <xpath expr="//div[@class='page']" position="replace">
+                <style>
+                    .block
+                    {
+                        display: block;
+                    }
+                    .inline-block
+                    {
+                        display: inline-block;
+                    }
+                    .square
+                    {
+                        height: 25px;
+                        width: 25px;
+                        background-color: #fff;
+                        border: 1px solid black;
+                        display: inline-block;
+                    }
+                    .middle
+                    {
+                        vertical-align: middle;
+                        display: inline-block;
+                        margin-top: -10px;
+                    }
+                    .fl
+                    {
+                        float: left;
+                    }
+                    .center
+                    {
+                        text-align: center;
+                    }
+                    .vam
+                    {
+                        vertical-align: middle;
+                    }
+                    .vab
+                    {
+                        vertical-align: bottom;
+                    }
+                    .border-table
+                    {
+                        border: 1px solid black;
+                        padding: 3px;
+                    }
+                    .pbaa
+                    {
+                        page-break-after: always;
+                    }
+                    .h70
+                    {
+                        height: 70px;
+                    }
+                    .h100
+                    {
+                        height: 100px;
+                    }
+                    .w100
+                    {
+                        width: 100%;
+                    }
+                </style>
+                <p><span t-field="o.name"/></p>
+                <p>Product Name : <span t-field="o.product_id"/> Barcode :<span t-field="o.product_id.barcode"/></p>
+                <p>Qty Target : <span t-field="o.product_qty"/> units</p>
+                <p>Lot # : <span t-field="o.finished_move_line_ids.lot_id"/></p>
+                <p class="fl">Exp Date : </p>
+                <div>
+                    <div class="square"/> <div class="square"/> <p class="middle">-</p> <div class="square"/> <div class="square"/> <p class="middle">-</p> <div class="square"/> <div class="square"/> <div class="square"/> <div class="square"/>
+                </div>
+                <p class="block">INPUT :</p>
+                <table class="border-table block w100 pbaa">
+                    <thead class="border-table">
+                        <tr class="border-table center">
+                            <th colspan="3" class="border-table center">To Consume Material</th>
+                            <th colspan="2" class="border-table center">Reserved Material</th>
+                            <th colspan="2" class="border-table center">Consumed Material</th>
+                        </tr>
+                        <tr class="border-table">
+                            <th class="border-table center">Category</th>
+                            <th class="border-table center">Material Name</th>
+                            <th class="border-table center">Qty</th>
+                            <th class="border-table center">Qty</th>
+                            <th class="border-table center">Lot #</th>
+                            <th class="border-table center">Consumed Qty</th>
+                            <th class="border-table center">No Consumed Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-table">
+                        <tr t-foreach="o.move_raw_ids" t-as="line" class="border-table">
+                            <td class="border-table center"><span t-esc="line.product_id.categ_id.parent_id.name[:2]"/></td>
+                            <td class="border-table"><span t-esc="line.product_id.name[3:100]"/></td>
+                            <td class="border-table center"><span t-field="line.product_uom_qty"/></td>
+                            <td class="border-table center"><span t-field="line.reserved_availability"/></td>
+                            <td class="border-table center">#</td>
+                            <td class="border-table center"><span t-field="line.quantity_done"/></td>
+                            <td class="border-table center">-</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="border-table center">
+                            <th class="border-table center vam h100">PIC (Sign)</th>
+                            <th colspan="2" class="border-table center vam h100">
+                            <![CDATA[
+                            <br />
+                            <br />
+                            ________
+                            <br />      
+                            WH RM]]>
+                            </th>
+                            <th colspan="2" class="border-table center vam h100">PIC Sign Produksi</th>
+                            <th colspan="2" class="border-table center vam h100">PIC Sign Produksi</th>
+                        </tr>
+                        <tr class="border-table center">
+                            <th class="border-table center vam">Catatan WH</th>
+                            <th colspan="2" class="border-table center vam"></th>
+                            <th colspan="2" class="border-table center vam">Catatan Produksi</th>
+                            <th colspan="2" rowspan="2" class="border-table">
+                            <![CDATA[Hasil Cek QC : 
+                            <br />      
+                            % air :
+                            <br />      
+                            Organoleptik :
+                            <br />      
+                            No Lot : Sesuai  /  Tidak
+                            <br />      
+                            Exp Date : Sesuai  /  Tidak
+                            <br />      
+                            Status: Organik  /  Halal
+                            <br />      
+                            Serah Terima]]>
+                            </th>
+                        </tr>
+                        <tr class="border-table center">
+                            <th class="border-table center vam h100">QC Sign</th>
+                            <th colspan="2" class="border-table center vam h100">
+                            <![CDATA[ 
+                            <br />
+                            <br />
+                            ________
+                            <br />      
+                            Heri]]>
+                            </th>
+                            <th colspan="2" rowspan="3" class="border-table h100">
+                            <![CDATA[Jml SDC : <br />      
+                            Jam Produksi :]]>
+                            </th>
+                        </tr>
+                        <tr class="border-table center">
+                            <th class="border-table center vam h70">Status QC</th>
+                            <th colspan="2" class="border-table center vam">
+                            <![CDATA[Released 
+                            <br />
+                            Reject
+                            <br />    
+                            Hold]]>
+                            </th>
+                            <th class="border-table center vam">QC</th>
+                            <th class="border-table center vam">WH FC</th>
+                        </tr>
+                        <tr class="border-table center">
+                            <th class="border-table center vam h100">Catatan QC</th>
+                            <th colspan="2" class="border-table center vam h100"></th>
+                            <th class="border-table center vam h100">
+                            <![CDATA[ 
+                            <br />
+                            <br />
+                            ________
+                            <br />      
+                            Septi]]>
+                            </th>
+                            <th class="border-table center vam h100">
+                            <![CDATA[ 
+                            <br />
+                            <br />
+                            ________
+                            <br />      
+                            ]]>
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+                <p class="block">Record Cleaning and Samtasi :</p>
+                <table class="border-table block w100 pbaa">
+                    <thead class="border-table">
+                        <tr class="border-table center">
+                            <th rowspan="2" class="border-table center">RM</th>
+                            <th colspan="2" rowspan="2" class="border-table center">
+                            <![CDATA[
+                            Kemasan 
+                            <br />
+                            -------
+                            <br />      
+                            Kebersihan]]>
+                            </th>
+                            <th class="border-table center">Sesuai</th>
+                            <th class="border-table center">Tidak Sesuai</th>
+                            <th class="border-table center">PIC</th>
+                            <th class="border-table center">Pemeriksa</th>
+                        </tr>
+                        <tr class="border-table">
+                            <th class="border-table center"></th>
+                            <th class="border-table center"></th>
+                            <th class="border-table center">
+                            <![CDATA[
+                            <br />
+                            <br />
+                            ________
+                            <br />   
+                            <br />      
+                            ]]>
+                            </th>
+                            <th class="border-table center">
+                            <![CDATA[
+                            <br />
+                            <br />
+                            ________
+                            <br />      
+                            <br />   
+                            ]]>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-table">
+                        <tr class="border-table">
+                            <td rowspan="11" class="border-table">Proses</td>
+                            <td rowspan="5" class="border-table">
+                            <![CDATA[
+                            Alat
+                            <br />
+                            1-5]]>
+                            </td>
+                            <td class="border-table center">1.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td rowspan="11" class="border-table center vab">
+                            <![CDATA[
+                            <br />
+                            <br />
+                            ________
+                            <br />      
+                            <br />   
+                            ]]>
+                            </td>
+                            <td rowspan="11" class="border-table center vab">
+                            <![CDATA[
+                            <br />
+                            <br />
+                            ________
+                            <br />      
+                            <br />   
+                            ]]>
+                            </td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">2.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">3.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">4.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">5.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td rowspan="3" class="border-table">
+                            <![CDATA[
+                            Ruangan
+                            <br />
+                            1-3]]>
+                            </td>
+                            <td class="border-table center">1.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">2.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">3.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td rowspan="3" class="border-table">
+                            <![CDATA[
+                            Personel
+                            <br />
+                            1-3]]>
+                            </td>
+                            <td class="border-table center">1.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">2.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">3.</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                    </tbody>
+                </table>
+	        </xpath>
+        </template>
+    </data>
+</odoo>

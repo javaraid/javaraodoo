@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="stock_days_form">
+            <field name="name">stock.days.form</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='scheduled_date']" position="after">
+                    <field name="done_at" attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                    <field name="days" string="Days to Delivery" attrs="{'invisible': ['|', ('picking_type_code','==','incoming'),('state', '!=', 'done')]}"/>
+                    <field name="days" string="Days to Receive" attrs="{'invisible': ['|', ('picking_type_code','!=','incoming'),('state', '!=', 'done')]}"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
