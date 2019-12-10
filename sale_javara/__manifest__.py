@@ -13,6 +13,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/sale_view.xml',
+        'report/sale_order_report'
     ],
     'demo': [],
     'test': [

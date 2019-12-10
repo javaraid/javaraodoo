@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="saleorder_custom_reports" inherit_id="sale.report_saleorder_document">
+            <xpath expr="//div[@id='informations']" position="after">
+                <p>Vehicle Number : ________________________</p>
+	        </xpath>
+            <xpath expr="//table[@class='table table-condensed']/thead/tr/th[2]" position="after">
+                <th>Best Before Date [ddmmyyyy]</th>
+                <th>Lot Number</th>
+	        </xpath>
+            <xpath expr="//table[@class='table table-condensed']/tbody/tr/td[2]" position="after">
+                <td></td>
+                <td></td>
+	        </xpath>
+            <xpath expr="//table[@class='table table-condensed']/tbody/tr[2]/td[2]" position="after">
+                <td/>
+                <td/>
+                <td/>
+	        </xpath>
+            <xpath expr="//p[@id='fiscal_position_remark']" position="after">
+                <style>
+                    .block
+                    {
+                        display: block;
+                    }
+                    .inline-block
+                    {
+                        display: inline-block;
+                    }
+                    .square
+                    {
+                        height: 15px;
+                        width: 15px;
+                        background-color: #fff;
+                        border: 1px solid black;
+                        display: inline-block;
+                    }
+                    .middle
+                    {
+                        vertical-align: middle;
+                        display: inline-block;
+                        margin-top: -10px;
+                    }
+                    .fl
+                    {
+                        float: left;
+                    }
+                    .fr
+                    {
+                        float: right;
+                    }
+                    .center
+                    {
+                        text-align: center;
+                    }
+                    .vam
+                    {
+                        vertical-align: middle;
+                    }
+                    .vab
+                    {
+                        vertical-align: bottom;
+                    }
+                    .border-table
+                    {
+                        border: 1px solid black;
+                        padding: 3px;
+                    }
+                </style>
+                <table class="border-table fr inline-block" style="margin-bottom: 10px;">
+                    <tr class="border-table">
+                        <td class="border-table" rowspan="2">
+                            <![CDATA[
+                            QC Checking Compliance:
+                            <br />
+                            Quality Product : <div class="square"/> YES <div class="square"/> NO
+                            <br />
+                            Quality Packaging : <div class="square"/> YES <div class="square"/> NO 
+                            ]]>
+                        </td>
+                        <td class="border-table" colspan="2">
+                            Check by :
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="border-table">
+                            QC
+                        </td>
+                        <td class="border-table" colspan="2">
+                            Logistik
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="border-table">
+                            Stempel QC Passed
+                        </td>
+                        <td class="border-table">
+                            <![CDATA[
+
+                            <br />
+                            ________      
+                            <br />   
+                            ]]>
+                        </td>
+                        <td class="border-table">
+                            <![CDATA[
+                            
+                            
+                            <br />
+                            ________      
+                            <br />   
+                            ]]>
+                        </td>
+                    </tr>
+                </table>
+	        </xpath>
+        </template>
+    </data>
+</odoo>
