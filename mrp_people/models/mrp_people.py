@@ -20,6 +20,7 @@ class MrpProduction(models.Model):
     people_ids = fields.One2many('mrp.people', 'people_id' ,'Worker Name')
     people_count = fields.Integer(compute='_get_people_count', store=True, string='Worker')
     done_at =  fields.Datetime(string='Done At')
+    days = fields.Integer(compute='_get_date', store=True, string='Days')
 
     @api.multi
     @api.depends('people_ids.name') 
@@ -34,6 +35,20 @@ class MrpProduction(models.Model):
                 raise UserError('Worker harus diisi!')
             record.done_at = datetime.now()
             record.write({'state': 'done'})
+
+    @api.multi
+    @api.depends('done_at')
+    def _get_date(self):
+        for record in self:
+            if not record.done_at:
+                record.done_at = False
+            else:
+                from_date = datetime.strptime(str(record.date_planned_start), '%Y-%m-%d %H:%M:%S')
+                to_date = datetime.strptime(str(record.done_at), '%Y-%m-%d %H:%M:%S')
+                timedelta = to_date - from_date
+                diff_day = timedelta.days
+                record.days = diff_day
+            
 
     
     
