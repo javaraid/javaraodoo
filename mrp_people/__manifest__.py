@@ -9,6 +9,7 @@
     'description': """Custom People for Manufacture Order Javara""",
     'depends': ['mrp'],
     'data': [
+        'security/ir.model.access.csv',
         'views/mrp_people_views.xml',
         'views/mrp_people_line_views.xml'
     ],

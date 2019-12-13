@@ -7,8 +7,8 @@
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='date_order']" position="after">
-                    <field name="date_orders"/>
-                    <field name="date_orders_old"/>
+                    <!-- <field name="date_orders"/> -->
+                    <field name="date_orders_old" invisible="1"/>
                 </xpath>
             </field>
         </record>
