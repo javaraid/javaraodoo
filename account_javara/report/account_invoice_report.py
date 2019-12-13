@@ -44,3 +44,15 @@ class AccountInvoiceReport(models.Model):
                     coalesce(partner.country_id, partner_ai.country_id) AS country_id
         """
         return select_str
+
+    invoice_id = fields.Many2one('account.invoice', 'Invoice Name', ondelete='cascade')
+
+    def _select(self):
+        return super(AccountInvoiceReport, self)._select() + ", sub.invoice_id as invoice_id"
+
+    def _sub_select(self):
+        return super(AccountInvoiceReport, self)._sub_select() + ", ai.id AS invoice_id"
+
+    def _group_by(self):
+        return super(AccountInvoiceReport, self)._group_by() + ", ai.id"
+
