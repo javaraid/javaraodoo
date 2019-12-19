@@ -40,7 +40,7 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-        <!-- <menuitem 
+        <menuitem 
             id="main_mrp_people"
             name="mrp.people"
         />
@@ -57,7 +57,7 @@
             parent="menu_mrp_people"
 
             action="mrp_people_action"
-        /> -->
+        />
 
     </data>
 </odoo>
