@@ -5,6 +5,7 @@ class PurchaseReport(models.Model):
     _inherit = "purchase.report"
 
     order_id = fields.Many2one('purchase.order','Order Number',readonly=True)
+    delay_real = fields.Float('Avg. Days to Receival', digits=(16, 2), readonly=True, group_operator="avg")
 
     @api.model_cr
     def init(self):
@@ -32,6 +33,7 @@ class PurchaseReport(models.Model):
                     sum(l.product_qty/u.factor*u2.factor) as unit_quantity,
                     extract(epoch from age(s.date_approve,s.date_order))/(24*60*60)::decimal(16,2) as delay,
                     extract(epoch from age(l.date_planned,s.date_order))/(24*60*60)::decimal(16,2) as delay_pass,
+                    extract(epoch from age(s.delivered_at,s.date_approve))/(24*60*60)::decimal(16,2) as delay_real,
                     count(*) as nbr_lines,
                     sum(l.price_unit / COALESCE(cr.rate, 1.0) * l.product_qty)::decimal(16,2) as price_total,
                     avg(100.0 * (l.price_unit / COALESCE(cr.rate,1.0) * l.product_qty) / NULLIF(ip.value_float*l.product_qty/u.factor*u2.factor, 0.0))::decimal(16,2) as negociation,
