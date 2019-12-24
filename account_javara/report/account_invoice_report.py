@@ -45,7 +45,7 @@ class AccountInvoiceReport(models.Model):
         """
         return select_str
 
-    invoice_id = fields.Many2one('account.invoice', 'Invoice Name', ondelete='cascade')
+    invoice_id = fields.Many2one('account.invoice', 'Invoice Number', ondelete='cascade')
 
     def _select(self):
         return super(AccountInvoiceReport, self)._select() + ", sub.invoice_id as invoice_id"
