@@ -68,24 +68,24 @@
                 <p>Product Name : <span t-field="o.product_id"/> Barcode :<span t-field="o.product_id.barcode"/></p>
                 <p>Qty Target : <span t-field="o.product_qty"/> units</p>
                 <p>Lot # : <span t-field="o.finished_move_line_ids.lot_id"/></p>
-                <p class="fl">Exp Date : </p>
-                <div>
+                <p class="fl">Exp Date :    -    -     </p>
+                <!-- <div>
                     <div class="square"/> <div class="square"/> <p class="middle">-</p> <div class="square"/> <div class="square"/> <p class="middle">-</p> <div class="square"/> <div class="square"/> <div class="square"/> <div class="square"/>
-                </div>
-                <p class="block">INPUT :</p>
+                </div> -->
+                <!-- <p class="block">INPUT :</p> -->
                 <table class="border-table block w100 pbaa">
                     <thead class="border-table">
                         <tr class="border-table center">
                             <th colspan="3" class="border-table center">To Consume Material</th>
-                            <th colspan="2" class="border-table center">Reserved Material</th>
+                            <!-- <th colspan="2" class="border-table center">Reserved Material</th> -->
                             <th colspan="2" class="border-table center">Consumed Material</th>
                         </tr>
                         <tr class="border-table">
                             <th class="border-table center">Category</th>
                             <th class="border-table center">Material Name</th>
                             <th class="border-table center">Qty</th>
-                            <th class="border-table center">Qty</th>
-                            <th class="border-table center">Lot #</th>
+                            <!-- <th class="border-table center">Qty</th>
+                            <th class="border-table center">Lot #</th> -->
                             <th class="border-table center">Consumed Qty</th>
                             <th class="border-table center">No Consumed Qty</th>
                         </tr>
@@ -95,97 +95,132 @@
                             <td class="border-table center"><span t-esc="line.product_id.categ_id.parent_id.name[:2]"/></td>
                             <td class="border-table"><span t-esc="line.product_id.name[3:100]"/></td>
                             <td class="border-table center"><span t-field="line.product_uom_qty"/></td>
-                            <td class="border-table center"><span t-field="line.reserved_availability"/></td>
-                            <td class="border-table center">#</td>
+                            <!-- <td class="border-table center"><span t-field="line.reserved_availability"/></td>
+                            <td class="border-table center">#</td> -->
                             <td class="border-table center"><span t-field="line.quantity_done"/></td>
                             <td class="border-table center">-</td>
                         </tr>
                     </tbody>
                     <tfoot>
-                        <tr class="border-table center">
-                            <th class="border-table center vam h100">PIC (Sign)</th>
-                            <th colspan="2" class="border-table center vam h100">
-                            <![CDATA[
-                            <br />
-                            <br />
-                            ________
-                            <br />      
-                            WH RM]]>
-                            </th>
-                            <th colspan="2" class="border-table center vam h100">PIC Sign Produksi</th>
-                            <th colspan="2" class="border-table center vam h100">PIC Sign Produksi</th>
+                        <tr class="border-table">
+                            <th class="border-table" colspan="3">Serah Terima RM dan PM</th>
+                            <th class="border-table" colspan="3" rowspan="23">Catatan</th>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Diserahkan Oleh</td>
+                            <td class="border-table center">Dicek Oleh</td>
+                            <td class="border-table center">Diterima Oleh</td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table h70"></td>
+                            <td class="border-table h70"></td>
+                            <td class="border-table h70"></td>
                         </tr>
                         <tr class="border-table center">
-                            <th class="border-table center vam">Catatan WH</th>
-                            <th colspan="2" class="border-table center vam"></th>
-                            <th colspan="2" class="border-table center vam">Catatan Produksi</th>
-                            <th colspan="2" rowspan="2" class="border-table">
-                            <![CDATA[Hasil Cek QC : 
-                            <br />      
-                            % air :
-                            <br />      
-                            Organoleptik :
-                            <br />      
-                            No Lot : Sesuai  /  Tidak
-                            <br />      
-                            Exp Date : Sesuai  /  Tidak
-                            <br />      
-                            Status: Organik  /  Halal
-                            <br />      
-                            Serah Terima]]>
-                            </th>
+                            <td class="border-table center">Warehouse</td>
+                            <td class="border-table center">QC WH</td>
+                            <td class="border-table center">Produksi</td>
+                        </tr>
+                        <tr class="border-table">
+                            <th class="border-table" colspan="3">Hasil Produksi</th>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table">QC Release :</td>
+                            <td class="border-table" colspan="2"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table">Qty Reject :</td>
+                            <td class="border-table" colspan="2"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table">Jumlah SDM :</td>
+                            <td class="border-table" colspan="2"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table">Jam Produksi :</td>
+                            <td class="border-table" colspan="2"></td>
                         </tr>
                         <tr class="border-table center">
-                            <th class="border-table center vam h100">QC Sign</th>
-                            <th colspan="2" class="border-table center vam h100">
-                            <![CDATA[ 
-                            <br />
-                            <br />
-                            ________
-                            <br />      
-                            Heri]]>
-                            </th>
-                            <th colspan="2" rowspan="3" class="border-table h100">
-                            <![CDATA[Jml SDC : <br />      
-                            Jam Produksi :]]>
-                            </th>
+                            <td class="border-table center" colspan="2">Diserahkan Oleh</td>
+                            <td class="border-table center">Dicek Oleh</td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table h70" colspan="2"></td>
+                            <td class="border-table h70"></td>
                         </tr>
                         <tr class="border-table center">
-                            <th class="border-table center vam h70">Status QC</th>
-                            <th colspan="2" class="border-table center vam">
-                            <![CDATA[Released 
-                            <br />
-                            Reject
-                            <br />    
-                            Hold]]>
-                            </th>
-                            <th class="border-table center vam">QC</th>
-                            <th class="border-table center vam">WH FC</th>
+                            <td class="border-table center" colspan="2">Staff Produksi</td>
+                            <td class="border-table center">QC Inline</td>
+                        </tr>
+                        <tr class="border-table">
+                            <th class="border-table" colspan="3">Serah Terima Finish Good</th>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table">Qty :</td>
+                            <td class="border-table" colspan="2"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table">Isi Per Box :</td>
+                            <td class="border-table" colspan="2"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table">Qty Box :</td>
+                            <td class="border-table" colspan="2"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <th class="border-table" colspan="3">Pengecekan QC</th>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table">Lot Number Outer :</td>
+                            <td class="border-table" colspan="2"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table">Best Before Outer :</td>
+                            <td class="border-table" colspan="2"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <th class="border-table" colspan="3">Sertifikasi</th>
+                        </tr>
+                        <tr class="border-table">
+                            <td colspan="3">
+                                <div class="square" colspan="2"/> Organic EU
+                                <div class="square"/> Organic SNI 5729:2015
+                            </td>
+                        </tr>
+                        <tr class="border-table">
+                            <td colspan="3">
+                                <div class="square" colspan="2"/> Organic USDA-NOP
+                                <div class="square"/> Halal LPPOM MUI
+                            </td>
+                        </tr>
+                        <tr class="border-table">
+                            <td colspan="3">
+                                <div class="square" colspan="2"/> Organic JAS
+                                <div class="square"/> SNI 3556:2010
+                            </td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Diserahkan Oleh</td>
+                            <td class="border-table center">Dicek Oleh</td>
+                            <td class="border-table center">Diterima Oleh</td>
+                            <td class="border-table center">Disetujui Oleh</td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table h70"></td>
+                            <td class="border-table h70"></td>
+                            <td class="border-table h70"></td>
+                            <td class="border-table h70"></td>
                         </tr>
                         <tr class="border-table center">
-                            <th class="border-table center vam h100">Catatan QC</th>
-                            <th colspan="2" class="border-table center vam h100"></th>
-                            <th class="border-table center vam h100">
-                            <![CDATA[ 
-                            <br />
-                            <br />
-                            ________
-                            <br />      
-                            Septi]]>
-                            </th>
-                            <th class="border-table center vam h100">
-                            <![CDATA[ 
-                            <br />
-                            <br />
-                            ________
-                            <br />      
-                            ]]>
-                            </th>
+                            <td class="border-table center">SPV Produksi</td>
+                            <td class="border-table center">QC WH</td>
+                            <td class="border-table center">Warehouse</td>
+                            <td class="border-table center">Production Head</td>
                         </tr>
                     </tfoot>
                 </table>
                 <p class="block">Record Cleaning and Samtasi :</p>
-                <table class="border-table block w100 pbaa">
+                <table class="border-table block w100 pbaa">    
                     <thead class="border-table">
                         <tr class="border-table center">
                             <th rowspan="2" class="border-table center">RM</th>
@@ -318,6 +353,303 @@
                             <td class="border-table center"></td>
                             <td class="border-table center"></td>
                         </tr>
+                    </tbody>
+                </table>
+                <div style="page-break-after: always;"></div>
+                <p class="block center" style="font-weight: bold;">FORM PENGGUNAAN DAN CLEANING SANITASI PRODUKSI</p>
+                <p class="block">Tanggal     :</p>
+                <p class="block">Nama Produk :</p>
+                <p class="block">Lot Number  :</p>
+                <p class="block">Best Before :</p>
+                <p class="block" style="font-weight: bold;">Penggunaan Alat dan Sanitasi</p>
+                <table class="border-table block w100 pbaa">
+                    <thead class="border-table">
+                        <tr class="border-table center">
+                            <th rowspan="2" class="border-table center">No</th>
+                            <th colspan="3" rowspan="2" class="border-table center">Nama Mesin/Alat</th>
+                            <th colspan="7" class="border-table center">Cleaning dan Sanitasi</th>
+                            <th rowspan="2" class="border-table center">Keterangan</th>
+                        </tr>
+                        <tr class="border-table">
+                            <th class="border-table center">Cuci</th>
+                            <th class="border-table center">Bilas</th>
+                            <th class="border-table center">Flusing</th>
+                            <th class="border-table center">Lap</th>
+                            <th class="border-table center">Sanitasi</th>
+                            <th class="border-table center">Keringkan</th>
+                            <th class="border-table center">Wrapping</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-table">
+                        <tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr><tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr><tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr><tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr><tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr><tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr><tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr><tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr><tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr><tr class="border-table">
+                            <td rowspan="2" class="border-table"></td>
+                            <td rowspan="2" colspan="2" class="border-table" style="color: white;">HAHAHAHAHA</td>
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <tr class="border-table">
+                            <td class="border-table center">Alat Proses</td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                            <td class="border-table center"></td>
+                        </tr>
+                        <table>
+                            <tr>
+                                <td>Note :</td>
+                                <td colspan="9">OK : Kondisi alat siap digunakan, tidak ada kerusakan, tidak ada kemungkinan kontaminasi silang akibat alat</td>
+                            </tr>
+                            <tr>
+                                <td style="color: white;">Note :</td>
+                                <td colspan="9">Tidak : Alat mengalami kerusakan, ada kemungkinan kontaminasi silang dari alat</td>
+                            </tr>
+                            <tr>
+                                <td class="text-center" width="50%">Dibuat Oleh,</td>
+                                <td class="text-center" width="50%">Diperiksa Oleh,</td>
+                            </tr>
+                        </table>
                     </tbody>
                 </table>
 	        </xpath>

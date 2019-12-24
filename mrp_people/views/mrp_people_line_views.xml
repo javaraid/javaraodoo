@@ -15,7 +15,7 @@
                 </xpath>
                 <xpath expr="//notebook/page[3]" position="after">
                     <page string="Worker">
-                        <field name="people_ids" widget="one2many_list">
+                        <field name="people_ids" widget="many2many">
                             <tree editable="bottom">
                                 <field name="name"/>
                             </tree>

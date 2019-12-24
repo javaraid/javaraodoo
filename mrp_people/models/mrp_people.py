@@ -11,13 +11,16 @@ class MrpPeople(models.Model):
     _name = 'mrp.people'
 
     name = fields.Char('Worker Name')
-    people_id = fields.Many2one('mrp.production')
+    # name_id = fields.Many2one(_name, 'Worker Name')
+    # people_id = fields.Many2one('mrp.production')
+    order_ids = fields.Many2many('mrp.production', string='Orders')
 
 
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
-    people_ids = fields.One2many('mrp.people', 'people_id' ,'Worker Name')
+    # people_ids = fields.One2many('mrp.people', 'people_id' ,'Worker Name')
+    people_ids = fields.Many2many('mrp.people', string='Workers')
     people_count = fields.Integer(compute='_get_people_count', store=True, string='Worker')
     done_at =  fields.Datetime(string='Done At')
     days = fields.Integer(compute='_get_date', store=True, string='Days')
