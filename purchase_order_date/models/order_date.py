@@ -8,8 +8,18 @@ from dateutil.relativedelta import relativedelta
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
-    # date_orders = fields.Datetime('Order Date', default=datetime.today())
     date_orders_old = fields.Datetime(string='Order Date', default=datetime.today())
+    # purchase_ids = fields.One2many(comodel_name='purchase.order.line', inverse_name='purchase_id', string='Purchase Ids')
+    qty_rec = fields.Float(string='Qty Received', store=True, compute='_get_qty_rec')
+
+    @api.multi
+    @api.depends('order_line.qty_received')
+    def _get_qty_rec(self):
+        for rec in self:
+            total = 0.0
+            for line in self.order_line:
+                total += line.qty_received
+            rec.qty_rec = total
 
     @api.multi
     @api.onchange('date_order')
@@ -43,17 +53,24 @@ class PurchaseOrder(models.Model):
         if self.date_orders_old != self.date_order:
             self.date_orders_old = self.date_order
             return purchase_order_write
-                        
 
+# class PurchaseOrderLine(models.Model):
+#     _inherit = 'purchase.order.line'
 
-                    # if dates_new < dates_old and dates_old_days <= '7':
-                    #     dates_new_month = datetime.date(dates_new_year, dates_new_month, monthrange((dates_new_year), int(dates_new_month))[-1])
-                    #     dates_new_month_day = mdays[datetime.record.dates_new.month]
-                    #     dates_old = dates_old_s - timedelta(days=14) 
-                    #     if dates_new < dates_old:
-                    #         raise UserError('Tidak boleh memilih bulan sebelumnya dari bulan sekarang!')
-                    #         record.date_orders = record.date_orders_old
-                  
+#     purchase_id = fields.Many2one(comodel_name='purchase.order', string='Purchase Id')
+#     purchase_idds = fields.One2many(comodel_name='purchase.report', inverse_name='purchase_idd', string='Purchase Idds')
+#     qty_recs = fields.Float(related='purchase_id.qty_rec', string='Quantity Received', store=True)
+    
+   
 
+# class PurchaseReport(models.Model):
+#     _inherit = "purchase.report"
 
+#     purchase_idd = fields.Many2one(comodel_name='purchase.order.line', string='Purchase Idd')
+#     qty_recss = fields.Float(related='purchase_idd.qty_recs', string='Quantity Received', store=True)
+#     qty_receiveds = fields.Float('Qty Received')
+
+#     def _select(self):
+#         return super(PurchaseReport, self)._select() + ", qty_recss as qty_receiveds"
+    
 

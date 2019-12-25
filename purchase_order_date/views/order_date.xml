@@ -10,6 +10,9 @@
                     <!-- <field name="date_orders"/> -->
                     <field name="date_orders_old" invisible="1"/>
                 </xpath>
+                <xpath expr="//field[@name='company_id']" position="after">
+                    <field name="qty_rec" attrs="{'invisible':[('state', 'not in', ['purchase'])]}"/>
+                </xpath>
             </field>
         </record>
     </data>
