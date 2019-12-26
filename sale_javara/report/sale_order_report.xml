@@ -6,17 +6,61 @@
                 <p>Vehicle Number : ________________________</p>
 	        </xpath>
             <xpath expr="//table[@class='table table-condensed']/thead/tr/th[2]" position="after">
-                <th>Best Before Date [ddmmyyyy]</th>
+                <th>Best Before Date</th>
                 <th>Lot Number</th>
 	        </xpath>
-            <xpath expr="//table[@class='table table-condensed']/tbody/tr/td[2]" position="after">
-                <td></td>
-                <td></td>
-	        </xpath>
-            <xpath expr="//table[@class='table table-condensed']/tbody/tr[2]/td[2]" position="after">
-                <td/>
-                <td/>
-                <td/>
+            <xpath expr="//tbody[@class='sale_tbody']" position="replace">
+                <tbody class="sale_tbody">
+                    <t t-foreach="page" t-as="layout_category">
+
+                        <t t-if="layout_category_size &gt; 1 or page_size &gt; 1" groups="sale.group_sale_layout">
+                            <tr class="active">
+                                <td colspan="7" style="font-weight: bold; border-bottom: 1px solid black;">&amp;bull;
+                                    <t t-esc="layout_category['name']"/>
+                                </td>
+                            </tr>
+                        </t>
+
+                        <!-- Lines associated -->
+                        <t t-foreach="layout_category['lines']" t-as="l">
+                            <tr>
+                                <td><span t-field="l.name"/></td>
+                                <td class="text-right" style="white-space: nowrap;">
+                                    <span t-field="l.product_uom_qty"/>
+                                    <span t-field="l.product_uom" groups="product.group_uom"/>
+                                </td>
+                                <td width="18%"/>
+                                <td width="10%"/>
+                                <td class="text-right">
+                                    <span t-field="l.price_unit"/>
+                                </td>
+                                <td t-if="display_discount" class="text-right" groups="sale.group_discount_per_so_line">
+                                    <span t-field="l.discount"/>
+                                </td>
+                                <td class="text-right">
+                                    <span t-esc="', '.join(map(lambda x: (x.description or x.name), l.tax_id))"/>
+                                </td>
+                                <td class="text-right" groups="sale.group_show_price_subtotal">
+                                    <span t-field="l.price_subtotal" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: doc.pricelist_id.currency_id}"/>
+                                </td>
+                                <td class="text-right" groups="sale.group_show_price_total">
+                                    <span t-field="l.price_total" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: doc.pricelist_id.currency_id}"/>
+                                </td>
+                            </tr>
+                        </t>
+
+                        <t t-if="(layout_category_size &gt; 1 or page_size &gt; 1) and layout_category['subtotal']" groups="sale.group_sale_layout">
+                            <tr class="text-right">
+                                <td colspan="6">
+                                    <strong>Subtotal: </strong>
+                                    <t t-set="subtotal" t-value="sum(line.price_subtotal for line in layout_category['lines'])"/>
+                                    <span t-esc="subtotal" t-options="{'widget': 'monetary', 'display_currency': doc.pricelist_id.currency_id}"/>
+                                </td>
+                            </tr>
+                        </t>
+
+                    </t>
+                </tbody>
 	        </xpath>
             <xpath expr="//p[@id='fiscal_position_remark']" position="after">
                 <style>
@@ -62,58 +106,79 @@
                     {
                         vertical-align: bottom;
                     }
+                    .w100
+                    {
+                        width: 100%;
+                    }
                     .border-table
                     {
                         border: 1px solid black;
                         padding: 3px;
                     }
                 </style>
-                <table class="border-table fr inline-block" style="margin-bottom: 10px;">
-                    <tr class="border-table">
-                        <td class="border-table" rowspan="2">
-                            <![CDATA[
-                            QC Checking Compliance:
-                            <br />
-                            Quality Product : <div class="square"/> YES <div class="square"/> NO
-                            <br />
-                            Quality Packaging : <div class="square"/> YES <div class="square"/> NO 
-                            ]]>
-                        </td>
-                        <td class="border-table" colspan="2">
-                            Check by :
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="border-table">
-                            QC
-                        </td>
-                        <td class="border-table" colspan="2">
-                            Logistik
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="border-table">
-                            Stempel QC Passed
-                        </td>
-                        <td class="border-table">
-                            <![CDATA[
-
-                            <br />
-                            ________      
-                            <br />   
-                            ]]>
-                        </td>
-                        <td class="border-table">
-                            <![CDATA[
-                            
-                            
-                            <br />
-                            ________      
-                            <br />   
-                            ]]>
-                        </td>
-                    </tr>
-                </table>
+                <div style="page-break-after: always;"></div>
+                <div class="page">
+                    <div class="row" style="margin-bottom: 20px;">
+                        <p>Pengecekan Pengiriman Produk Jadi</p>
+                        <table class="border-table w100">
+                            <tr class="border-table">
+                                <th class="border-table">No</th>
+                                <th class="border-table">Parameter Pengecekan</th>
+                                <th class="border-table">Ya</th>
+                                <th class="border-table">Tidak</th>
+                                <th class="border-table">Komentar</th>
+                            </tr>
+                            <tr class="border-table">
+                                <td class="border-table">1</td>
+                                <td class="border-table">Produk yang dikirim terkemas rapih dan memiliki identifikasi yang jelas</td>
+                                <td class="border-table"></td>
+                                <td class="border-table"></td>
+                                <td class="border-table"></td>
+                            </tr>
+                            <tr class="border-table">
+                                <td class="border-table">2</td>
+                                <td class="border-table">Kendaraan dalam kondisi bersih dan tidak ada arome menyimpang</td>
+                                <td class="border-table"></td>
+                                <td class="border-table"></td>
+                                <td class="border-table"></td>
+                            </tr>
+                            <tr class="border-table">
+                                <td class="border-table">3</td>
+                                <td class="border-table">Produk tidak ciampur dengan produk selain makanan</td>
+                                <td class="border-table"></td>
+                                <td class="border-table"></td>
+                                <td class="border-table"></td>
+                            </tr>
+                            <tr class="border-table">
+                                <td class="border-table">4</td>
+                                <td class="border-table">Produk tidak dicampur dengan produk yang menimbulkan kontaminasi dan najis (bersifat haram)</td>
+                                <td class="border-table"></td>
+                                <td class="border-table"></td>
+                                <td class="border-table"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-6 col-xs-offset-3">
+                            <table style="width:100%;">
+                                <tr>
+                                    <td class="text-center" width="50%">Diperiksa Oleh</td>
+                                    <td class="text-center" width="50%">Disetujui Oleh</td>
+                                </tr>
+                                <tr>
+                                    <td style="height:100px;vertical-align:bottom">
+                                        <div style="border:1px solid black;width:200px;"/>
+                                        <p class="text-center">Logistic Staff</p>
+                                    </td>
+                                    <td style="height:100px;vertical-align:bottom;">
+                                        <div style="border:1px solid black;width:200px;"/>
+                                        <p class="text-center">Logistic Manager</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 	        </xpath>
         </template>
     </data>

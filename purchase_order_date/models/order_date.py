@@ -8,7 +8,6 @@ from dateutil.relativedelta import relativedelta
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
-    # date_orders = fields.Datetime('Order Date', default=datetime.today())
     date_orders_old = fields.Datetime(string='Order Date', default=datetime.today())
 
     @api.multi
@@ -42,18 +41,6 @@ class PurchaseOrder(models.Model):
         purchase_order_write = super(PurchaseOrder,self).write(values)
         if self.date_orders_old != self.date_order:
             self.date_orders_old = self.date_order
-            return purchase_order_write
-                        
-
-
-                    # if dates_new < dates_old and dates_old_days <= '7':
-                    #     dates_new_month = datetime.date(dates_new_year, dates_new_month, monthrange((dates_new_year), int(dates_new_month))[-1])
-                    #     dates_new_month_day = mdays[datetime.record.dates_new.month]
-                    #     dates_old = dates_old_s - timedelta(days=14) 
-                    #     if dates_new < dates_old:
-                    #         raise UserError('Tidak boleh memilih bulan sebelumnya dari bulan sekarang!')
-                    #         record.date_orders = record.date_orders_old
-                  
-
-
+        return purchase_order_write
+    
 
