@@ -5,7 +5,10 @@ class PurchaseReport(models.Model):
     _inherit = "purchase.report"
 
     order_id = fields.Many2one('purchase.order','Order Number',readonly=True)
-    delay_real = fields.Float('Avg. Days to Receival', digits=(16, 2), readonly=True, group_operator="avg")
+    delay_real = fields.Float('Avg. Days to Receival', digits=(5, 2), readonly=True, group_operator="avg")
+    qty_received = fields.Float('Qty Received', digits=(8,3), readonly=True)
+    qty_billed = fields.Float('Qty Billed', digits=(8,3), readonly=True)
+    amount_billed = fields.Float('Billed Amount', digits=(16,2), readonly=True)
 
     @api.model_cr
     def init(self):
@@ -31,11 +34,14 @@ class PurchaseReport(models.Model):
                     s.currency_id,
                     t.uom_id as product_uom,
                     sum(l.product_qty/u.factor*u2.factor) as unit_quantity,
+                    sum(l.qty_received/u.factor*u2.factor) as qty_received,
+                    sum(l.qty_invoiced/u.factor*u2.factor) as qty_billed,
                     extract(epoch from age(s.date_approve,s.date_order))/(24*60*60)::decimal(16,2) as delay,
                     extract(epoch from age(l.date_planned,s.date_order))/(24*60*60)::decimal(16,2) as delay_pass,
                     extract(epoch from age(s.delivered_at,s.date_approve))/(24*60*60)::decimal(16,2) as delay_real,
                     count(*) as nbr_lines,
                     sum(l.price_unit / COALESCE(cr.rate, 1.0) * l.product_qty)::decimal(16,2) as price_total,
+                    sum(l.price_unit / COALESCE(cr.rate, 1.0) * l.qty_invoiced)::decimal(16,2) as amount_billed,
                     avg(100.0 * (l.price_unit / COALESCE(cr.rate,1.0) * l.product_qty) / NULLIF(ip.value_float*l.product_qty/u.factor*u2.factor, 0.0))::decimal(16,2) as negociation,
                     sum(ip.value_float*l.product_qty/u.factor*u2.factor)::decimal(16,2) as price_standard,
                     (sum(l.product_qty * l.price_unit / COALESCE(cr.rate, 1.0))/NULLIF(sum(l.product_qty/u.factor*u2.factor),0.0))::decimal(16,2) as price_average,

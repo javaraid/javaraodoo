@@ -9,17 +9,6 @@ class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
     date_orders_old = fields.Datetime(string='Order Date', default=datetime.today())
-    # purchase_ids = fields.One2many(comodel_name='purchase.order.line', inverse_name='purchase_id', string='Purchase Ids')
-    qty_rec = fields.Float(string='Qty Received', store=True, compute='_get_qty_rec')
-
-    @api.multi
-    @api.depends('order_line.qty_received')
-    def _get_qty_rec(self):
-        for rec in self:
-            total = 0.0
-            for line in self.order_line:
-                total += line.qty_received
-            rec.qty_rec = total
 
     @api.multi
     @api.onchange('date_order')
@@ -52,25 +41,6 @@ class PurchaseOrder(models.Model):
         purchase_order_write = super(PurchaseOrder,self).write(values)
         if self.date_orders_old != self.date_order:
             self.date_orders_old = self.date_order
-            return purchase_order_write
-
-# class PurchaseOrderLine(models.Model):
-#     _inherit = 'purchase.order.line'
-
-#     purchase_id = fields.Many2one(comodel_name='purchase.order', string='Purchase Id')
-#     purchase_idds = fields.One2many(comodel_name='purchase.report', inverse_name='purchase_idd', string='Purchase Idds')
-#     qty_recs = fields.Float(related='purchase_id.qty_rec', string='Quantity Received', store=True)
-    
-   
-
-# class PurchaseReport(models.Model):
-#     _inherit = "purchase.report"
-
-#     purchase_idd = fields.Many2one(comodel_name='purchase.order.line', string='Purchase Idd')
-#     qty_recss = fields.Float(related='purchase_idd.qty_recs', string='Quantity Received', store=True)
-#     qty_receiveds = fields.Float('Qty Received')
-
-#     def _select(self):
-#         return super(PurchaseReport, self)._select() + ", qty_recss as qty_receiveds"
+        return purchase_order_write
     
 
