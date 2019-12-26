@@ -25,7 +25,9 @@ class PurchaseOrder(models.Model):
                 delivery_state = 'no'
             elif all(picking.state in ('done', 'cancel') for picking in order.picking_ids):
                 delivery_state = 'delivered'
-                delivered_at = order.picking_ids.sorted(key=lambda p: p.create_date, reverse=True)[0].done_at if order.picking_ids else False
+                last_picking = order.picking_ids.sorted(key=lambda p: p.create_date, reverse=True)[0] if order.picking_ids else False
+                if last_picking:
+                    delivered_at = last_picking.done_at or last_picking.x_studio_field_aixKm
             else:
                 delivery_state = 'partial'
 

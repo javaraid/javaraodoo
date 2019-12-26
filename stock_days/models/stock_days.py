@@ -18,7 +18,13 @@ class Picking(models.Model):
     def button_validate(self):
         self.done_at = datetime.now()
         self.write({'state': 'done'})
-        from_date = datetime.strptime(str(self.create_date), '%Y-%m-%d %H:%M:%S')
+        base_date = self.create_date
+        current = self
+        while current.backorder_id:
+            base_date = current.backorder_id.create_date
+            current = current.backorder_id
+
+        from_date = datetime.strptime(str(base_date), '%Y-%m-%d %H:%M:%S')
         to_date = datetime.strptime(str(self.done_at), '%Y-%m-%d %H:%M:%S')
         timedelta = to_date - from_date
         diff_day = timedelta.days + float(timedelta.seconds) / 86400
