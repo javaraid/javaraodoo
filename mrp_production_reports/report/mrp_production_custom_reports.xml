@@ -81,10 +81,6 @@
                 <p>Qty Target : <span t-field="o.product_qty"/> units</p>
                 <p>Lot # : <span t-field="o.finished_move_line_ids.lot_id"/></p>
                 <p class="fl">Exp Date :  __ - __ - ________    </p>
-                <!-- <div>
-                    <div class="square"/> <div class="square"/> <p class="middle">-</p> <div class="square"/> <div class="square"/> <p class="middle">-</p> <div class="square"/> <div class="square"/> <div class="square"/> <div class="square"/>
-                </div> -->
-                <!-- <p class="block">INPUT :</p> -->
                 <table class="border-table block w100">
                     <thead class="border-table">
                         <tr class="border-table center">
@@ -101,14 +97,18 @@
                         </tr>
                     </thead>
                     <tbody class="border-table">
-                        <tr t-foreach="o.move_raw_ids" t-as="line" class="border-table">
-                            <td class="border-table"><span t-esc="line.product_id.name"/></td>
-                            <td class="border-table center"><span t-field="line.product_uom_qty"/></td>
-                            <td class="border-table center"></td>
-                            <td class="border-table center"><span t-field="line.quantity_done"/></td>
+                        <t t-foreach="o.move_raw_ids" t-as="line" class="border-table">
+                        <t t-foreach="line.active_move_line_ids" t-as="lines">
+                            <tr>
+                            <td class="border-table center"><span t-esc="line.product_id.name"/></td>
+                            <td class="border-table center"><span t-field="lines.qty_done"/></td>
+                            <td class="border-table center"><span t-esc="lines.lot_id.name"/></td>
+                            <td class="border-table center"><span t-esc="lines.qty_done"/></td>
                             <td class="border-table center"></td>
                             <td class="border-table center"></td>
                         </tr>
+                        </t>
+                        </t>
                     </tbody>
                 </table>
                 <div class="m10" />
