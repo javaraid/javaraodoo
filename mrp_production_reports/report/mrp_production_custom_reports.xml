@@ -42,10 +42,15 @@
                     {
                         vertical-align: bottom;
                     }
+                    .table-bordered thead tr th,
+                    .table-bordered tbody tr td,
+                    .table-bordered tr,
                     .border-table
                     {
-                        border: 1px solid black;
+                        border: 1px solid black !important;
                         padding: 3px;
+                        text-align: center;
+                        vertical-align: middle;
                     }
                     .pbaa
                     {
@@ -76,47 +81,83 @@
                         margin-bottom: 10px;
                     }
                 </style>
-                <p><span t-field="o.name"/></p>
-                <p>Product Name : <span t-field="o.product_id" style="font-weight: bold;"/> Barcode :<span t-field="o.product_id.barcode" style="font-weight: bold;"/></p>
-                <p>Qty Target : <span t-field="o.product_qty"/> units</p>
-                <p>Lot # : <span t-field="o.finished_move_line_ids.lot_id"/></p>
-                <p class="fl">Exp Date :  __ - __ - ________    </p>
-                <table class="border-table block w100">
-                    <thead class="border-table">
-                        <tr class="border-table center">
-                            <th colspan="2" class="border-table center">To Consume Material</th>
-                            <th colspan="4" class="border-table center">Consumed Material</th>
+                <div class="oe_structure"/>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h2><span t-field="o.name" style="font-weight: bold;"/></h2>
+                    </div>
+                </div>
+                <div class="row mb32">
+                    <div class="col-xs-12">
+                        Product Name : <span t-field="o.product_id" style="font-weight: bold;"/>
+                    </div>
+                    <div class="col-xs-6">
+                        Barcode : <span t-field="o.product_id.barcode" style="font-weight: bold;"/><br/>
+                        Qty Target : <span t-field="o.product_qty"/> <span t-field="o.product_uom_id"/>
+                    </div>
+                    <div class="col-xs-6">
+                        Lot # : 
+                        <t t-foreach="o.finished_move_line_ids" t-as="line">
+                            <t t-if="line_last">
+                                <span t-field="line.lot_id"/>
+                            </t>
+                            <t t-else="">
+                                <span t-field="line.lot_id"/>,
+                            </t>
+                        </t>
+                        <br/>
+                        Exp Date :  ____ - ____ - ____________
+                    </div>
+                </div>     
+                
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th colspan="2">To Consume Material</th>
+                            <th colspan="4">Consumed Material</th>
                         </tr>
-                        <tr class="border-table">
-                            <th class="border-table center"  width="50%">Material Name</th>
-                            <th class="border-table center">Qty</th>
-                            <th class="border-table center">Lot #</th>
-                            <th class="border-table center">Consumed Qty</th>
-                            <th class="border-table center">Reject</th>
-                            <th class="border-table center">Retur</th>
+                        <tr>
+                            <th>Material Name</th>
+                            <th>Qty</th>
+                            <th width="100">Lot #</th>
+                            <th>Consumed Qty</th>
+                            <th>Reject</th>
+                            <th>Retur</th>
                         </tr>
                     </thead>
-                    <tbody class="border-table">
-                        <t t-foreach="o.move_raw_ids" t-as="line" class="border-table">
-                        <t t-foreach="line.active_move_line_ids" t-as="lines">
+                    <tbody>
+                        <t t-foreach="o.move_raw_ids" t-as="line">
+                        <t t-if="line.product_id.tracking != 'none'">
+                            <t t-foreach="line.active_move_line_ids" t-as="lot_line">
+                                <tr>
+                                    <td class="text-left"><span t-field="line.product_id.name"/></td>
+                                    <td><span t-field="lot_line.product_qty"/></td>
+                                    <td><span t-field="lot_line.lot_id.name"/></td>
+                                    <td><span t-field="lot_line.qty_done"/></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </t>
+                        </t>
+                        <t t-else="">
                             <tr>
-                            <td class="border-table center"><span t-esc="line.product_id.name"/></td>
-                            <td class="border-table center"><span t-field="lines.qty_done"/></td>
-                            <td class="border-table center"><span t-esc="lines.lot_id.name"/></td>
-                            <td class="border-table center"><span t-esc="lines.qty_done"/></td>
-                            <td class="border-table center"></td>
-                            <td class="border-table center"></td>
-                        </tr>
+                                <td class="text-left"><span t-field="line.product_id.name"/></td>
+                                <td><span t-field="line.reserved_availability"/></td>
+                                <td></td>
+                                <td><span t-field="line.quantity_done"/></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
                         </t>
                         </t>
                     </tbody>
                 </table>
-                <div class="m10" />
+                <!-- <div class="m10" />
                 <table class="border-table block w100">
                     <thead class="border-table">
                         <tr class="border-table">
                             <th class="border-table w68" colspan="3">Serah Terima RM dan PM</th>
-                            <td class="border-table w31" colspan="3" rowspan="23">
+                            <td class="border-table w31 text-left" colspan="3" rowspan="23">
                                 <![CDATA[
                                     <p style="font-weight: bold;">Catatan</p>
                                     <br>
@@ -132,7 +173,7 @@
                                     <br>
                                     <p>Tekstur :</p>
                                     <br>
-                                    <p>Bendah Asing :</p>
+                                    <p>Benda Asing :</p>
                                 ]]>
                             </td>
                         </tr>
@@ -209,7 +250,7 @@
                             <td class="border-table" colspan="2"></td>
                         </tr>
                         <tr class="border-table">
-                            <th class="border-table" colspan="3">Sertifikasi</th>
+                            <th class="border-table text-left" colspan="3">Sertifikasi</th>
                         </tr>
                         <tr>
                             <td style="padding: 5px;">
@@ -544,19 +585,17 @@
                         <td>Note : OK : Kondisi alat siap digunakan, tidak ada kerusakan, tidak ada kemungkinan kontaminasi silang akibat alat</td>
                         <td>Tidak : Alat mengalami kerusakan, ada kemungkinan kontaminasi silang dari alat</td>
                     </tr>                    
-                </table>
-                <table style="width:100%;">
+                </table> -->
+                <!-- <table style="width:100%;">
                     <tr style="text-center">
                         <td style="height:100px; width:50%; text-align: center; vertical-align:bottom">
-                            <!-- <div style="border:1px solid black;width:200px;"/> -->
                             <p class="text-center">Dibuat Oleh,</p>
                         </td>
                         <td style="height:100px; width:50%; text-align: center; vertical-align:bottom;">
-                            <!-- <div style="border:1px solid black;width:200px;"/> -->
                             <p class="text-center">Diperiksa Oleh,</p>
                         </td>
                     </tr>
-                </table>
+                </table> -->
 	        </xpath>
         </template>
     </data>
