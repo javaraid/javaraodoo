@@ -119,14 +119,14 @@
                 <div style="page-break-after: always;"></div>
                 <div class="page">
                     <div class="row" style="margin-bottom: 20px;">
-                        <p>Pengecekan Pengiriman Produk Jadi</p>
+                        <h4>Pengecekan Pengiriman Produk Jadi</h4>
                         <table class="border-table w100">
                             <tr class="border-table">
                                 <th class="border-table">No</th>
                                 <th class="border-table">Parameter Pengecekan</th>
-                                <th class="border-table">Ya</th>
-                                <th class="border-table">Tidak</th>
-                                <th class="border-table">Komentar</th>
+                                <th class="border-table" width="75px">Ya</th>
+                                <th class="border-table" width="75px">Tidak</th>
+                                <th class="border-table" width="30%">Komentar</th>
                             </tr>
                             <tr class="border-table">
                                 <td class="border-table">1</td>

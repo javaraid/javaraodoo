@@ -18,14 +18,18 @@ class SaleTarget(models.Model):
     _description = 'Sales Target'
 
     name = fields.Char(string='Name')
-    date_from = fields.Date(string='From')
-    date_to = fields.Date(string='To')
+    date_from = fields.Date(string='From', required=True)
+    date_to = fields.Date(string='To', required=True)
     amount_actual = fields.Float(string='Actual', compute='_get_actual')
-    amount_target = fields.Float(string='Target')
-    percentage = fields.Float(string='(%)', compute='_get_actual')
+    amount_target = fields.Float(string='Targeted Amount')
+    amount_invoiced = fields.Float(string='Invoiced Amount', compute='_get_actual')
+    percentage_amount = fields.Float(string='Accomplishment (%)', compute='_get_actual')
+    salesperson_id = fields.Many2one('res.users', 'Salesperson', ondelete='set null')
+    saleschannel_id = fields.Many2one('crm.team', 'Sales Channel', ondelete='set null')
+    company_id = fields.Many2one('res.company', 'Company', ondelete='cascade')
 
     @api.multi
-    @api.depends('date_from', 'date_to', 'amount_target')
+    @api.depends('date_from', 'date_to', 'amount_target', 'salesperson_id', 'saleschannel_id', 'company_id')
     def _get_actual(self):
         for target in self:
             if target.date_from and target.date_to:
@@ -34,13 +38,26 @@ class SaleTarget(models.Model):
                     ('confirmation_date', '>=', target.date_from),
                     ('confirmation_date', '<=', target.date_to),
                 ]
+                
+                if target.salesperson_id :
+                    domain.append(('user_id','=',target.salesperson_id.id))
+
+                if target.saleschannel_id :
+                    domain.append(('team_id','=',target.saleschannel_id.id))
+
+                if target.company_id :
+                    domain.append(('company_id','=',target.company_id))
+
                 sales = self.env['sale.order'].search(domain)
+                order_lines = sales.mapped('order_line')
                 if sales:
-                    amount_actual = sum(sales.mapped('amount_total'))
+                    amount_actual = sum(sales.mapped('amount_untaxed'))
                     target.amount_actual = amount_actual
+                    amount_invoiced = sum(line.amt_invoiced for line in order_lines)
+                    target.amount_invoiced = amount_invoiced
 
             amount_target = target.amount_target
-            target.parcentage = amount_actual / amount_target if amount_target > 0 else 0
+            target.percentage_amount = target.amount_actual / amount_target * 100 if amount_target > 0 else 0
 
 
 class SaleOrder(models.Model):

@@ -3,7 +3,7 @@
     <data>
         <template id="account_invoice_custom_reports" inherit_id="account.report_invoice_document_with_payments">
             <xpath expr="//div[@class='row mt32 mb32']" position="after">
-                <p>Vhicle Number : ________________________</p>
+                <p>Vehicle Number : ________________________</p>
 	        </xpath>
             <xpath expr="//table[@class='table table-condensed']/thead/tr/th[3]" position="after">
                 <th>Best Before Date</th>
