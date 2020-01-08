@@ -209,7 +209,7 @@
                                         <th class="border-table" colspan="3">Hasil Produksi</th>
                                     </tr>
                                     <tr class="border-table">
-                                        <td class="border-table">QC Release :</td>
+                                        <td class="border-table">ty Release :</td>
                                         <td class="border-table" colspan="2"></td>
                                     </tr>
                                     <tr class="border-table">
@@ -270,7 +270,7 @@
                                             <div class="square"/> Organic EU
                                         </td>
                                         <td style="padding: 5px;">
-                                            <div class="square"/> Organic SNI 5729:2015
+                                            <div class="square"/> Organic SNI 6729:2016
                                         </td>
                                     </tr>
                                     <tr class="text-left">
@@ -278,7 +278,7 @@
                                             <div class="square"/> Organic USDA-NOP
                                         </td>
                                         <td style="padding: 5px;">
-                                            <div class="square"/> Halal LPPOM MUI
+                                            <div class="square"/> Halal MUI
                                         </td>
                                     </tr>
                                     <tr class="text-left">
@@ -286,7 +286,7 @@
                                             <div class="square"/> Organic JAS
                                         </td>
                                         <td style="padding: 5px;">
-                                            <div class="square"/> SNI 3556:2010
+                                            <div class="square"/> SNI 3556:2010 Garam Konsumsi Beryodium
                                         </td>
                                     </tr>
                                     <tr class="border-table">
