@@ -46,7 +46,7 @@ class SaleTarget(models.Model):
                     domain.append(('team_id','=',target.saleschannel_id.id))
 
                 if target.company_id :
-                    domain.append(('company_id','=',target.company_id))
+                    domain.append(('company_id','=',target.company_id.id))
 
                 sales = self.env['sale.order'].search(domain)
                 order_lines = sales.mapped('order_line')
