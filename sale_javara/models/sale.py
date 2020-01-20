@@ -20,7 +20,7 @@ class SaleTarget(models.Model):
     name = fields.Char(string='Name')
     date_from = fields.Date(string='From', required=True)
     date_to = fields.Date(string='To', required=True)
-    amount_actual = fields.Float(string='Actual', compute='_get_actual')
+    amount_actual = fields.Float(string='Actual', compute='_get_actual', store=True)
     amount_target = fields.Float(string='Targeted Amount')
     amount_invoiced = fields.Float(string='Invoiced Amount', compute='_get_actual')
     percentage_amount = fields.Float(string='Accomplishment (%)', compute='_get_actual')

@@ -12,7 +12,9 @@
     ],
     'data': [
         'security/ir.model.access.csv',
+        'security/record_rules.xml',
         'views/sale_view.xml',
+        # 'views/_menu_item.xml',
         'report/sale_order_report.xml'
     ],
     'demo': [],

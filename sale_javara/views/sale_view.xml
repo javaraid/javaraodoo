@@ -10,6 +10,7 @@
 				<field name="amount_actual"/>
 				<field name="amount_target"/>
 				<field name="percentage_amount"/>
+				<field name="company_id"/>
 			</tree>
 		</field>
 	</record>
@@ -90,4 +91,12 @@
             </data>
         </field>
     </record>
+
+	<menuitem 
+            id="sale_target_model" 
+            name="Sale Target" 
+            parent="account.account_management_menu" 
+
+            action="sale_target_action" 
+        />
 </odoo>
