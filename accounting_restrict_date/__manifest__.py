@@ -7,7 +7,7 @@
     'author': 'Arkana, Joenan <joenan@arkana.co.id>',
     'website': 'https://www.arkana.co.id',
     'description': """Custom Editable Order Date for Accounting Javara""",
-    'depends': ['purchase'],
+    'depends': ['purchase','sale','account'],
     'data': [
         'views/order_date.xml',
         # 'views/days_to_receive.xml',
