@@ -9,6 +9,9 @@ class PurchaseReport(models.Model):
     qty_received = fields.Float('Qty Received', digits=(8,3), readonly=True)
     qty_billed = fields.Float('Qty Billed', digits=(8,3), readonly=True)
     amount_billed = fields.Float('Billed Amount', digits=(16,2), readonly=True)
+    commercial_partner_id = fields.Many2one(string='Vendor Company', readonly=True)
+    delay = fields.Float('Days to Validate', digits=(16, 2), readonly=True, group_operator="avg")
+    delay_pass = fields.Float('Days to Deliver', digits=(16, 2), readonly=True, group_operator="avg")
 
     @api.model_cr
     def init(self):

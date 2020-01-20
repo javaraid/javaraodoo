@@ -22,6 +22,12 @@
 				<xpath expr="//field[@name='picking_type_id']" position="after">
                     <field name="delivery_status"/>
                 </xpath>
+                <xpath expr="//field[@name='company_id']" position="after">
+                    <field name="rec_qty" invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='company_id']" position="after">
+                    <field name="bil_qty" invisible="1"/>
+                </xpath>
             </data>
         </field>
     </record>
