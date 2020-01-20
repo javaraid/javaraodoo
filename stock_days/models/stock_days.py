@@ -13,11 +13,14 @@ class Picking(models.Model):
     done_at = fields.Datetime('Done At')
     days = fields.Integer(string='Days to Delivery')
 
+    # Days to Deliver is duration creation date (order confirmation date) until validate date
+    # if the picking is a backorder, the ancestor creation date become the base date
     @api.multi
     @api.depends('create_date', 'done_at')
     def button_validate(self):
+        res = super(Picking, self).button_validate()
         self.done_at = datetime.now()
-        self.write({'state': 'done'})
+
         base_date = self.create_date
         current = self
         while current.backorder_id:
@@ -29,5 +32,4 @@ class Picking(models.Model):
         timedelta = to_date - from_date
         diff_day = timedelta.days + float(timedelta.seconds) / 86400
         self.days = diff_day
-        
-            
+        return res

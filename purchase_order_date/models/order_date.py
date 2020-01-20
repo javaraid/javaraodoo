@@ -41,6 +41,6 @@ class PurchaseOrder(models.Model):
         purchase_order_write = super(PurchaseOrder,self).write(values)
         if self.date_orders_old != self.date_order:
             self.date_orders_old = self.date_order
-        return purchase_order_write
+            return purchase_order_write
     
 
