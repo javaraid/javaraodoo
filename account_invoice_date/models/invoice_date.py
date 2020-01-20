@@ -9,7 +9,7 @@ class AccountInvoice(models.Model):
     _inherit = "account.invoice"
 
     # date_orders = fields.Datetime('Order Date', default=datetime.today())
-    date_invoices_old = fields.Date(string='Invoice Date')
+    date_invoices_old = fields.Date(string='Invoice Date', default=datetime.today())
 
     @api.multi
     @api.onchange('date_invoice')
