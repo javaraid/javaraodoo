@@ -9,7 +9,7 @@
     'description': """Custom Editable Order Date for Accounting Javara""",
     'depends': ['purchase','sale','account'],
     'data': [
-        'views/order_date.xml',
+        # 'views/order_date.xml',
         # 'views/days_to_receive.xml',
     ],
     'demo': [],
