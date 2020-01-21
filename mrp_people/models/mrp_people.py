@@ -10,8 +10,8 @@ from datetime import datetime
 class MrpPeople(models.Model):
     _name = 'mrp.people'
 
-    name = fields.Char('Name')
-    order_ids = fields.Many2many('mrp.production', string='Manufacture Orders')
+    name = fields.Char('Name', Required=True)
+    # order_ids = fields.Many2many('mrp.production', string='Manufacture Orders')
 
 
 class MrpProduction(models.Model):
@@ -30,11 +30,11 @@ class MrpProduction(models.Model):
 
     @api.multi
     def button_mark_done(self):
-        for record in self:
-            if not record.people_ids:
-                raise UserError('Worker harus diisi!')
-            record.done_at = datetime.now()
-            record.write({'state': 'done'})
+        res = super(MrpProduction, self).button_mark_done()
+        if not self.people_ids:
+            raise UserError('Worker harus diisi!')
+        self.done_at = datetime.now()
+        return res
 
     @api.multi
     @api.depends('done_at')
