@@ -8,7 +8,7 @@
     'website': 'https://www.arkana.co.id',
     'description': """Custom Purchase Management for Javara""",
     'depends': [
-        'purchase'
+        'purchase','stock_days'
     ],
     'data': [
         'security/ir.model.access.csv'

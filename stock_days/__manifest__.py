@@ -10,7 +10,6 @@
     'depends': ['stock'],
     'data': [
         'views/stock_days.xml',
-        # 'views/days_to_receive.xml',
     ],
     'demo': [],
     'test': [],

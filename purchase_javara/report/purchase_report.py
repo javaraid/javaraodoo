@@ -5,7 +5,7 @@ class PurchaseReport(models.Model):
     _inherit = "purchase.report"
 
     order_id = fields.Many2one('purchase.order','Order Number',readonly=True)
-    delay_real = fields.Float('Avg. Days to Receival', digits=(5, 2), readonly=True, group_operator="avg")
+    delay_real = fields.Float('Avg. Days to Receival', digits=(16, 2), readonly=True, group_operator="avg")
     qty_received = fields.Float('Qty Received', digits=(8,3), readonly=True)
     qty_billed = fields.Float('Qty Billed', digits=(8,3), readonly=True)
     amount_billed = fields.Float('Billed Amount', digits=(16,2), readonly=True)

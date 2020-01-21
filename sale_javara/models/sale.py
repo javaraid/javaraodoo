@@ -12,6 +12,37 @@ class SaleOrderLine(models.Model):
             self.price_unit = 0.0
             return
 
+class SaleOrder(models.Model):
+    _inherit = 'sale.order'
+
+    delivery_status = fields.Selection([
+            ('no', 'Not Delivered'),
+            ('partial', 'Partially Delivered'),
+            ('delivered', 'Fully Delivered')
+        ], string='Delivery State', compute='_get_delivery', store='True')
+    
+    delivered_at = fields.Datetime('Delivered at', compute='_get_delivery', store='True')
+    
+    @api.depends('state', 'picking_ids.state')
+    def _get_delivery(self):
+        for order in self:
+            delivered_at = False
+            if order.state not in ('sale', 'done'):
+                delivery_state = 'no'
+            elif all(picking.state != 'done' for picking in order.picking_ids):
+                delivery_state = 'no'
+            elif all(picking.state in ('done', 'cancel') for picking in order.picking_ids):
+                delivery_state = 'delivered'
+                last_picking = order.picking_ids.filtered(lambda p: p.picking_type_code == 'outgoing').sorted(key=lambda p: p.create_date, reverse=True)[0] if order.picking_ids else False
+                if last_picking:
+                    delivered_at = last_picking.done_at or last_picking.x_studio_field_aixKm
+            else:
+                delivery_state = 'partial'
+
+            order.update({
+                'delivery_status': delivery_state,
+                'delivered_at': delivered_at
+            })
 
 class SaleTarget(models.Model):
     _name = 'sale.target'
@@ -59,28 +90,3 @@ class SaleTarget(models.Model):
             amount_target = target.amount_target
             target.percentage_amount = target.amount_actual / amount_target * 100 if amount_target > 0 else 0
 
-
-class SaleOrder(models.Model):
-    _inherit = 'sale.order'
-
-    delivery_status = fields.Selection([
-            ('no', 'Not Delivered'),
-            ('partial', 'Partially Delivered'),
-            ('delivered', 'Fully Delivered')
-        ], string='Delivery State', compute='_get_delivery', store='True')
-    
-    @api.depends('state', 'picking_ids.state')
-    def _get_delivery(self):
-        for order in self:
-            if order.state not in ('sale', 'done'):
-                delivery_state = 'no'
-            elif all(picking.state != 'done' for picking in order.picking_ids):
-                delivery_state = 'no'
-            elif all(picking.state in ('done', 'cancel') for picking in order.picking_ids):
-                delivery_state = 'delivered'
-            else:
-                delivery_state = 'partial'
-
-            order.update({
-                'delivery_status': delivery_state
-            })
