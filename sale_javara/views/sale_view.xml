@@ -22,20 +22,30 @@
             <form string="Sales Target">
 				<sheet>
 					<group>
-						<field name="name" />
+						<field name="name" placeholder="Target Name"/>
 						<group>
 							<field name="amount_target"/>
-							<field name="salesperson_id"/>
-							<field name="saleschannel_id"/>
+							<field name="amount_actual"/>
+							<field name="qty_actual" attrs="{'invisible': [('product_id','=',False)]}"/>
+						</group>
+						<group>
+							<field name="amount_invoiced"/>
+							<field name="percentage_amount"/>
+						</group>
+					</group>
+					<group string="Parameters">
+						<group>
 							<label for="date_from" string="Period"/>
 							<div>
 								<field name="date_from" class="oe_inline"/> - <field name="date_to" class="oe_inline"/>
 							</div>
+							<field name="salesperson_id" options="{&quot;always_reload&quot;: True}"/>
+							<field name="saleschannel_id" options="{&quot;always_reload&quot;: True}"/>
+							<field name="customer_id" domain="[('customer','=',True)]" options="{&quot;always_reload&quot;: True}"/>
 						</group>
 						<group>
-							<field name="amount_actual"/>
-							<field name="amount_invoiced"/>
-							<field name="percentage_amount"/>
+							<field name="product_id" domain="[('sale_ok','=',True)]" options="{&quot;always_reload&quot;: True}"/>
+							<field name="qty_target" attrs="{'invisible': [('product_id','=',False)], 'required': [('product_id','=',True)]}"/>
 							<field name="company_id"/>
 						</group>
 					</group>
