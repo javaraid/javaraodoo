@@ -39,7 +39,7 @@ class PurchaseReport(models.Model):
                     sum(l.product_qty/u.factor*u2.factor) as unit_quantity,
                     sum(l.qty_received/u.factor*u2.factor) as qty_received,
                     sum(l.qty_invoiced/u.factor*u2.factor) as qty_billed,
-                    extract(epoch from age(s.date_approve,s.date_order))/(24*60*60)::decimal(16,2) as delay,
+                    extract(epoch from age(s.date_order,s.date_approve))/(24*60*60)::decimal(16,2) as delay,
                     extract(epoch from age(l.date_planned,s.date_order))/(24*60*60)::decimal(16,2) as delay_pass,
                     extract(epoch from age(s.delivered_at,s.date_approve))/(24*60*60)::decimal(16,2) as delay_real,
                     count(*) as nbr_lines,

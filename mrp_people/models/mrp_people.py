@@ -20,7 +20,7 @@ class MrpProduction(models.Model):
     people_ids = fields.Many2many('mrp.people', string='Workers')
     people_count = fields.Float(compute='_get_people_count', store=True, string='Total Worker', group_operator="avg", digits=(4, 1))
     done_at =  fields.Datetime(string='Done At')
-    days = fields.Integer(compute='_get_date', store=True, string='Lead Time', group_operator="avg")
+    days = fields.Float(compute='_get_date', digits=(4, 1), store=True, string='Lead Time', group_operator="avg")
 
     @api.multi
     @api.depends('people_ids.name') 
@@ -30,9 +30,9 @@ class MrpProduction(models.Model):
 
     @api.multi
     def button_mark_done(self):
-        res = super(MrpProduction, self).button_mark_done()
         if not self.people_ids:
             raise UserError('Worker harus diisi!')
+        res = super(MrpProduction, self).button_mark_done()
         self.done_at = datetime.now()
         return res
 

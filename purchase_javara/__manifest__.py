@@ -11,7 +11,8 @@
         'purchase','stock_days'
     ],
     'data': [
-        'security/ir.model.access.csv'
+        'security/ir.model.access.csv',
+        'views/purchase_view.xml'
     ],
     'demo': [],
     'test': [
