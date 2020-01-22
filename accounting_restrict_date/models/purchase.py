@@ -15,7 +15,7 @@ class PurchaseOrder(models.Model):
         user = self.env.user
         if not user.has_group('account.group_account_manager'):
             start_of_month = datetime.today().replace(day=1,hour=0,minute=0,second=0)
-            date_order = datetime.strptime(self.date_order, '%Y-%m-%d %H:%M:%S').replace(day=1,hour=0,minute=0,second=0)
+            date_order = datetime.strptime(self.date_order, '%Y-%m-%d %H:%M:%S').replace(hour=0,minute=0,second=0)
             if date_order < start_of_month:
                 raise UserError('Tidak boleh input dokumen bulan lalu! Hubungi Admin untuk info selengkapnya')
 
