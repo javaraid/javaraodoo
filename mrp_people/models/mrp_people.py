@@ -10,7 +10,7 @@ from datetime import datetime
 class MrpPeople(models.Model):
     _name = 'mrp.people'
 
-    name = fields.Char('Name', Required=True)
+    name = fields.Char('Name', required=True)
     # order_ids = fields.Many2many('mrp.production', string='Manufacture Orders')
 
 
@@ -18,7 +18,7 @@ class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
     people_ids = fields.Many2many('mrp.people', string='Workers')
-    people_count = fields.Integer(compute='_get_people_count', store=True, string='Total Worker', group_operator="avg")
+    people_count = fields.Float(compute='_get_people_count', store=True, string='Total Worker', group_operator="avg", digits=(4, 1))
     done_at =  fields.Datetime(string='Done At')
     days = fields.Integer(compute='_get_date', store=True, string='Lead Time', group_operator="avg")
 

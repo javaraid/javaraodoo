@@ -95,7 +95,7 @@
                         Qty Target : <span t-field="o.product_qty"/> <span t-field="o.product_uom_id"/>
                     </div>
                     <div class="col-xs-6">
-                        Lot # : <span t-field="o.finished_move_line_ids.lot_id"/> <br/>
+                        Lot # : <t t-if="o.finished_move_line_ids.lot_id"><span t-field="o.finished_move_line_ids.lot_id"/></t><t t-else=""><span> - </span></t><br/>
                         Best Before Date :  ____ - ____ - ____________
                     </div>
                 </div>
@@ -103,15 +103,14 @@
                     <thead class="border-table">
                         <tr class="border-table center">
                             <th colspan="2" class="border-table center">To Consume Material</th>
-                            <th colspan="4" class="border-table center">Consumed Material</th>
+                            <th colspan="2" class="border-table center">Consumed Material</th>
                         </tr>
                         <tr class="border-table">
                             <th class="border-table" width="50%">Material Name</th>
                             <th class="border-table center">Qty</th>
                             <th class="border-table center">Lot #</th>
                             <th class="border-table center">Consumed Qty</th>
-                            <th class="border-table center">Reject</th>
-                            <th class="border-table center">Retur</th>
+                            <th class="border-table center">UoM</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -120,11 +119,10 @@
                             <t t-foreach="line.active_move_line_ids" t-as="lot_line">
                                 <tr>
                                     <td class="border-table"><span t-field="line.product_id.name"/></td>
-                                    <td class="border-table center"><span t-field="lot_line.product_qty"/></td>
+                                    <td class="border-table center"><span t-field="line.product_uom_qty"/></td>
                                     <td class="border-table center"><span t-field="lot_line.lot_id.name"/></td>
                                     <td class="border-table center"><span t-field="lot_line.qty_done"/></td>
-                                    <td></td>
-                                    <td></td>
+                                    <td class="border-table center"><span t-field="line.product_uom"/></td>
                                 </tr>
                             </t>
                         </t>
@@ -132,10 +130,9 @@
                         <tr>
                             <td class="border-table"><span t-esc="line.product_id.name"/></td>
                             <td class="border-table center"><span t-esc="line.product_uom_qty"/></td>
-                            <td class="border-table center"></td>
+                            <td class="border-table center"> - </td>
                             <td class="border-table center"><span t-esc="line.quantity_done"/></td>
-                            <td class="border-table center"></td>
-                            <td class="border-table center"></td>
+                            <td class="border-table center"><span t-field="line.product_uom"/></td>
                         </tr>
                         </t>
                         </t>
