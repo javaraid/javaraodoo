@@ -103,7 +103,7 @@
                     <thead class="border-table">
                         <tr class="border-table center">
                             <th colspan="2" class="border-table center">To Consume Material</th>
-                            <th colspan="2" class="border-table center">Consumed Material</th>
+                            <th colspan="3" class="border-table center">Consumed Material</th>
                         </tr>
                         <tr class="border-table">
                             <th class="border-table" width="50%">Material Name</th>

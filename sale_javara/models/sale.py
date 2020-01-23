@@ -68,7 +68,7 @@ class SaleTarget(models.Model):
     @api.depends('date_from', 'date_to', 'amount_target', 'salesperson_id', 'saleschannel_id', 'company_id', 'customer_id', 'product_id', 'qty_target')
     def _get_actual(self):
         for target in self:
-            if target.amount_target <= 0 or (target.product_id and target.qty_actual <= 0):
+            if target.amount_target <= 0 or (target.product_id and target.qty_target <= 0):
                 continue
             else:
                 if target.date_from and target.date_to:
