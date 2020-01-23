@@ -32,6 +32,8 @@ class MrpProduction(models.Model):
     def button_mark_done(self):
         if not self.people_ids:
             raise UserError('Worker harus diisi!')
+        if datetime.now() <= datetime.strptime(self.date_planned_start, '%Y-%m-%d %H:%M:%S'):
+            raise UserError('Deadline Start harus lebih awal daripada waktu selesai!')
         res = super(MrpProduction, self).button_mark_done()
         self.done_at = datetime.now()
         return res
