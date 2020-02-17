@@ -18,7 +18,7 @@ class AccountInvoice(models.Model):
             if date_invoice < start_of_month:
                 raise UserError('Tidak boleh input dokumen bulan lalu! Hubungi Admin untuk info selengkapnya')
 
-class AccountInvoiceRefund(models.Model):
+class AccountInvoiceRefund(models.TransientModel):
     _inherit = "account.invoice.refund"
 
     @api.onchange('date_invoice')
