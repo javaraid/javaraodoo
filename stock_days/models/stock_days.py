@@ -7,6 +7,7 @@ from odoo.exceptions import UserError
 from odoo.tools import float_compare
 from datetime import datetime
 
+
 class Picking(models.Model):
     _inherit = "stock.picking"
 
@@ -14,7 +15,8 @@ class Picking(models.Model):
     days = fields.Integer(string='Days to Delivery')
 
     # Days to Deliver is duration creation date (order confirmation date) until validate date
-    # if the picking is a backorder, the ancestor creation date become the base date
+    # if the picking is a backorder, the ancestor creation date become the
+    # base date
     @api.multi
     @api.depends('create_date', 'done_at')
     def button_validate(self):
@@ -32,4 +34,15 @@ class Picking(models.Model):
         timedelta = to_date - from_date
         diff_day = timedelta.days + float(timedelta.seconds) / 86400
         self.days = diff_day
+        return res
+
+
+class ReturnPicking(models.TransientModel):
+    _inherit = 'stock.return.picking'
+
+    @api.model
+    def default_get(self, fields):
+        res = super(ReturnPicking, self).default_get(fields)
+        for i in range(0, len(res['product_return_moves'])):
+            res['product_return_moves'][i][2]['to_refund'] = True
         return res
