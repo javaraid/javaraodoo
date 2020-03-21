@@ -12,8 +12,13 @@ class SaleReport(models.Model):
     
     delay_real = fields.Float('Avg. Days to Deliver', digits=(16, 2), readonly=True, group_operator="avg")
 
+    amt_invoiced_untax = fields.Float('Amount Invoiced Untaxed', readonly=True)
+
     def _select(self):
-        return super(SaleReport, self)._select() + ", extract(epoch from age(s.delivered_at,s.confirmation_date))/(24*60*60)::decimal(16,2) as delay_real"
+        return super(SaleReport, self)._select() + \
+        """, 
+        extract(epoch from age(s.delivered_at,s.confirmation_date))/(24*60*60)::decimal(16,2) as delay_real, 
+        sum(l.amt_invoiced_untax / COALESCE(cr.rate, 1.0)) as amt_invoiced_untax"""
 
     def _group_by(self):
         return super(SaleReport, self)._group_by() + ", s.delivered_at"

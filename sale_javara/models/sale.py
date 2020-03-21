@@ -11,6 +11,53 @@ class SaleOrderLine(models.Model):
         if not self.product_uom or not self.product_id:
             self.price_unit = 0.0
             return
+    
+    amt_invoiced_untax = fields.Monetary(string='Amount Invoiced Untax', compute='_compute_invoice_amount', compute_sudo=True, store=True)
+
+    @api.depends('state',
+                 'price_reduce_taxinc',
+                 'qty_delivered',
+                 'invoice_lines',
+                 'invoice_lines.price_total',
+                 'invoice_lines.invoice_id',
+                 'invoice_lines.invoice_id.state',
+                 'invoice_lines.invoice_id.refund_invoice_ids',
+                 'invoice_lines.invoice_id.refund_invoice_ids.state',
+                 'invoice_lines.invoice_id.refund_invoice_ids.amount_total')
+    def _compute_invoice_amount(self):
+        for line in self:
+            # Invoice lines referenced by this line
+            invoice_lines = line.invoice_lines.filtered(lambda l: l.invoice_id.state in ('open', 'paid'))
+            # Refund invoices linked to invoice_lines
+            refund_invoices = invoice_lines.mapped('invoice_id.refund_invoice_ids').filtered(lambda inv: inv.state in ('open', 'paid'))
+            refund_invoice_lines = refund_invoices.mapped('invoice_line_ids').filtered(lambda l: l.product_id == line.product_id)
+            # If the currency of the invoice differs from the sale order, we need to convert the values
+            if line.invoice_lines and line.invoice_lines[0].currency_id \
+                    and line.invoice_lines[0].currency_id != line.currency_id:
+                invoiced_amount_total = sum([inv_line.currency_id.with_context({'date': inv_line.invoice_id.date}).compute(inv_line.price_total, line.currency_id)
+                                             for inv_line in invoice_lines])
+                refund_amount_total = sum([inv_line.currency_id.with_context({'date': inv_line.invoice_id.date}).compute(inv_line.price_total, line.currency_id)
+                                           for inv_line in refund_invoice_lines])
+                invoiced_amount_untax = sum([inv_line.currency_id.with_context({'date': inv_line.invoice_id.date}).compute(inv_line.price_subtotal, line.currency_id)
+                                             for inv_line in invoice_lines])
+                refund_amount_untax = sum([inv_line.currency_id.with_context({'date': inv_line.invoice_id.date}).compute(inv_line.price_subtotal, line.currency_id)
+                                           for inv_line in refund_invoice_lines])
+            else:
+                invoiced_amount_total = sum(invoice_lines.mapped('price_total'))
+                refund_amount_total = sum(refund_invoice_lines.mapped('price_total'))
+                invoiced_amount_untax = sum(invoice_lines.mapped('price_subtotal'))
+                refund_amount_untax = sum(refund_invoice_lines.mapped('price_subtotal'))
+            # Total of remaining amount to invoice on the sale ordered (and draft invoice included) to support upsell (when
+            # delivered quantity is higher than ordered one). Draft invoice are ignored on purpose, the 'to invoice' should
+            # come only from the SO lines.
+            total_sale_line = line.price_total
+            if line.product_id.invoice_policy == 'delivery':
+                total_sale_line = line.price_reduce_taxinc * line.qty_delivered
+
+            line.amt_invoiced = invoiced_amount_total - refund_amount_total
+            line.amt_to_invoice = (total_sale_line - invoiced_amount_total) if line.state in ['sale', 'done'] else 0.0
+            line.amt_invoiced_untax = invoiced_amount_untax - refund_amount_untax
+
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
