@@ -4,6 +4,7 @@ from odoo import models, fields, api
 class AccountInvoiceLine(models.Model):
     _inherit = "account.invoice.line"
 
+    # price_total to comply with price_subtotal (Price Without Tax)
     price_total_signed = fields.Monetary(string='Total Amount Signed', currency_field='company_currency_id',
         store=True, readonly=True, compute='_compute_price',
         help="Total amount in the currency of the company, negative for credit note.")
