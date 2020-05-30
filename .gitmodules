@@ -1,0 +1,9 @@
+[submodule "guohuadeng/app-odoo"]
+	path = guohuadeng/app-odoo
+	url = git@github.com:guohuadeng/app-odoo.git
+	branch = 13.0
+
+[submodule "guohuadeng/app-odoo"]
+	path = guohuadeng/app-odoo
+	url = git@github.com:guohuadeng/app-odoo.git
+	branch = 13.0
