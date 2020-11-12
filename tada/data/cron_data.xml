@@ -1,0 +1,23 @@
+<odoo>
+	<record id="tada_product_cron" model="ir.cron">
+        <field name="name">Tada: Synchronization</field>
+        <field name="model_id" ref="model_tada_tada" />
+        <field name="state">code</field>
+        <field name="code">model._sync()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+    
+    <record id="tada_product_variant_cron" model="ir.cron">
+        <field name="name">Tada: Variant Synchronization</field>
+        <field name="model_id" ref="model_tada_product" />
+        <field name="state">code</field>
+        <field name="code">model._sync_variant()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+</odoo>
