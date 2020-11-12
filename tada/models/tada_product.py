@@ -42,7 +42,7 @@ class TadaCategory(models.Model):
         headers = {'Content-Type': 'application/json', 'Authorization': authorization}
         auth_response = requests.get(base_api_url + CategoryUrl, headers=headers, timeout=10.0)
         resp_json = auth_response.json()
-        self._cr.execute('select id, categid from %s' %self._table)
+        self._cr.execute('select id, categid from %s where tada_id=%d' %self._table, tada_id.id)
         categories = {categid: id for id, categid in self._cr.fetchall()}
         parent_not_found = {}
         for resp in resp_json['data']:
@@ -94,7 +94,6 @@ class TadaProduct(models.Model):
     _name = 'tada.product'
     _description = 'Tada Products'
     
-    name = fields.Char(required=True)
     tada_id = fields.Many2one('tada.tada', 'Tada Account', ondelete='cascade')
     productid = fields.Integer(index=True, readonly=True) # id
     category_id = fields.Many2one('tada.category', 'Category') # CategoryId
@@ -102,7 +101,7 @@ class TadaProduct(models.Model):
     is_digital = fields.Boolean() # isDigital
     item_type = fields.Char('Type') # itemType
     swap_redeem = fields.Char() # swapRedeem
-    name = fields.Char() # name
+    name = fields.Char(required=True) # name
     description = fields.Html(compute='_compute_description', inverse='_inverse_description', store=True) # description
     image = fields.Char(compute='_compute_image', inverse='_inverse_image', store=True) # image
     prefix = None # prefix
@@ -119,11 +118,16 @@ class TadaProduct(models.Model):
     image_view = fields.Char(related='image')
     variant_ids = fields.One2many('tada.product.variant', 'product_id', 'Product Variants')
     has_variant = fields.Boolean(compute='_compute_has_variant', store=True)
+    system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product')
+    
+    def _compute_system_product(self):
+        for rec in self:
+            rec
+        return
     
     @api.depends('variant_ids.price')
     def _compute_price(self):
         for rec in self:
-            import pdb;pdb.set_trace()
             if rec.has_variant:
                 continue
             rec.price = rec.variant_ids.price
@@ -179,6 +183,10 @@ class TadaProduct(models.Model):
         return
     
     def act_sync(self):
+        self = self.with_context(sync=True)
+        Stock = self.env['tada.stock']
+        Category = self.env['tada.category']
+        Variant = self.env['tada.product.variant']
         tada_id = self.tada_id
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         access_token = tada_id.access_token
@@ -186,10 +194,12 @@ class TadaProduct(models.Model):
         headers = {'Content-Type': 'application/json', 'Authorization': authorization}
         auth_response = requests.get(base_api_url + ProductDetailUrl.format(itemid=self.productid), headers=headers, timeout=10.0)
         resp_json = auth_response.json()
-        self._cr.execute('select id, categid from %s' %self.mapped('category_id')._table)
+        self._cr.execute('select id, categid from %s where tada_id=%d' %Category._table, tada_id.id)
         categories = {categid: id for id, categid in self._cr.fetchall()}
-        self._cr.execute('select id, variantid from %s where product_id=%d' %(self.variant_ids._table, self.id))
-        variants = {variantid: id for id, variantid in self._cr.fetchall()}
+        self._cr.execute('select id, variantid from %s where product_id=%d' %(Variant._table, self.id))
+        variants = {variant: id for id, variantid in self._cr.fetchall()}
+        self._cr.execute('select id, stockid from %s' %(Stock._table))
+        stocks = {stockid: id for id, stockid in self._cr.fetchall()}
         productid = resp_json['id']
         category_id = categories.get(resp_json['CategoryId'], False)
         is_digital = resp_json['isDigital']
@@ -249,12 +259,52 @@ class TadaProduct(models.Model):
                             'updatedAt': updatedAt,
                             }
             variant_id = variants.get(variantid, False)
+            stock = variant['Stock']
+            stockid = stock['id']
+            stock_id = stocks.get(stockid, False)
+            if not stock_id:
+                stock_type = stock['stockType']
+                name = stock['name']
+                terms = stock['terms']
+                price = stock['price']
+                default_exp_type = stock['defaultExpType']
+                default_exp = stock['defaultExp']
+                default_exp_date = stock['defaultExpDate']
+                is_limited = stock['isLimited']
+                quantity = stock['quantity']
+                image = stock['image']
+                weight = stock['weight']
+                length = stock['length']
+                height = stock['height']
+                width = stock['width']
+                active = stock['active']
+                createdAt = stock['createdAt']
+                updatedAt = stock['updatedAt']
+                stock_vals = {'stockid': stockid,
+                              'stock_type': stock_type,
+                              'name': name,
+                              'terms': terms,
+                              'price': price,
+                              'default_exp_type': default_exp_type,
+                              'default_exp': default_exp,
+                              'default_exp_date': default_exp_date,
+                              'is_limited': is_limited,
+                              'quantity': quantity,
+                              'image': image,
+                              'weight': weight,
+                              'length': length,
+                              'height': height,
+                              'width': width,
+                              'active': active,
+                              'createdAt': createdAt,
+                              'updatedAt': updatedAt,}
+                stock_id = Stock.create(stock_vals).id
+                stocks.update({stockid: stock_id})
+            variant_vals['stock_id'] = stock_id
             if variant_id:
                 variant_line.append((1, variant_id, variant_vals))
             else:
                 variant_line.append((0, 0, variant_vals))
-        stock_id = stocks.get(stockid, False)
-        vals['stock_id'] = stock_id
         self.write(vals)
     
     @api.model
@@ -276,9 +326,9 @@ class TadaProduct(models.Model):
             params['page'] += 1
             auth_response = requests.get(base_api_url + ProductUrl, params=params, headers=headers, timeout=10.0)
             resp_json = auth_response.json()
-            self._cr.execute('select id, categid from %s' %self.mapped('category_id')._table)
+            self._cr.execute('select id, categid from %s where tada_id=%d' %(self.mapped('category_id')._table, tada_id.id))
             categories = {categid: id for id, categid in self._cr.fetchall()}
-            self._cr.execute('select id, productid from %s' %self._table)
+            self._cr.execute('select id, productid from %s where tada_id=%d' %(self._table, tada_id.id))
             products = {prodid: id for id, prodid in self._cr.fetchall()}
             for resp in resp_json['data']:
                 count_item += 1
@@ -336,6 +386,7 @@ class TadaProductVariant(models.Model):
     _description = 'Tada Products Variant'
     
     product_id = fields.Many2one('tada.product', 'Product', required=True, index=True)
+    tada_id = fields.Many2one('tada.tada', 'Tada', related='product_id.tada_id', store=True, index=True)
     variantid = fields.Integer(readonly=True) # id
     name = fields.Char(required=True) # name
     description = fields.Html() # description
@@ -351,12 +402,119 @@ class TadaProductVariant(models.Model):
     updatedAt = fields.Datetime(readonly=True) # updatedAt
     stock_id = fields.Many2one('tada.stock', 'Stocks', required=False, index=True)
     image_view = fields.Char(related='image')
+    system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product', store=True)
+    
+    @api.depends('sku')
+    def _compute_system_product(self):
+        Product = self.env['product.product']
+        for rec in self:
+            sku_lst = rec.sku.split(';')
+            if len(sku_lst) == 1:
+                operator = '='
+                sku = sku_lst[0]
+            else:
+                operator = 'in'
+                sku = sku_lst
+            
+            system_product_ids = Product.search([('default_code', operator, sku)])
+            rec.system_product_ids = [(6,0,system_product_ids.ids)]
+        return
     
     @api.model
     def _update_product_variant(self, itemid, vals):
         product_id = self.search([('productid', '=', itemid)])
-        
-        
-
-
-
+    
+    def act_sync(self):
+        self = self.with_context(sync=True)
+        Stock = self.env['tada.stock']
+        Category = self.env['tada.category']
+        Product = self.env['tada.product']
+        product_id = self.product_id
+        tada_id = product_id.tada_id
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        access_token = tada_id.access_token
+        authorization = 'Bearer {}'.format(access_token)
+        headers = {'Content-Type': 'application/json', 'Authorization': authorization}
+        auth_response = requests.get(base_api_url + VariantDetailUrl.format(itemid=product_id.productid, variantId=self.variantid), headers=headers, timeout=10.0)
+        resp_json = auth_response.json()
+        self._cr.execute('select id, variantid from %s where product_id=%d' %(self._table, product_id.id))
+        variants = {variantid: id for id, variantid in self._cr.fetchall()}
+        self._cr.execute('select id, stockid from %s' %(Stock._table))
+        stocks = {stockid: id for id, stockid in self._cr.fetchall()}
+        variant = resp_json
+        variantid = variant['id']
+        name = variant['name']
+        description = variant['description']
+        image = variant['image']
+        sku = variant['sku']
+        value_type = variant['valueType']
+        min_price = variant['minPrice']
+        is_multi_price = variant['isMultiPrice']
+        price = variant['price']
+        source_type = variant['sourceType']
+        active = variant['active']
+        createdAt = variant['createdAt']
+        updatedAt = variant['updatedAt']
+        variant_vals = {'variantid': variantid,
+                        'name': name,
+                        'description': description,
+                        'image': image,
+                        'sku': sku,
+                        'value_type': value_type,
+                        'min_price': min_price,
+                        'is_multi_price': is_multi_price,
+                        'price': price,
+                        'source_type': source_type,
+                        'active': active,
+                        'createdAt': createdAt,
+                        'updatedAt': updatedAt,
+                        }
+        variant_id = variants.get(variantid, False)
+        stock = variant['Stock']
+        stockid = stock['id']
+        stock_id = stocks.get(stockid, False)
+        if not stock_id:
+            stock_type = stock['stockType']
+            name = stock['name']
+            terms = stock['terms']
+            price = stock['price']
+            default_exp_type = stock['defaultExpType']
+            default_exp = stock['defaultExp']
+            default_exp_date = stock['defaultExpDate']
+            is_limited = stock['isLimited']
+            quantity = stock['quantity']
+            image = stock['image']
+            weight = stock['weight']
+            length = stock['length']
+            height = stock['height']
+            width = stock['width']
+            active = stock['active']
+            createdAt = stock['createdAt']
+            updatedAt = stock['updatedAt']
+            stock_vals = {'stockid': stockid,
+                          'stock_type': stock_type,
+                          'name': name,
+                          'terms': terms,
+                          'price': price,
+                          'default_exp_type': default_exp_type,
+                          'default_exp': default_exp,
+                          'default_exp_date': default_exp_date,
+                          'is_limited': is_limited,
+                          'quantity': quantity,
+                          'image': image,
+                          'weight': weight,
+                          'length': length,
+                          'height': height,
+                          'width': width,
+                          'active': active,
+                          'createdAt': createdAt,
+                          'updatedAt': updatedAt,}
+            stock_id = Stock.create(stock_vals).id
+            stocks.update({stockid: stock_id})
+        variant_vals['stock_id'] = stock_id
+        if variant_id:
+            self.browse(variant_id).write(variant_vals)
+        else:
+            self.create(variant_vals)
+        return
+    

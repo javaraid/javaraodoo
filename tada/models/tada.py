@@ -1,6 +1,7 @@
 import re
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
+from addons.event_sale.models.product import Product
 
 
 class TadaTada(models.Model):
@@ -11,15 +12,16 @@ class TadaTada(models.Model):
     name = fields.Char('Name')
     username = fields.Char('Username', required=True)
     access_token = fields.Char('Token')
-    expired_at = fields.Datetime('Expired At')
+    expired_at = fields.Datetime('Expired At', readonly=True)
     state = fields.Selection([('new', 'New'), ('establish', 'Established'), ('expired', 'Expired')], 'State', default='new')
-    category_ids = fields.One2many('tada.category', 'tada_id', 'Category')
-    product_ids = fields.One2many('tada.product', 'tada_id', 'Product')
+    category_ids = fields.One2many('tada.category', 'tada_id', 'Categories')
+    product_ids = fields.One2many('tada.product', 'tada_id', 'Products')
     # mId = fields.Char()
+    order_ids = fields.One2many('tada.order', 'tada_id', 'Orders')
     
     @api.constrains('username')
     def _check_username(self):
-        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+        regex = r'[\w.-]+@[\w.-]+.\w+'
         if not re.search(regex,self.username):  
             raise ValidationError("Invalid Email")
     
@@ -30,9 +32,29 @@ class TadaTada(models.Model):
             tada_id.act_sync()
     
     def act_sync(self):
-        self.category_ids._get_on_tada(self.access_token)
-        self.product_ids._get_on_tada(self.access_token)
+        self = self.with_context(sync=True)
+        Category = self.env['tada.category']
+        Product = self.env['tada.product']
+        Order = self.env['tada.order']
+        Category._get_on_tada(self.access_token)
+        Product._get_on_tada(self.access_token)
+        Order._get_on_tada(self.access_token)
+    
+    def act_sync_order(self):
+        self = self.with_context(sync=True)
+        Order = self.env['tada.order']
+        Order._get_on_tada(self.access_token)
+    
+    def act_sync_product(self):
+        self = self.with_context(sync=True)
+        Product = self.env['tada.product']
+        Product._get_on_tada(self.access_token)
         
+    def act_sync_category(self):
+        self = self.with_context(sync=True)
+        Category = self.env['tada.category']
+        Category._get_on_tada(self.access_token)
+
 
 class TadaStore(models.Model):
     _name = 'tada.store'

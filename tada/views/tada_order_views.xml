@@ -4,7 +4,7 @@
 		<field name="model">tada.order</field>
 		<field name="arch" type="xml">
 			<tree>
-				<field name="name" />
+				<field name="order_number" />
 			</tree>
 		</field>
 	</record>
@@ -14,7 +14,7 @@
 		<field name="model">tada.order</field>
 		<field name="arch" type="xml">
 			<form>
-				<field name="name" />
+				<field name="order_number" />
 			</form>
 		</field>
 	</record>
