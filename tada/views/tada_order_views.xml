@@ -1,0 +1,27 @@
+<odoo>
+	<record model="ir.ui.view" id="order_view_tree">
+		<field name="name">Order</field>
+		<field name="model">tada.order</field>
+		<field name="arch" type="xml">
+			<tree>
+				<field name="name" />
+			</tree>
+		</field>
+	</record>
+	
+	<record model="ir.ui.view" id="order_view_form">
+		<field name="name">Order</field>
+		<field name="model">tada.order</field>
+		<field name="arch" type="xml">
+			<form>
+				<field name="name" />
+			</form>
+		</field>
+	</record>
+	
+	<record model="ir.actions.act_window" id="act_tada_order">
+		<field name="name">Orders</field>
+		<field name="res_model">tada.order</field>
+		<field name="view_mode">tree,form</field>
+	</record>
+</odoo>
