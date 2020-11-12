@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tada_tada,access_tada_tada,model_tada_tada,base.group_user,1,1,1,1
+access_tada_store,access_tada_store,model_tada_store,base.group_user,1,1,1,1
+access_tada_category,access_tada_category,model_tada_category,base.group_user,1,1,1,1
+access_tada_stock,access_tada_stock,model_tada_stock,base.group_user,1,1,1,1
+access_tada_product,access_tada_product,model_tada_product,base.group_user,1,1,1,1
+access_tada_product_variant,access_tada_product_variant,model_tada_product_variant,base.group_user,1,1,1,1
+access_tada_order,access_tada_order,model_tada_order,base.group_user,1,1,1,1
+access_tada_order_line,access_tada_order_line,model_tada_order_line,base.group_user,1,1,1,1
+access_tada_fee,access_tada_fee,model_tada_fee,base.group_user,1,1,1,1
+access_tada_payment,access_tada_payment,model_tada_payment,base.group_user,1,1,1,1
