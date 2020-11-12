@@ -3,4 +3,11 @@
          <field name="key">tada.base_api_url</field>
          <field name="value">https://staging-distribution-api.gift.id</field>
      </record>
+     
+     <record id="salesteam_tada_sales" model="crm.team">
+          <field name="name">Tada</field>
+          <field name="company_id" eval="False"/>
+          <field name="active" eval="True"/>
+          <field name="team_type" eval="'tada'"/>
+      </record>
 </odoo>

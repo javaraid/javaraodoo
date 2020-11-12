@@ -18,6 +18,9 @@
 				<header>
 					<button name="%(act_tada_authenticate)d" type="action" string="Authenticate" class="btn-primary" />
 					<button name="act_sync" type="object" string="Syncronize" class="btn-primary" />
+					<button name="act_sync_category" type="object" string="Get Categories" class="btn-primary" />
+					<button name="act_sync_product" type="object" string="Get Products" class="btn-primary" />
+					<button name="act_sync_order" type="object" string="Get Order" class="btn-primary" />
 					<field name="state" widget="statusbar" />
 				</header>
 				<sheet>
@@ -32,6 +35,9 @@
 						</page>
 						<page name="product" string="Products">
 							<field name="product_ids" />
+						</page>
+						<page name="order" string="Orders">
+							<field name="order_ids" />
 						</page>
 					</notebook>
 				</sheet>
