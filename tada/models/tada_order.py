@@ -59,6 +59,48 @@ class TadaOrder(models.Model):
         return
     
     @api.model
+    def _convert_resp_to_vals(self, tada_id, resp_dict,  variants):
+        order = resp_dict
+        orderid = order['id']
+        requester_type = order['requesterType']
+        requesterId = order['requesterId']
+        order_type = order['orderType']
+        order_number = order['orderNumber']
+        order_reference = order['orderReference']
+        total = order['total']
+        total_all = order['totalAll']
+        status = order['status']
+        request_delivery_date = order['requestDeliveryDate']
+        notes = order['notes']
+#                 receiver = order['receiver']
+#                 recipient_id = customers.get(order['RecipientId'], False)
+        internal_reference = order['internalReference']
+#                 shipping`Id = order['ShippingId']
+#                 store_id = order['storeId']
+        createdAt = order['createdAt']
+        updatedAt = order['updatedAt']
+        order_vals = {'tada_id': tada_id.id,
+                    'orderid': orderid,
+                    'requester_type': requester_type,
+                    'requesterId': requesterId,
+                    'order_type': order_type,
+                    'order_number': order_number,
+                    'order_reference': order_reference,
+                    'total': total,
+                    'total_all': total_all,
+                    'status': status,
+                    'request_delivery_date': request_delivery_date,
+                    'notes': notes,
+#                             'receiver': receiver,
+#                             'recipient_id': recipient_id,
+                    'internal_reference': internal_reference,
+#                             'shippingId': shippingId,
+#                             'store_id': store_id,
+                    'createdAt': createdAt,
+                    'updatedAt': updatedAt,}
+        return order_vals
+    
+    @api.model
     def _get_on_tada(self, access_token=False):
         if not access_token:
             if self.tada_id:
@@ -77,7 +119,7 @@ class TadaOrder(models.Model):
         body = {'page': 0}
         if latest_order_id.id:
             today = fields.Date.today()
-            body.update({'periodStart': latest_order_id.createdAt, 'periodEnd': today})
+            body.update({'periodStart': latest_order_id.createdAt.split(' ')[0], 'periodEnd': today})
         self._cr.execute('select id, orderid from %s where tada_id=%d' %(Order._table, tada_id.id))
         orders = {orderid: id for id, orderid in self._cr.fetchall()}
         self._cr.execute('select id, variantid from %s where tada_id=%d' %(Variant._table, tada_id.id))
@@ -91,57 +133,21 @@ class TadaOrder(models.Model):
             bodyJson = json.dumps(body)
             auth_response = requests.post(base_api_url + OrderUrl, headers=headers, data=bodyJson, timeout=10.0)
             resp_json = auth_response.json()
-            
+            if resp_json['totalItemPerPage'] == 0:
+                break
             for order in resp_json['data']:
                 count_item += 1
                 orderid = order['id']
-                requester_type = order['requesterType']
-                requesterId = order['requesterId']
-                order_type = order['orderType']
-                order_number = order['orderNumber']
-                order_reference = order['orderReference']
-                total = order['total']
-                total_all = order['totalAll']
-                status = order['status']
-                request_delivery_date = order['requestDeliveryDate']
-                notes = order['notes']
-#                 receiver = order['receiver']
-#                 recipient_id = customers.get(order['RecipientId'], False)
-                internal_reference = order['internalReference']
-#                 shipping`Id = order['ShippingId']
-#                 store_id = order['storeId']
-                createdAt = order['createdAt']
-                updatedAt = order['updatedAt']
-                order_vals = {'tada_id': tada_id.id,
-                            'orderid': orderid,
-                            'requester_type': requester_type,
-                            'requesterId': requesterId,
-                            'order_type': order_type,
-                            'order_number': order_number,
-                            'order_reference': order_reference,
-                            'total': total,
-                            'total_all': total_all,
-                            'status': status,
-                            'request_delivery_date': request_delivery_date,
-                            'notes': notes,
-#                             'receiver': receiver,
-#                             'recipient_id': recipient_id,
-                            'internal_reference': internal_reference,
-#                             'shippingId': shippingId,
-#                             'store_id': store_id,
-                            'createdAt': createdAt,
-                            'updatedAt': updatedAt,}
+                order_vals = self._convert_resp_to_vals(tada_id, order, variants)
                 order_id = orders.get(orderid, False)
                 if order_id:
                     Order.browse(order_id).write(order_vals)
                 else:
                     Order.create(order_vals)
-            self._cr.commit()
             if count_item == resp_json['totalItems']:
                 has_next_page = False
         return
-            
-        
+    
 
 class TadaOrderLine(models.Model):
     _name = 'tada.order.line'
@@ -150,6 +156,9 @@ class TadaOrderLine(models.Model):
     name = fields.Char()
     order_id = fields.Many2one('tada.order', 'Tada Order')
     
+    @api.model
+    def _convert_resp_to_vals(self, resp_dict, orders, order_lines):
+        return
     
     
 class TadaFee(models.Model):
@@ -159,10 +168,31 @@ class TadaFee(models.Model):
     name = fields.Char()
     order_id = fields.Many2one('tada.order', 'Tada Order')
     
+    @api.model
+    def _convert_resp_to_vals(self, resp_dict, orders, fees):
+        return
+    
     
 class TadaPayment(models.Model):
     _name = 'tada.payment'
     _description = 'Fee Tada'
     
-    order_id = fields.Many2one('tada.order', 'Tada Order')    
+    paymentid = fields.Integer() # id
+    order_id = fields.Many2one('tada.order', 'Tada Order', index=True, ondelete='cascade') # OrderId
+    payment_type = fields.Char() # paymentType
+    channel = fields.Char() # channel
+    card_number = fields.Char() # cardNumber
+    amount = fields.Integer() # amount
+    transactionId = fields.Char() # transactionId
+    reward_type = fields.Char() # rewardType
+    unit_type = fields.Char() # unitType
+    conversion_rate = fields.Integer() # conversionRate
+    currency_code = fields.Char() # currencyCode
+    createdAt = fields.Datetime(readonly=True) # createdAt
+    updatedAt = fields.Datetime(readonly=True) # updatedAt    
+    
+    @api.model
+    def _convert_resp_to_vals(self, resp_dict, orders, fees):
+        return
+    
     
