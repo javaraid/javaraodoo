@@ -119,6 +119,19 @@ class TadaProduct(models.Model):
     variant_ids = fields.One2many('tada.product.variant', 'product_id', 'Product Variants')
     has_variant = fields.Boolean(compute='_compute_has_variant', store=True)
     system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product')
+    quantity = fields.Integer(compute='_compute_quantity', inverse='_inverse_quantity', store=True)
+    
+    @api.depends('variant_ids.quantity')
+    def _compute_quantity(self):
+        for rec in self:
+            if len(rec.variant_ids) == 1:
+                rec.quantity = rec.variant_ids.quantity
+        return
+    
+    def _inverse_quantity(self):
+        if not self.has_variant:
+            self.variant_ids.quantity = self.quantity
+        return
     
     def _compute_system_product(self):
         for rec in self:
@@ -224,7 +237,7 @@ class TadaProduct(models.Model):
         for variant in resp_dict['Variants']:
             variant_vals = Variant._convert_resp_to_vals(variant, stocks)
             variantid = variant['id']
-            variant_id = Variant.browse(variants.get(variantid, False))
+            variant_id = variants.get(variantid, False)
             if variant_id:
                 variant_line.append((1, variant_id, variant_vals))
             else:
@@ -289,6 +302,7 @@ class TadaProduct(models.Model):
                 productid = resp['id']
                 vals = self._convert_resp_to_vals(tada_id, resp, categories, variants, stocks)
                 product_id = self.browse(products.get(productid, False))
+                updatedAt = resp['updatedAt']
                 if not product_id.id:
                     product_id = self.create(vals)
                 elif not product_id.updatedAt or product_id.updatedAt <  updatedAt.replace('T', ' ').replace('Z', ''):
@@ -313,9 +327,9 @@ class TadaProductVariant(models.Model):
     _description = 'Tada Products Variant'
     
     tada_id = fields.Many2one('tada.tada', 'Tada', related='product_id.tada_id', store=True, index=True)
-    product_id = fields.Many2one('tada.product', 'Product', ondelete="cascade", required=True, index=True) #itemid
+    product_id = fields.Many2one('tada.product', 'Product Item', ondelete="cascade", required=True, index=True) #itemid
     variantid = fields.Integer(readonly=True) # id
-    name = fields.Char(required=True) # name
+    name = fields.Char('Variant Name', required=True) # name
     description = fields.Html() # description
     image = fields.Char() # image
     sku = fields.Char('SKU') # sku
@@ -330,6 +344,17 @@ class TadaProductVariant(models.Model):
     stock_id = fields.Many2one('tada.stock', 'Stocks', required=False, index=True)
     image_view = fields.Char(related='image')
     system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product', store=True)
+    quantity = fields.Integer(compute='_compute_quantity', inverse='_inverse_quantity', store=True)
+    
+    @api.depends('stock_id.quantity')
+    def _compute_quantity(self):
+        for rec in self:
+            rec.quantity = rec.stock_id.quantity
+        return
+    
+    def _inverse_quantity(self):
+        self.stock_id.quantity = self.quantity
+        return
     
     @api.depends('sku')
     def _compute_system_product(self):

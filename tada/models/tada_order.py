@@ -33,7 +33,7 @@ class TadaOrder(models.Model):
     updatedAt = fields.Datetime(readonly=True) # updatedAt
     order_line_ids = fields.One2many('tada.order.line', 'order_id', 'Tada Order Items') # OrderItems
     fee_line_ids = fields.One2many('tada.fee', 'order_id', 'Tada Order Fees') # Fees
-    payment_line_ids = fields.One2many('tada.payment', 'order_id', 'Tada Order Payments')
+    payment_line_ids = fields.One2many('tada.payment', 'order_id', 'Tada Order Payments') # OrderPayments
     
     def act_create_sale_order(self):
         team_id = self.env.ref('tada.salesteam_tada_sales')
@@ -59,7 +59,7 @@ class TadaOrder(models.Model):
         return
     
     @api.model
-    def _convert_resp_to_vals(self, tada_id, resp_dict,  variants):
+    def _convert_resp_to_vals(self, tada_id, resp_dict):
         order = resp_dict
         orderid = order['id']
         requester_type = order['requesterType']
@@ -110,8 +110,11 @@ class TadaOrder(models.Model):
         else:
             tada_id = self.mapped('tada_id').search([('access_token', '=', access_token)])
         Order = self.env['tada.order']
+        OrderLine = self.env['tada.order.line']
         Partner = self.env['res.partner']
         Variant = self.env['tada.product.variant']
+        Payment = self.env['tada.payment']
+        Fee = self.env['tada.fee']
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
         headers = {'Content-Type': 'application/json', 'Authorization': authorization}
@@ -124,10 +127,12 @@ class TadaOrder(models.Model):
         orders = {orderid: id for id, orderid in self._cr.fetchall()}
         self._cr.execute('select id, variantid from %s where tada_id=%d' %(Variant._table, tada_id.id))
         variants = {variantid: id for id, variantid in self._cr.fetchall()}
-#         self._cr.execute('select id, tadaid from %s where tada_id=%d' %(Partner._table, tada_id.id))
-#         customer = {variantid: id for id, tadaid in self._cr.fetchall()}
         count_item = 0
         has_next_page = True
+        self._cr.execute('select id, tadaid, phone from {table} where customer=True;'.format(table=Partner._table))
+        partner_fetched = self._cr.fetchall()
+        customers_tada = {fetch[1]: fetch[0] for fetch in partner_fetched}
+        customers_phone = {fetch[2]: fetch[1] for fetch in partner_fetched}
         while has_next_page:
             body['page'] += 1
             bodyJson = json.dumps(body)
@@ -138,12 +143,47 @@ class TadaOrder(models.Model):
             for order in resp_json['data']:
                 count_item += 1
                 orderid = order['id']
-                order_vals = self._convert_resp_to_vals(tada_id, order, variants)
-                order_id = orders.get(orderid, False)
+                partner_id = Partner._upsert_customer_tada(order['Recipient'], customers_tada, customers_phone)
+                order_vals = self._convert_resp_to_vals(tada_id, order)
+                order_vals['recipient_id'] = partner_id
+                order_id = Order.browse(orders.get(orderid, False))
                 if order_id:
-                    Order.browse(order_id).write(order_vals)
+                    order_id.write(order_vals)
                 else:
-                    Order.create(order_vals)
+                    order_id = Order.create(order_vals)
+                # Appending Lines
+                self._cr.execute('select id, orderlineid from %s where order_id=%d' %(OrderLine._table, order_id.id))
+                order_lines = {orderlineid: id for id, orderlineid in self._cr.fetchall()}
+                order_line = []
+                for line in order['OrderItems']:
+                    order_line_vals = OrderLine._convert_resp_to_vals(order_id.id, line, order_lines, variants)
+                    order_line_id = order_lines.get(line['id'])
+                    if order_line_id:
+                        order_line.append((1, order_line_id, order_line_vals))
+                    else:
+                        order_line.append((0, 0, order_line_vals))
+                self._cr.execute('select id, paymentid from %s where order_id=%d' %(Payment._table, order_id.id))
+                payments = {paymentid: id for id, paymentid in self._cr.fetchall()}
+                payment_line = []
+                for payment in order['OrderPayments']:
+                    payment_vals = Payment._convert_resp_to_vals(order_id.id, payment)
+                    payment_id = payments.get(line['id'])
+                    if payment_id:
+                        payment_line.append((1, payment_id, payment_vals))
+                    else:
+                        payment_line.append((0, 0, payment_vals))
+                self._cr.execute('select id, feeid from %s where order_id=%d' %(Fee._table, order_id.id))
+                fees = {feeid: id for id, feeid in self._cr.fetchall()}
+                fee_line = []
+                for fee in order['Fees']:
+                    fee_vals = Fee._convert_resp_to_vals(order_id.id, fee)
+                    fee_id = fees.get(fee['id'], False)
+                    if fee_id:
+                        fee_line.append((1, fee_id, fee_vals))
+                    else:
+                        fee_line.append((0, 0, fee_vals))
+                order_id.write({'order_line_ids': order_line, 'payment_line_ids': payment_line, 'fee_line_ids': fee_line})
+                
             if count_item == resp_json['totalItems']:
                 has_next_page = False
         return
@@ -153,24 +193,73 @@ class TadaOrderLine(models.Model):
     _name = 'tada.order.line'
     _description = 'Order Line Tada'
     
-    name = fields.Char()
-    order_id = fields.Many2one('tada.order', 'Tada Order')
+    orderlineid = fields.Integer() # id
+    order_id = fields.Many2one('tada.order', 'Tada Order', index=True, ondelete='cascade', required=True) # OrderId
+    variant_id = fields.Many2one('tada.product.variant', 'Variant') # variantId
+    price = fields.Integer() # price
+    quantity = fields.Integer() # quantity
+    notes = fields.Char() # notes
+    status = fields.Char() # status
+    createdAt = fields.Datetime() # createdAt
+    updatedAt = fields.Datetime() # updatedAt
     
     @api.model
-    def _convert_resp_to_vals(self, resp_dict, orders, order_lines):
-        return
+    def _convert_resp_to_vals(self, order_id, resp_dict, order_lines=False, variants=False):
+        Variant = self.env['tada.product.variant']
+        if not variants:
+            self._cr.execute('select id, variantid from %s where tada_id=%d' %(Variant._table, tada_id.id))
+            variants = {variantid: id for id, variantid in self._cr.fetchall()}
+        if not order_lines:
+            self._cr.execute('select id, orderlineid from %s where order_id=%d' %(self._table, order_id))
+            order_lines = {orderlineid: id for id, orderlineid in self._cr.fetchall()}
+        orderlineid = resp_dict['id']
+        variant_id = variants.get(resp_dict['variantId'], False)
+        price = resp_dict['price']
+        quantity = resp_dict['quantity']
+        notes = resp_dict['notes']
+        status = resp_dict['status']
+        createdAt = resp_dict['createdAt']
+        updatedAt = resp_dict['updatedAt']
+        order_line_vals = {'orderlineid': orderlineid,
+                           'order_id': order_id,
+                           'variant_id': variant_id,
+                           'price': price,
+                           'quantity': quantity,
+                           'notes': notes,
+                           'status': status,
+                           'createdAt': createdAt,
+                           'updatedAt': updatedAt,}
+        return order_line_vals
     
     
 class TadaFee(models.Model):
     _name = 'tada.fee'
     _description = 'Fee Tada'
     
-    name = fields.Char()
-    order_id = fields.Many2one('tada.order', 'Tada Order')
+    feeid = fields.Integer() # id
+    order_id = fields.Many2one('tada.order', 'Order', ondelete='cascade', index=True, required=True) # OrderId
+    name = fields.Char() # name
+    absorber = fields.Char() # absorber
+    value = fields.Integer() # value
+    createdAt = fields.Datetime(readonly=True) # createdAt
+    updatedAt = fields.Datetime(readonly=True) # updatedAt
     
     @api.model
-    def _convert_resp_to_vals(self, resp_dict, orders, fees):
-        return
+    def _convert_resp_to_vals(self, order_id, resp_dict):
+        feeid = resp_dict['id']
+        name = resp_dict['name']
+        absorber = resp_dict['absorber']
+        value = resp_dict['value']
+        createdAt = resp_dict['createdAt']
+        updatedAt = resp_dict['updatedAt']
+        vals = {'feeid': feeid,
+                'order_id': order_id,
+                'name': name,
+                'absorber': absorber,
+                'value': value,
+                'createdAt': createdAt,
+                'updatedAt': updatedAt,}
+        return vals
     
     
 class TadaPayment(models.Model):
@@ -192,7 +281,32 @@ class TadaPayment(models.Model):
     updatedAt = fields.Datetime(readonly=True) # updatedAt    
     
     @api.model
-    def _convert_resp_to_vals(self, resp_dict, orders, fees):
-        return
+    def _convert_resp_to_vals(self, order_id, resp_dict):
+        paymentid = resp_dict['id']
+        payment_type = resp_dict['paymentType']
+        channel = resp_dict['channel']
+        card_number = resp_dict['cardNumber']
+        amount = resp_dict['amount']
+        transactionId = resp_dict['transactionId']
+        reward_type = resp_dict['rewardType']
+        unit_type = resp_dict['unitType']
+        conversion_rate = resp_dict['conversionRate']
+        currency_code = resp_dict['currencyCode']
+        createdAt = resp_dict['createdAt']
+        updatedAt = resp_dict['updatedAt']
+        vals = {'paymentid': paymentid,
+                'order_id': order_id,
+                'payment_type': payment_type,
+                'channel': channel,
+                'card_number': card_number,
+                'amount': amount,
+                'transactionId': transactionId,
+                'reward_type': reward_type,
+                'unit_type': unit_type,
+                'conversion_rate': conversion_rate,
+                'currency_code': currency_code,
+                'createdAt': createdAt,
+                'updatedAt': updatedAt}
+        return vals
     
     

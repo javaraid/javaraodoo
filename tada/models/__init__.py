@@ -1,3 +1,4 @@
+from . import partner
 from . import sale
 from . import tada
 from . import tada_product
