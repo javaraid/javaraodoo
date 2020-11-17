@@ -15,7 +15,25 @@
 		<field name="model">tada.order</field>
 		<field name="arch" type="xml">
 			<form>
-				<field name="order_number" />
+				<sheet>
+					<field name="order_number" />
+					<group>
+						<field name="order_type" />
+						<field name="order_reference" />
+						<field name="recipient_id" />
+						<field name="status" />
+						<field name="request_delivery_date" />
+						<field name="notes" />
+						<field name="internal_reference" />
+						<field name="order_line_ids" />
+						<field name="payment_line_ids" />
+						<field name="fee_line_ids" />
+						<field name="total" />
+						<field name="total_all" />
+						<field name="createdAt" />
+						<field name="updatedAt" />
+					</group>
+				</sheet>
 			</form>
 		</field>
 	</record>
@@ -24,5 +42,110 @@
 		<field name="name">Orders</field>
 		<field name="res_model">tada.order</field>
 		<field name="view_mode">tree,form</field>
+	</record>
+
+	<record model="ir.ui.view" id="order_line_view_tree">
+		<field name="name">Order Line</field>
+		<field name="model">tada.order.line</field>
+		<field name="arch" type="xml">
+			<tree>
+				<field name="variant_id" />
+			    <field name="price" />
+			    <field name="quantity" />
+			    <field name="notes" />
+			    <field name="status" />
+			</tree>
+		</field>
+	</record>
+	
+	<record model="ir.ui.view" id="order_line_view_form">
+		<field name="name">Order Line</field>
+		<field name="model">tada.order.line</field>
+		<field name="arch" type="xml">
+			<form>
+				<sheet>
+					<group>
+						<field name="order_id" />
+						<field name="variant_id" />
+					    <field name="price" />
+					    <field name="quantity" />
+					    <field name="notes" />
+					    <field name="status" />
+					    <field name="createdAt" />
+					    <field name="updatedAt" />
+					</group>
+				</sheet>
+			</form>
+		</field>
+	</record>
+
+	<record model="ir.ui.view" id="order_payment_view_tree">
+		<field name="name">Tada Order Payments</field>
+		<field name="model">tada.payment</field>
+		<field name="arch" type="xml">
+			<tree>
+			    <field name="payment_type" />
+				<field name="channel" />
+				<field name="card_number" />
+				<field name="amount" />
+				<field name="transactionId" />
+				<field name="reward_type" />
+				<field name="unit_type" />
+			</tree>
+		</field>
+	</record>
+	
+	<record model="ir.ui.view" id="order_payment_view_form">
+		<field name="name">Tada Order Payments</field>
+		<field name="model">tada.payment</field>
+		<field name="arch" type="xml">
+			<form>
+				<sheet>
+					<group>
+						<field name="order_id" />
+						<field name="payment_type" />
+						<field name="channel" />
+						<field name="card_number" />
+						<field name="amount" />
+						<field name="transactionId" />
+						<field name="reward_type" />
+						<field name="unit_type" />
+					    <field name="createdAt" />
+					    <field name="updatedAt" />
+					</group>
+				</sheet>
+			</form>
+		</field>
+	</record>
+
+	<record model="ir.ui.view" id="order_fee_view_tree">
+		<field name="name">Tada Order Fee</field>
+		<field name="model">tada.fee</field>
+		<field name="arch" type="xml">
+			<tree>
+				<field name="name" />
+				<field name="absorber" />
+				<field name="value" />
+			</tree>
+		</field>
+	</record>
+	
+	<record model="ir.ui.view" id="order_fee_view_form">
+		<field name="name">Tada Order Fee</field>
+		<field name="model">tada.fee</field>
+		<field name="arch" type="xml">
+			<form>
+				<sheet>
+					<group>
+						<field name="name" />
+						<field name="order_id" />
+						<field name="absorber" />
+						<field name="value" />
+						<field name="createdAt" />
+						<field name="updatedAt" />
+					</group>
+				</sheet>
+			</form>
+		</field>
 	</record>
 </odoo>
