@@ -1,12 +1,54 @@
+import json
 import requests
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 ProductUrl = '/v1/integration_merchants/manage/inventories/items'
 ProductDetailUrl = '/v1/integration_merchants/manage/inventories/items/{itemid}'
 VariantUrl = '/v1/integration_merchants/manage/inventories/items/{itemid}/variants'
 VariantDetailUrl = '/v1/integration_merchants/manage/inventories/items/{itemid}/variants/{variantId}'
 CategoryUrl = '/v1/integration_merchants/manage/inventories/categories'
+CategoryDetailUrl = '/v1/integration_merchants/manage/inventories/categories/{categoryId}'
 CatalogUrl = '/v1/integration_merchants/manage/inventories/catalogs/{catalogId}/categories'
+Headers = {'Content-Type': 'application/json', 'Authorization': None}
+
+TadaCategoryFields = {'parent_id','name','label','active','createdAt','updatedAt',}
+TadaCategoryFieldsName = {'parent_id': 'parentId',
+                        'name': 'name',
+                        'label': 'label',
+                        'active': 'active',
+                        'createdAt': 'createdAt',
+                        'updatedAt': 'updatedAt',}
+TadaProductFields = {'category_id', 'is_digital','item_type','swap_redeem','name','description','image','delivery_type','is_limited','limit_qty','active','enable_store_availability','createdAt','updatedAt'}
+TadaProductFieldsName = {'category_id': 'CategoryId',
+                        'is_digital': 'isDigital',
+                        'item_type': 'itemType',
+                        'swap_redeem': 'swapRedeem',
+                        'name': 'name',
+                        'description': 'description',
+                        'image': 'image',
+                        'delivery_type': 'deliveryType',
+                        'is_limited': 'isLimited',
+                        'limit_qty': 'limitQty',
+                        'active': 'active',
+                        'enable_store_availability': 'enableStoreAvailability',
+                        'createdAt': 'createdAt',
+                        'updatedAt': 'updatedAt'} 
+TadaVariantFields = {'name','description','image','sku','value_type','min_price','is_multi_price','price','source_type','active','createdAt','updatedAt'}
+TadaVariantFieldsName = {'variantid': 'id',
+                        'name': 'name',
+                        'description': 'description',
+                        'image': 'image',
+                        'sku': 'sku',
+                        'value_type': 'valueType',
+                        'min_price': 'minPrice',
+                        'is_multi_price': 'isMultiPrice',
+                        'price': 'price',
+                        'source_type': 'sourceType',
+                        'active': 'active',
+                        'createdAt': 'createdAt',
+                        'updatedAt': 'updatedAt'}
+
 
 class TadaCategory(models.Model):
     _name = 'tada.category'
@@ -17,7 +59,7 @@ class TadaCategory(models.Model):
     parent_id = fields.Many2one(_name, 'Parent') # parentId
     mId = fields.Char(readonly=True) # mId
     name = fields.Char() # name
-    label = fields.Char() # label
+    label = fields.Char(default=lambda self: self.name) # label
     active = fields.Boolean(default=True) # active
     groupRefId = None # groupRefId
     createdAt = fields.Datetime(readonly=True) # createdAt
@@ -33,15 +75,17 @@ class TadaCategory(models.Model):
         if not access_token:
             if self.tada_id:
                 tada_id = self.tada_id
+                access_token = tada_id.access_token
             else:
                 return
         else:
             tada_id = self.mapped('tada_id').search([('access_token', '=', access_token)])
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
-        headers = {'Content-Type': 'application/json', 'Authorization': authorization}
-        auth_response = requests.get(base_api_url + CategoryUrl, headers=headers, timeout=10.0)
-        resp_json = auth_response.json()
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        response = requests.get(base_api_url + CategoryUrl, headers=headers, timeout=10.0)
+        resp_json = response.json()
         self._cr.execute('select id, categid from %s where tada_id=%d' %(self._table, tada_id.id))
         categories = {categid: id for id, categid in self._cr.fetchall()}
         parent_not_found = {}
@@ -87,19 +131,76 @@ class TadaCategory(models.Model):
     @api.model
     def create(self, vals):
         res = super(TadaCategory, self).create(vals)
+        if not self._context.get('sync', False):
+            res._create_to_tada(vals)
         return res
+    
+    def write(self, vals):
+        res = super(TadaCategory, self).write(vals)
+        if not self._context.get('sync', False):
+            self._update_to_tada(vals)
+        return res
+    
+    def _create_to_tada(self, vals):
+        access_token = self.tada_id.access_token
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        body = {"name": vals.get('name'),
+                "allowedPayments": [
+                    "EXTERNAL_PAYMENT"
+                  ]
+                }
+        response = requests.post(base_api_url + CategoryUrl, headers=headers, json=body, timeout=10.0)
+        resp_json = response.json()
+        if response.status_code != 200:
+            raise ValidationError(_('Request cannot be completed'))
+        resp_vals = {'categid': resp_json['id'],
+                    'parent_id': resp_json['parent_id'],
+                    'mId': resp_json['mId'],
+                    'name': resp_json['name'],
+                    'label': resp_json['label'],
+                    'active': resp_json['active'],
+                    'createdAt': resp_json['createdAt'],
+                    'updatedAt': resp_json['updatedAt']}
+        return self.with_context(sync=True).write(resp_vals)
+    
+    def _update_to_tada(self, vals):
+        updated_fields = set(vals.keys())
+        difference_field = updated_fields.difference(TadaCategoryFields)
+        for field in difference_field:
+            vals.pop(field)
+        if len(vals) == 0:
+            return
+        body = {TadaCategoryFieldsName[key]: value for key, value in vals.items()}
+        if 'parent_id' in vals:
+            body.update({'parentId': self.parent_id.categid or None})
+        body.update(name=vals.get('name', self.name))
+        bodyJson = json.dumps(body)
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        access_token = self.tada_id.access_token
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        response = requests.put(base_api_url + CategoryDetailUrl.format(categoryId=self.categid), headers=headers, data=bodyJson, timeout=10.0)
+        resp_json = response.json()
+        if response.status_code != 200:
+            raise ValidationError(_('Request cannot be completed'))
+        self.with_context(sync=True).write({'updatedAt': resp_json['updatedAt']})
+        return
     
     
 class TadaProduct(models.Model):
     _name = 'tada.product'
     _description = 'Tada Products'
     
-    tada_id = fields.Many2one('tada.tada', 'Tada Account', ondelete='cascade')
+    tada_id = fields.Many2one('tada.tada', 'Tada Account', ondelete='cascade', required=True)
     productid = fields.Integer(index=True, readonly=True) # id
     category_id = fields.Many2one('tada.category', 'Category') # CategoryId
     VendorId = None # VendorId
     is_digital = fields.Boolean() # isDigital
-    item_type = fields.Char('Type') # itemType
+    item_type = fields.Char(default="item") # itemType
     swap_redeem = fields.Char() # swapRedeem
     name = fields.Char(required=True) # name
     description = fields.Html(compute='_compute_description', inverse='_inverse_description', store=True) # description
@@ -109,17 +210,19 @@ class TadaProduct(models.Model):
     is_limited = fields.Boolean() # isLimited
     limit_qty = fields.Integer() # limitQty
     gcfsItemId = None # gcfsItemId
+    variant_ids = fields.One2many('tada.product.variant', 'product_id', 'Product Variants') # Variants
     active = fields.Boolean(default=True) # active
     enable_store_availability = fields.Boolean() # enableStoreAvailability
-    store_ids = fields.Many2many('tada.store', string='Available on Store')
+    store_ids = fields.Many2many('tada.store', string='Available on Store') # stores
     createdAt = fields.Datetime(readonly=True) # createdAt
     updatedAt = fields.Datetime(readonly=True) # updatedAt
     price = fields.Integer(default=0, required=False, compute='_compute_price', inverse='_inverse_price', store=True)
-    image_view = fields.Char(related='image')
-    variant_ids = fields.One2many('tada.product.variant', 'product_id', 'Product Variants')
-    has_variant = fields.Boolean(compute='_compute_has_variant', store=True)
-    system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product')
     quantity = fields.Integer(compute='_compute_quantity', inverse='_inverse_quantity', store=True)
+    sku = fields.Char(compute='_compute_sku', inverse='_inverse_sku', store=True)
+    image_view = fields.Char(related='image')
+    has_variant = fields.Boolean(compute='_compute_has_variant', store=True)
+    count_variant = fields.Boolean(compute='_compute_has_variant', store=True)
+    system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product')
     
     @api.depends('variant_ids.quantity')
     def _compute_quantity(self):
@@ -129,13 +232,25 @@ class TadaProduct(models.Model):
         return
     
     def _inverse_quantity(self):
-        if not self.has_variant:
+        if not self.has_variant and self.count_variant != 0:
             self.variant_ids.quantity = self.quantity
+        return
+    
+    @api.depends('variant_ids.sku')
+    def _compute_sku(self):
+        for rec in self:
+            if len(rec.variant_ids) == 1:
+                rec.sku = rec.variant_ids.sku
+        return
+    
+    def _inverse_sku(self):
+        if not self.has_variant and self.count_variant != 0:
+            self.variant_ids.sku = self.sku
         return
     
     def _compute_system_product(self):
         for rec in self:
-            rec
+            rec.system_product_ids = rec.variant_ids.mapped('system_product_ids')
         return
     
     @api.depends('variant_ids.price')
@@ -147,10 +262,8 @@ class TadaProduct(models.Model):
         return
     
     def _inverse_price(self):
-        if self.has_variant:
-            return
-        for variant in self.variant_ids:
-            variant.price = self.price
+        if not self.has_variant and self.count_variant != 0:
+            self.variant_ids.price = self.price
         return
     
     @api.depends('variant_ids.image')
@@ -158,13 +271,11 @@ class TadaProduct(models.Model):
         for rec in self:
             if rec.has_variant:
                 continue
-            rec.price = rec.variant_ids.price
+            rec.image = rec.variant_ids.image
         
     def _inverse_image(self):
-        if self.has_variant:
-            return
-        for variant in self.variant_ids:
-            variant.price = self.price
+        if not self.has_variant and self.count_variant != 0:
+            self.variant_ids.image = self.image
         return
     
     @api.depends('variant_ids.description')
@@ -175,20 +286,20 @@ class TadaProduct(models.Model):
             rec.description = rec.variant_ids.description
         
     def _inverse_description(self):
-        if self.has_variant:
-            return
-        for variant in self.variant_ids:
-            variant.description = self.description
+        if not self.has_variant and self.count_variant != 0:
+            self.variant_ids.description = self.description
         return
     
     @api.depends('variant_ids')
     def _compute_has_variant(self):
         for rec in self:
-            rec.has_variant = len(rec.variant_ids) > 1
+            len_variant = len(rec.variant_ids)
+            rec.count_variant = len_variant
+            rec.has_variant = len_variant > 1
         return
     
     @api.model
-    def _convert_resp_to_vals(self, tada_id, resp_dict, categories=False, variants=False, stocks=False):
+    def _convert_resp_tada_to_vals(self, tada_id, resp_dict, categories=False, variants=False, stocks=False):
         Category = self.env['tada.category']
         Variant = self.env['tada.product.variant']
         Stock = self.env['tada.stock']
@@ -235,7 +346,7 @@ class TadaProduct(models.Model):
                 'updatedAt': updatedAt,}
         variant_line = []
         for variant in resp_dict['Variants']:
-            variant_vals = Variant._convert_resp_to_vals(variant, stocks)
+            variant_vals = Variant._convert_resp_tada_to_vals(variant, stocks)
             variantid = variant['id']
             variant_id = variants.get(variantid, False)
             if variant_id:
@@ -254,16 +365,17 @@ class TadaProduct(models.Model):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         access_token = tada_id.access_token
         authorization = 'Bearer {}'.format(access_token)
-        headers = {'Content-Type': 'application/json', 'Authorization': authorization}
-        auth_response = requests.get(base_api_url + ProductDetailUrl.format(itemid=self.productid), headers=headers, timeout=10.0)
-        resp_json = auth_response.json()
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        response = requests.get(base_api_url + ProductDetailUrl.format(itemid=self.productid), headers=headers, timeout=10.0)
+        resp_json = response.json()
         self._cr.execute('select id, categid from %s where tada_id=%d' % (Category._table, tada_id.id))
         categories = {categid: id for id, categid in self._cr.fetchall()}
         self._cr.execute('select id, variantid from %s where product_id=%d' %(Variant._table, self.id))
         variants = {variant: id for id, variantid in self._cr.fetchall()}
         self._cr.execute('select id, stockid from %s' %(Stock._table))
         stocks = {stockid: id for id, stockid in self._cr.fetchall()}
-        vals = self._convert_resp_to_vals(tada_id, resp_json, categories, variants, stocks)
+        vals = self._convert_resp_tada_to_vals(tada_id, resp_json, categories, variants, stocks)
         self.write(vals)
     
     @api.model
@@ -271,6 +383,7 @@ class TadaProduct(models.Model):
         if not access_token:
             if self.tada_id:
                 tada_id = self.tada_id
+                access_token = tada_id.access_token
             else:
                 return
         else:
@@ -281,7 +394,8 @@ class TadaProduct(models.Model):
         Stock = self.env['tada.stock']
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
-        headers = {'Content-Type': 'application/json', 'Authorization': authorization}
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
         self._cr.execute('select id, categid from %s where tada_id=%d' %(self.mapped('category_id')._table, tada_id.id))
         categories = {categid: id for id, categid in self._cr.fetchall()}
         self._cr.execute('select id, productid from %s where tada_id=%d' %(self._table, tada_id.id))
@@ -295,12 +409,12 @@ class TadaProduct(models.Model):
         params = {'page': 0}
         while has_next_page:
             params['page'] += 1
-            auth_response = requests.get(base_api_url + ProductUrl, params=params, headers=headers, timeout=10.0)
-            resp_json = auth_response.json()
+            response = requests.get(base_api_url + ProductUrl, params=params, headers=headers, timeout=10.0)
+            resp_json = response.json()
             for resp in resp_json['data']:
                 count_item += 1
                 productid = resp['id']
-                vals = self._convert_resp_to_vals(tada_id, resp, categories, variants, stocks)
+                vals = self._convert_resp_tada_to_vals(tada_id, resp, categories, variants, stocks)
                 product_id = self.browse(products.get(productid, False))
                 updatedAt = resp['updatedAt']
                 if not product_id.id:
@@ -313,13 +427,66 @@ class TadaProduct(models.Model):
     @api.model
     def create(self, vals):
         res = super(TadaProduct, self).create(vals)
+        if not self._context.get('sync', False):
+            stock_id = self.env['tada.stock'].create({'name': res.name, 'quantity': res.quantity, 'product_id': res.id, 'price': res.price})
+            res._create_to_tada(vals, stock_id)
+            variant_id = self.env['tada.product.variant'].create({'name': res.name, 'product_id': res.id, 'sku': res.sku, 'price': res.price, 'stock_id': stock_id.id})
         return res
     
     def write(self, vals):
         res = super(TadaProduct, self).write(vals)
-        if not self._context.get('sync'):
-            self._update_to_tada()
+        if not self._context.get('sync', False):
+            self._update_to_tada(vals)
         return res
+    
+    def _create_to_tada(self, vals, stock_id):
+        access_token = self.tada_id.access_token
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        body = {'itemType': 'item',
+                'programId': '1500923748327',
+                'name': self.name,
+                'description': self.description,
+                'CategoryId': str(self.category_id.categid),
+                'isLimited': self.is_limited,
+                'active': self.active,
+                'initialVariant': {"name": self.variant_ids.name, 
+                                   "description": self.variant_ids.description, 
+                                   "price": self.variant_ids.price, 
+                                   "sku": self.variant_ids.sku, 
+                                   "StockId": stock_id.stockid},}
+        response = requests.post(base_api_url + ProductUrl, headers=headers, json=body, timeout=10.0)
+        resp_json = response.json()
+        resp_vals = self._convert_resp_tada_to_vals(self.tada_id, resp_json)
+        self.with_context(sync=True).write(resp_vals)
+    
+    def _update_to_tada(self, vals):
+        if self.productid == 0:
+            return
+        updated_fields = set(vals.keys())
+        difference_field = updated_fields.difference(TadaProductFields)
+        for field in difference_field:
+            vals.pop(field)
+        if len(vals) == 0:
+            return
+        body = {TadaProductFieldsName[key]: value for key, value in vals.items()}
+        if 'category_id' in vals:
+            body.update({'CategoryId': self.category_id.categid})
+        body.update(name=vals.get('name', self.name))
+        bodyJson = json.dumps(body)
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        access_token = self.tada_id.access_token
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        response = requests.put(base_api_url + ProductDetailUrl.format(itemid=self.productid), headers=headers, data=bodyJson, timeout=10.0)
+        resp_json = response.json()
+        if response.status_code != 200:
+            raise ValidationError(_('Request cannot be completed'))
+        self.with_context(sync=True).write({'updatedAt': resp_json['updatedAt']})
+        return
     
     
 class TadaProductVariant(models.Model):
@@ -341,7 +508,7 @@ class TadaProductVariant(models.Model):
     active = fields.Boolean(default=True) # active
     createdAt = fields.Datetime(readonly=True) # createdAt
     updatedAt = fields.Datetime(readonly=True) # updatedAt
-    stock_id = fields.Many2one('tada.stock', 'Stocks', required=False, index=True)
+    stock_id = fields.Many2one('tada.stock', 'Stocks', required=False, index=True) # StockId
     image_view = fields.Char(related='image')
     system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product', store=True)
     quantity = fields.Integer(compute='_compute_quantity', inverse='_inverse_quantity', store=True)
@@ -372,12 +539,49 @@ class TadaProductVariant(models.Model):
             rec.system_product_ids = [(6,0,system_product_ids.ids)]
         return
     
-    @api.model
-    def _update_product_variant(self, itemid, vals):
-        product_id = self.search([('productid', '=', itemid)])
+    def _create_to_tada(self, vals):
+        access_token = self.tada_id.access_token
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        body = {'name': self.name,
+               "description": self.description, 
+               "price": self.price, 
+               "sku": self.sku,
+               "StockId": self.stock_id.stockid}
+        response = requests.post(base_api_url + VariantUrl, headers=headers, json=body, timeout=10.0)
+        resp_json = response.json()
+        resp_vals = self._convert_resp_tada_to_vals(self.tada_id, resp_json)
+        return self.with_context(sync=True).write(resp_vals)
+    
+    def _update_to_tada(self, vals):
+        updated_fields = set(vals.keys())
+        difference_field = updated_fields.difference(TadaVariantFields)
+        for field in difference_field:
+            vals.pop(field)
+        if len(vals) == 0:
+            return
+        body = {TadaVariantFieldsName[key]: value for key, value in vals.items()}
+        body.update(name=vals.get('name', self.name), price=vals.get('price', self.price))
+        bodyJson = json.dumps(body)
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        access_token = self.tada_id.access_token
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        response = requests.put(base_api_url + VariantDetailUrl.format(itemid=self.product_id.productid, variantId=self.variantid), headers=headers, data=bodyJson, timeout=10.0)
+        resp_json = response.json()
+        if response.status_code != 200:
+            raise ValidationError(_('Request cannot be completed'))
+        self.with_context(sync=True).write({'updatedAt': resp_json['updatedAt']})
     
     @api.model
-    def _convert_resp_to_vals(self, resp_dict, stocks=False):
+    def _convert_vals_to_body_tada(self, vals):
+        TadaFieldsName
+    
+    @api.model
+    def _convert_resp_tada_to_vals(self, resp_dict, stocks=False):
         Stock = self.env['tada.stock']
         if not stocks:
             self._cr.execute('select id, stockid from %s' %(Stock._table))
@@ -415,7 +619,7 @@ class TadaProductVariant(models.Model):
             stockid = stock['id']
             stock_id = stocks.get(stockid, False)
             if not stock_id:
-                stock_vals = Stock._convert_resp_to_vals(stock)
+                stock_vals = Stock._convert_resp_tada_to_vals(stock)
                 stock_id = Stock.browse(stocks.get(stockid, False))
                 if stock_id.id:
                     stock_id.write(stock_vals)
@@ -439,10 +643,18 @@ class TadaProductVariant(models.Model):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         access_token = tada_id.access_token
         authorization = 'Bearer {}'.format(access_token)
-        headers = {'Content-Type': 'application/json', 'Authorization': authorization}
-        auth_response = requests.get(base_api_url + VariantDetailUrl.format(itemid=product_id.productid, variantId=self.variantid), headers=headers, timeout=10.0)
-        resp_json = auth_response.json()
-        variant_vals = self._convert_resp_to_vals(resp_json, stocks)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        response = requests.get(base_api_url + VariantDetailUrl.format(itemid=product_id.productid, variantId=self.variantid), headers=headers, timeout=10.0)
+        resp_json = response.json()
+        variant_vals = self._convert_resp_tada_to_vals(resp_json, stocks)
         self.write(variant_vals)
         return
+    
+    def write(self, vals):
+        res = super(TadaProductVariant, self).write(vals)
+        if not self._context.get('sync', False):
+            self._update_to_tada(vals)
+        return res
+    
     
