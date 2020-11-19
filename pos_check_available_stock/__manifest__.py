@@ -1,35 +1,40 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "pos_check_available_stock",
+    'name': "POS No Negative",
 
     'summary': """
-        Short (1 phrase/line) summary of the module's purpose, used as
-        subtitle on modules listing or apps.openerp.com""",
-
-    'description': """
-        Long description of module's purpose
+        Prevent negative stock on point of sale
     """,
 
-    'author': "My Company",
-    'website': "http://www.yourcompany.com",
+    'description': """
+
+    """,
+
+    'author': "Arkana",
+    'website': "https://www.arkana.co.id",
 
     # Categories can be used to filter modules in modules listing
     # Check https://github.com/odoo/odoo/blob/11.0/odoo/addons/base/module/module_data.xml
     # for the full list
-    'category': 'Uncategorized',
+    'category': 'Inventory',
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base'],
+    'depends': [
+        'base',
+        'stock',
+        'point_of_sale',
+        'check_available_stock',
+    ],
 
     # always loaded
     'data': [
         # 'security/ir.model.access.csv',
-        'views/views.xml',
-        'views/templates.xml',
+        # 'views/views.xml',
+        # 'views/templates.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
-        'demo/demo.xml',
+        # 'demo/demo.xml',
     ],
 }
