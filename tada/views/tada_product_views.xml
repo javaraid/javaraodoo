@@ -29,9 +29,9 @@
 					<group>
 					    <field name="tada_id" />
 					    <field name="productid" />
-					    <field name="sku" attrs="{'invisible': [('has_variant', '=', True)]}" />
-					    <field name="price" attrs="{'invisible': [('has_variant', '=', True)]}" />
-					    <field name="quantity" attrs="{'invisible': [('has_variant', '=', True)]}" />
+					    <field name="sku" attrs="{'invisible': [('has_variant', '=', True)], 'required': [('has_variant', '=', False)]}" />
+					    <field name="price" attrs="{'invisible': [('has_variant', '=', True)], 'required': [('has_variant', '=', False)]}" />
+					    <field name="quantity" attrs="{'invisible': [('has_variant', '=', True)], 'required': [('has_variant', '=', False)]}" />
 					    <field name="category_id" />
 					    <field name="is_digital" />
 					    <field name="item_type" invisible="1" />
@@ -100,6 +100,7 @@
 						<field name="is_multi_price" />
 						<field name="min_price" />
 						<field name="price" />
+						<field name="quantity" />
 						<field name="stock_id" invisible="True" />
 						<field name="active" />
 						<field name="createdAt" />
