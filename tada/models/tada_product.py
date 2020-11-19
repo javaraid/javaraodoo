@@ -311,7 +311,7 @@ class TadaProduct(models.Model):
             stocks = {stockid: id for id, stockid in self._cr.fetchall()}
         if not variants:
             self._cr.execute('select id, variantid from %s where product_id=%d' %(Variant._table, self.id))
-            variants = {variant: id for id, variantid in self._cr.fetchall()}
+            variants = {variantid: id for id, variantid in self._cr.fetchall()}
         productid = resp_dict['id']
         category_id = categories.get(resp_dict['CategoryId'], False)
         is_digital = resp_dict['isDigital']
@@ -372,7 +372,7 @@ class TadaProduct(models.Model):
         self._cr.execute('select id, categid from %s where tada_id=%d' % (Category._table, tada_id.id))
         categories = {categid: id for id, categid in self._cr.fetchall()}
         self._cr.execute('select id, variantid from %s where product_id=%d' %(Variant._table, self.id))
-        variants = {variant: id for id, variantid in self._cr.fetchall()}
+        variants = {variantid: id for id, variantid in self._cr.fetchall()}
         self._cr.execute('select id, stockid from %s' %(Stock._table))
         stocks = {stockid: id for id, stockid in self._cr.fetchall()}
         vals = self._convert_resp_tada_to_vals(tada_id, resp_json, categories, variants, stocks)
@@ -430,7 +430,6 @@ class TadaProduct(models.Model):
         if not self._context.get('sync', False):
             stock_id = self.env['tada.stock'].create({'name': res.name, 'quantity': res.quantity, 'product_id': res.id, 'price': res.price})
             res._create_to_tada(vals, stock_id)
-            variant_id = self.env['tada.product.variant'].create({'name': res.name, 'product_id': res.id, 'sku': res.sku, 'price': res.price, 'stock_id': stock_id.id})
         return res
     
     def write(self, vals):
@@ -448,19 +447,24 @@ class TadaProduct(models.Model):
         body = {'itemType': 'item',
                 'programId': '1500923748327',
                 'name': self.name,
+                'image': self.image or None,
                 'description': self.description,
                 'CategoryId': str(self.category_id.categid),
                 'isLimited': self.is_limited,
                 'active': self.active,
-                'initialVariant': {"name": self.variant_ids.name, 
-                                   "description": self.variant_ids.description, 
-                                   "price": self.variant_ids.price, 
-                                   "sku": self.variant_ids.sku, 
+                'initialVariant': {"name": self.name, 
+                                   "description": self.description, 
+                                   "price": self.price, 
+                                   "sku": self.sku, 
                                    "StockId": stock_id.stockid},}
         response = requests.post(base_api_url + ProductUrl, headers=headers, json=body, timeout=10.0)
         resp_json = response.json()
-        resp_vals = self._convert_resp_tada_to_vals(self.tada_id, resp_json)
+        resp_vals = {'productid': resp_json['id'],
+                     'updatedAt': resp_json['updatedAt'],
+                     'createdAt': resp_json['createdAt']
+                     }
         self.with_context(sync=True).write(resp_vals)
+        self.act_sync()
     
     def _update_to_tada(self, vals):
         if self.productid == 0:
@@ -499,7 +503,7 @@ class TadaProductVariant(models.Model):
     name = fields.Char('Variant Name', required=True) # name
     description = fields.Html() # description
     image = fields.Char() # image
-    sku = fields.Char('SKU') # sku
+    sku = fields.Char('SKU', required=True) # sku
     value_type = fields.Char() # valueType
     min_price = fields.Integer() # minPrice
     is_multi_price = fields.Boolean() # isMultiPrice
@@ -511,17 +515,7 @@ class TadaProductVariant(models.Model):
     stock_id = fields.Many2one('tada.stock', 'Stocks', required=False, index=True) # StockId
     image_view = fields.Char(related='image')
     system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product', store=True)
-    quantity = fields.Integer(compute='_compute_quantity', inverse='_inverse_quantity', store=True)
-    
-    @api.depends('stock_id.quantity')
-    def _compute_quantity(self):
-        for rec in self:
-            rec.quantity = rec.stock_id.quantity
-        return
-    
-    def _inverse_quantity(self):
-        self.stock_id.quantity = self.quantity
-        return
+    quantity = fields.Integer(related='stock_id.quantity', default=0, required=True, store=True)
     
     @api.depends('sku')
     def _compute_system_product(self):
@@ -575,10 +569,6 @@ class TadaProductVariant(models.Model):
         if response.status_code != 200:
             raise ValidationError(_('Request cannot be completed'))
         self.with_context(sync=True).write({'updatedAt': resp_json['updatedAt']})
-    
-    @api.model
-    def _convert_vals_to_body_tada(self, vals):
-        TadaFieldsName
     
     @api.model
     def _convert_resp_tada_to_vals(self, resp_dict, stocks=False):
