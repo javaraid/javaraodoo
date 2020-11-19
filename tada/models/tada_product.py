@@ -517,6 +517,12 @@ class TadaProductVariant(models.Model):
     system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product', store=True)
     quantity = fields.Integer(related='stock_id.quantity', default=0, required=True, store=True)
     
+    @api.constrains('sku')
+    def _check_sku(self):
+        variant_sku = self.search([('sku', '=', self.sku), ('tada_id', self.tada_id.id)], limit=1)
+        if variant_sku.id:
+            raise ValidationError(_('SKU has been exist'))
+    
     @api.depends('sku')
     def _compute_system_product(self):
         Product = self.env['product.product']
