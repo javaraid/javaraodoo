@@ -3,6 +3,12 @@ from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 from addons.event_sale.models.product import Product
 
+def sync(fun):
+    def wrapper(par):
+        par = par.with_context(sync=True)
+        return fun(par)
+    return wrapper
+
 
 class TadaTada(models.Model):
     _name = 'tada.tada'
@@ -45,8 +51,8 @@ class TadaTada(models.Model):
         Order = self.env['tada.order']
         Order._get_on_tada(self.access_token)
     
+    @sync
     def act_sync_product(self):
-        self = self.with_context(sync=True)
         Product = self.env['tada.product']
         Product._get_on_tada(self.access_token)
         

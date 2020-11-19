@@ -2,9 +2,9 @@ import json
 import requests
 from odoo import models, fields, api
 
-
 OrderUrl = '/v1/integration_merchants/manage/orders'
 OrderDetailUrl = '/v1/integration_merchants/manage/orders/detail/{orderNumberOrId}'
+Headers = {'Content-Type': 'application/json', 'Authorization': None}
 
 
 class TadaOrder(models.Model):
@@ -59,7 +59,7 @@ class TadaOrder(models.Model):
         return
     
     @api.model
-    def _convert_resp_to_vals(self, tada_id, resp_dict):
+    def _convert_resp_tada_to_vals(self, tada_id, resp_dict):
         order = resp_dict
         orderid = order['id']
         requester_type = order['requesterType']
@@ -117,7 +117,8 @@ class TadaOrder(models.Model):
         Fee = self.env['tada.fee']
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
-        headers = {'Content-Type': 'application/json', 'Authorization': authorization}
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
         latest_order_id = self.search([('tada_id', '=', tada_id.id)], order='createdAt desc', limit=1)
         body = {'page': 0}
         if latest_order_id.id:
@@ -136,15 +137,15 @@ class TadaOrder(models.Model):
         while has_next_page:
             body['page'] += 1
             bodyJson = json.dumps(body)
-            auth_response = requests.post(base_api_url + OrderUrl, headers=headers, data=bodyJson, timeout=10.0)
-            resp_json = auth_response.json()
+            response = requests.post(base_api_url + OrderUrl, headers=headers, data=bodyJson, timeout=10.0)
+            resp_json = response.json()
             if resp_json['totalItemPerPage'] == 0:
                 break
             for order in resp_json['data']:
                 count_item += 1
                 orderid = order['id']
                 partner_id = Partner._upsert_customer_tada(order['Recipient'], customers_tada, customers_phone)
-                order_vals = self._convert_resp_to_vals(tada_id, order)
+                order_vals = self._convert_resp_tada_to_vals(tada_id, order)
                 order_vals['recipient_id'] = partner_id
                 order_id = Order.browse(orders.get(orderid, False))
                 if order_id:
@@ -156,7 +157,7 @@ class TadaOrder(models.Model):
                 order_lines = {orderlineid: id for id, orderlineid in self._cr.fetchall()}
                 order_line = []
                 for line in order['OrderItems']:
-                    order_line_vals = OrderLine._convert_resp_to_vals(order_id.id, line, order_lines, variants)
+                    order_line_vals = OrderLine._convert_resp_tada_to_vals(order_id.id, line, order_lines, variants)
                     order_line_id = order_lines.get(line['id'])
                     if order_line_id:
                         order_line.append((1, order_line_id, order_line_vals))
@@ -166,7 +167,7 @@ class TadaOrder(models.Model):
                 payments = {paymentid: id for id, paymentid in self._cr.fetchall()}
                 payment_line = []
                 for payment in order['OrderPayments']:
-                    payment_vals = Payment._convert_resp_to_vals(order_id.id, payment)
+                    payment_vals = Payment._convert_resp_tada_to_vals(order_id.id, payment)
                     payment_id = payments.get(line['id'])
                     if payment_id:
                         payment_line.append((1, payment_id, payment_vals))
@@ -176,7 +177,7 @@ class TadaOrder(models.Model):
                 fees = {feeid: id for id, feeid in self._cr.fetchall()}
                 fee_line = []
                 for fee in order['Fees']:
-                    fee_vals = Fee._convert_resp_to_vals(order_id.id, fee)
+                    fee_vals = Fee._convert_resp_tada_to_vals(order_id.id, fee)
                     fee_id = fees.get(fee['id'], False)
                     if fee_id:
                         fee_line.append((1, fee_id, fee_vals))
@@ -204,7 +205,7 @@ class TadaOrderLine(models.Model):
     updatedAt = fields.Datetime() # updatedAt
     
     @api.model
-    def _convert_resp_to_vals(self, order_id, resp_dict, order_lines=False, variants=False):
+    def _convert_resp_tada_to_vals(self, order_id, resp_dict, order_lines=False, variants=False):
         Variant = self.env['tada.product.variant']
         if not variants:
             self._cr.execute('select id, variantid from %s where tada_id=%d' %(Variant._table, tada_id.id))
@@ -245,7 +246,7 @@ class TadaFee(models.Model):
     updatedAt = fields.Datetime(readonly=True) # updatedAt
     
     @api.model
-    def _convert_resp_to_vals(self, order_id, resp_dict):
+    def _convert_resp_tada_to_vals(self, order_id, resp_dict):
         feeid = resp_dict['id']
         name = resp_dict['name']
         absorber = resp_dict['absorber']
@@ -281,7 +282,7 @@ class TadaPayment(models.Model):
     updatedAt = fields.Datetime(readonly=True) # updatedAt    
     
     @api.model
-    def _convert_resp_to_vals(self, order_id, resp_dict):
+    def _convert_resp_tada_to_vals(self, order_id, resp_dict):
         paymentid = resp_dict['id']
         payment_type = resp_dict['paymentType']
         channel = resp_dict['channel']
