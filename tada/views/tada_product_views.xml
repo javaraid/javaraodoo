@@ -25,19 +25,22 @@
                         <label for="name" string="Product Name"/>
                         <h1><field name="name" placeholder="Product Name"/></h1>
                     </div>
+                    <field name="id" invisible="1" />
 					<group>
 					    <field name="tada_id" />
 					    <field name="productid" />
+					    <field name="sku" attrs="{'invisible': [('has_variant', '=', True)]}" />
 					    <field name="price" attrs="{'invisible': [('has_variant', '=', True)]}" />
+					    <field name="quantity" attrs="{'invisible': [('has_variant', '=', True)]}" />
 					    <field name="category_id" />
 					    <field name="is_digital" />
-					    <field name="item_type" />
+					    <field name="item_type" invisible="1" />
 					    <field name="swap_redeem" />
 					    <field name="image" />
 					    <field name="description" />
-					    <field name="delivery_type" />
+					    <field name="delivery_type" invisible="1" />
 					    <field name="is_limited" />
-					    <field name="limit_qty" />
+					    <field name="limit_qty" attrs="{'invisible': [('is_limited', '=', False)]}" />
 					    <field name="active" />
 					    <field name="variant_ids" attrs="{'invisible': [('has_variant', '=', False)]}">
 					    	<tree>
@@ -46,7 +49,7 @@
 					    	</tree>
 					    </field>
 					    <field name="enable_store_availability" />
-					    <field name="store_ids" />
+					    <field name="store_ids" invisible="True" />
 					    <field name="createdAt" />
 					    <field name="updatedAt" />
 					</group>
@@ -86,16 +89,18 @@
                         <label for="name" string="Product Name"/>
                         <h1><field name="name" placeholder="Product Name"/></h1>
                     </div>
+                    <field name="id" invisible="1" />
 					<group>
 						<field name="name" />
 						<field name="description" />
 						<field name="image" />
-						<field name="variantid" />
+						<field name="product_id" attrs="{'readonly': [('id', '!=', False)]}" />
+						<field name="variantid" attrs="{'readonly': [('id', '!=', False)]}" />
 						<field name="sku" />
 						<field name="is_multi_price" />
 						<field name="min_price" />
 						<field name="price" />
-						<field name="stock_id" />
+						<field name="stock_id" invisible="True" />
 						<field name="active" />
 						<field name="createdAt" />
 						<field name="updatedAt" />

@@ -1,8 +1,12 @@
+import json
+import requests
 from odoo import models, fields, api
 
 
 StockUrl = '/v1/integration_merchants/manage/inventories/stocks'
 StockDetailUrl = '/v1/integration_merchants/manage/inventories/stocks/{stockId}'
+Headers = {'Content-Type': 'application/json', 'Authorization': None}
+
 
 class TadaStock(models.Model):
     _name = 'tada.stock'
@@ -32,7 +36,7 @@ class TadaStock(models.Model):
     updatedAt = fields.Datetime(readonly=True) # updatedAt
     
     @api.model
-    def _convert_resp_to_vals(self, resp_dict):
+    def _convert_resp_tada_to_vals(self, resp_dict):
         stock_type = resp_dict['stockType']
         stockid = resp_dict['id']
         name = resp_dict['name']
@@ -70,5 +74,30 @@ class TadaStock(models.Model):
                       'createdAt': createdAt,
                       'updatedAt': updatedAt,}
         return stock_vals
+    
+    @api.model
+    def create(self, vals):
+        res = super(TadaStock, self).create(vals)
+        if not self._context.get('sync', False):
+            res._create_to_tada(vals)
+        return res
+    
+    def _create_to_tada(self, vals):
+        access_token = self.product_id.tada_id.access_token
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        body = {"name": vals.get('name'),
+                "quantity": vals.get('quantity', 0),
+                "price": vals.get('price', 0),
+                "availability": [
+                  "redemption"
+                 ]
+                }
+        response = requests.post(base_api_url + StockUrl, headers=headers, json=body, timeout=10.0)
+        resp_json = response.json()
+        resp_vals = self._convert_resp_tada_to_vals(resp_json)
+        return self.with_context(sync=True).write(resp_vals)
     
     
