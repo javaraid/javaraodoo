@@ -7,6 +7,8 @@ StockUrl = '/v1/integration_merchants/manage/inventories/stocks'
 StockDetailUrl = '/v1/integration_merchants/manage/inventories/stocks/{stockId}'
 Headers = {'Content-Type': 'application/json', 'Authorization': None}
 
+TadaStockFields = {'name', 'price', 'quantity'}
+
 
 class TadaStock(models.Model):
     _name = 'tada.stock'
@@ -82,6 +84,12 @@ class TadaStock(models.Model):
             res._create_to_tada(vals)
         return res
     
+    def write(self, vals):
+        res = super(TadaStock, self).write(vals)
+        if not self._context.get('sync', False):
+            self._update_to_tada(vals)
+        return res
+    
     def _create_to_tada(self, vals):
         access_token = self.product_id.tada_id.access_token
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
@@ -100,4 +108,24 @@ class TadaStock(models.Model):
         resp_vals = self._convert_resp_tada_to_vals(resp_json)
         return self.with_context(sync=True).write(resp_vals)
     
-    
+    def _update_to_tada(self, vals):
+        updated_fields = set(vals.keys())
+        difference_field = updated_fields.difference(TadaStockFields)
+        for field in difference_field:
+            vals.pop(field)
+        if len(vals) == 0:
+            return
+        body = {'name': vals.get('name', self.name), 'price': vals.get('price', self.price), 'quantity': vals.get('quantity', self.quantity)}
+        bodyJson = json.dumps(body)
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        access_token = self.product_id.tada_id.access_token
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        response = requests.put(base_api_url + StockDetailUrl.format(stockId=self.stockid), headers=headers, data=bodyJson, timeout=10.0)
+        resp_json = response.json()
+        if response.status_code != 200:
+            raise ValidationError(_('Request cannot be completed'))
+        self.with_context(sync=True).write({'updatedAt': resp_json['updatedAt']})
+        
+        
