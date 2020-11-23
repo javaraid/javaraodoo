@@ -17,9 +17,9 @@ class AccountInvoice(models.Model):
             if rec.state not in ('draft','open'):
                 is_cancelable = False
             elif rec.date_invoice :
-                date_invoice = datetime.strptime(rec.date_invoice, '%Y-%m-%d')
+                date_invoice = datetime.strptime(rec.date_invoice, '%Y-%m-%d').date()
                 current_date = datetime.now().date()
-                if date_invoice.month != current_date.month or date_invoice.year != current_date.year:
+                if date_invoice.month < current_date.month and date_invoice < current_date:
                     if self.env.user != admin_user_id :
                         is_cancelable = False
             rec.is_cancelable = is_cancelable
