@@ -69,7 +69,7 @@ class AccountInvoice(models.Model):
         account_invoice_write = super(AccountInvoice,self).write(values)
         if self.date_invoices_old != self.date_invoice:
             self.date_invoices_old = self.date_invoice
-            return account_invoice_write
+        return account_invoice_write
                         
 
 
