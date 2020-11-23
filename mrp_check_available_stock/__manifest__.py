@@ -30,6 +30,7 @@
     # always loaded
     'data': [
         'views/mrp_bom_views.xml',
+        'views/mrp_production_views.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
