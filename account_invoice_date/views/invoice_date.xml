@@ -12,5 +12,19 @@
                 </xpath>
             </field>
         </record>
+        <record model="ir.ui.view" id="invoice_form_cancel_inherit">
+            <field name="name">invoice.date.form</field>
+            <field name="model">account.invoice</field>
+            <field name="inherit_id" ref="account_cancel.invoice_form_cancel_inherit"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='date_invoice']" position="after">
+                    <field name="is_cancelable" invisible="1"/>
+                </xpath>
+                <xpath expr="//button[@name='action_invoice_cancel']" position="attributes">
+                    <attribute name="attrs">{'invisible': [('is_cancelable','=',False)]}</attribute>
+                    <attribute name="states"></attribute>
+                </xpath>
+            </field>
+        </record>
     </data>
 </odoo>
