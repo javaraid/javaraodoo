@@ -3,7 +3,12 @@ odoo.define("pos_javara.PosModel", function(require) {
 
     var rpc = require("web.rpc");
     var models = require("point_of_sale.models");
+    var screens = require("point_of_sale.screens");
+    var models = require("point_of_sale.models");
+    var core = require("web.core");
+    var _t = core._t;
 
+    // menampilkan qty available
     var PosModelSuper = models.PosModel.prototype;
     models.PosModel = models.PosModel.extend({
         load_server_data: function() {
@@ -111,6 +116,51 @@ odoo.define("pos_javara.PosModel", function(require) {
             if (product.qty_available !== data.qty_available) {
                 this.pos.set_product_qty_available(product, data.qty_available);
             }
+
+        },
+    });
+
+    // block stock negative
+    screens.PaymentScreenWidget.include({
+        validate_order: function(force_validation) {
+            var self = this;
+            var _super = this._super;
+            var order = this.pos.get_order();
+            var orderlines = order.get_orderlines();
+            var has_negative_product = false;
+            for (var i = 0; i < orderlines.length; i++) {
+                if (
+                    orderlines[i].product.qty_available < orderlines[i].quantity
+                ) {
+                    has_negative_product = true;
+                    self.gui
+                        .show_popup('alert',{
+                            'title': _t('Can Not Validate Order'),
+                            'body': _t('Order has out-of-stock product'),
+                        });
+                }
+            }
+            if (!has_negative_product) {
+                this._super(force_validation);
+            }
+        },
+    });
+
+    screens.ProductListWidget.include({
+        init: function(parent, options) {
+            var self = this;
+            this._super(parent, options);
+            var click_product_handler_super = this.click_product_handler;
+            this.click_product_handler = function() {
+                var product = self.pos.db.get_product_by_id(this.dataset.productId);
+                if (product.qty_available <= 0) {
+                    return self.gui.show_popup("alert", {
+                        title: _t("The Product is Out of Stock"),
+                        body: _t("It's unavailable to add the product"),
+                    });
+                }
+                _.bind(click_product_handler_super, this)();
+            };
         },
     });
 });
