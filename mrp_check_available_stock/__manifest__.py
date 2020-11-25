@@ -24,7 +24,6 @@
         'base',
         'stock',
         'mrp',
-        'check_available_stock',
     ],
 
     # always loaded
