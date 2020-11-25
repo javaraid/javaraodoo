@@ -11,11 +11,24 @@ class MrpProduction(models.Model):
 
     def check_available_qty(self):
         if self.availability not in ('assigned','none'):
-            if self.bom_id.stock_rule == 'not_less' :
-                raise ValidationError(_('Not enough material stock for MO %s or please click CHECK AVAILABILITY button before PRODUCE'%(self.display_name)))
-            elif self.bom_id.stock_rule == 'less_approval' and self.state == 'progress' :
-                self.state = 'to_approve'
-        return self
+            raise ValidationError(_('Not enough material stock for MO %s or please click CHECK AVAILABILITY button before PRODUCE'%(self.display_name)))
+        return True
+
+    def check_material_consume(self):
+        to_approve = self.env['mrp.production']
+        if self.bom_id.stock_rule != 'less':
+            bom_qty = 0
+            consumed_qty = 0
+            for line in self.move_raw_ids:
+                bom_qty += line.product_uom_qty
+                consumed_qty += line.quantity_done
+            if bom_qty != consumed_qty :
+                if self.bom_id.stock_rule == 'not_less':
+                    raise ValidationError(_('Can not consume qty less than to consume qty for MO %s' % (self.display_name)))
+                elif self.bom_id.stock_rule == 'less_approval' :
+                    self.state = 'to_approve'
+                    to_approve += self
+        return to_approve
 
     @api.multi
     def open_produce_product(self):
@@ -27,7 +40,7 @@ class MrpProduction(models.Model):
         to_approve = self.env['mrp.production']
         for rec in self :
             if not self._context.get('force_post'):
-                to_approve += rec.check_available_qty()
+                to_approve += rec.check_material_consume()
         return super(MrpProduction, self-to_approve).post_inventory()
 
     @api.multi
@@ -36,3 +49,10 @@ class MrpProduction(models.Model):
             if rec.state != 'to_approve' :
                 continue
             rec.state = 'progress'
+
+    @api.multi
+    def action_approve(self):
+        for rec in self :
+            if rec.state != 'to_approve' :
+                continue
+            rec.with_context(force_post=True).post_inventory()
