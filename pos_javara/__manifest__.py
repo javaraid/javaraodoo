@@ -11,8 +11,13 @@
     'description': """Custom PoS for Javara""",
     'depends': [
         'pos_sale',
+        'point_of_sale',
     ],
     'data': [
+        'views/templates.xml',
+    ],
+    'qweb': [
+        "static/src/xml/pos.xml"
     ],
     'demo': [],
     'test': [
