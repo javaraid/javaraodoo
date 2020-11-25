@@ -7,7 +7,7 @@ class MrpBom(models.Model):
     stock_rule = fields.Selection(
         string='Stock Rule',
         selection=[
-            ('not_less', 'Can not Produce MO Less Than Stock'),
-            ('less', 'Can Produce MO Less Than Stock'),
-            ('less_approval', 'Can Produce MO Less Than Stock With Approval'),
+            ('not_less', 'Can not Consume Less Than BoM'),
+            ('less', 'Can Consume Less Than BoM'),
+            ('less_approval', 'Can Consume Less Than BoM With Approval'),
         ], required=True, default='not_less')
