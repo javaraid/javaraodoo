@@ -8,27 +8,8 @@ from dateutil.relativedelta import relativedelta
 class AccountInvoice(models.Model):
     _inherit = "account.invoice"
 
-    @api.depends('date_invoice')
-    @api.multi
-    def _compute_is_cancelable(self):
-        for rec in self :
-            is_cancelable = True
-            admin_user_id = self.env.ref('base.user_root')
-            if rec.state not in ('draft','open'):
-                is_cancelable = False
-            elif rec.date_invoice :
-                date_invoice = datetime.strptime(rec.date_invoice, '%Y-%m-%d').date()
-                current_date = datetime.now().date()
-                if date_invoice.month < current_date.month and date_invoice < current_date:
-                    if self.env.user != admin_user_id :
-                        is_cancelable = False
-            rec.is_cancelable = is_cancelable
-
     # date_orders = fields.Datetime('Order Date', default=datetime.today())
     date_invoices_old = fields.Date(string='Invoice Date', default=datetime.today())
-    is_cancelable = fields.Boolean(
-        string='Is Cancelable',
-        compute='_compute_is_cancelable')
 
     @api.multi
     @api.onchange('date_invoice')
