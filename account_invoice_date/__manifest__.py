@@ -7,7 +7,7 @@
     'author': 'Arkana, Joenan <joenan@arkana.co.id>',
     'website': 'https://www.arkana.co.id',
     'description': """Custom Editable Invoice Date for Accounting Javara""",
-    'depends': ['account','account_cancel'],
+    'depends': ['account'],
     'data': [
         'views/invoice_date.xml',
         # 'views/days_to_receive.xml',
