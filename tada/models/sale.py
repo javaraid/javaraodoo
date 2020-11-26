@@ -9,7 +9,13 @@ class CrmTeam(models.Model):
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
+
+    is_from_tada = fields.Boolean('From Tada')
+    tada_order_ids = fields.One2many('tada.order', 'sale_order_id', 'Order')
     
-    
+    def action_confirm(self):
+        if self.is_from_tada:
+            self.tada_order_ids.action_confirm()
+        return super(SaleOrder, self).action_confirm()
     
     

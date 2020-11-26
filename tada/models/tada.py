@@ -25,6 +25,9 @@ class TadaTada(models.Model):
     # mId = fields.Char()
     order_ids = fields.One2many('tada.order', 'tada_id', 'Orders')
     
+    # Odoo settings
+    warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse', required=True)
+    
     @api.constrains('username')
     def _check_username(self):
         regex = r'[\w.-]+@[\w.-]+.\w+'

@@ -4,6 +4,11 @@
          <field name="value">https://staging-distribution-api.gift.id</field>
      </record>
      
+     <record id="tada_program_id" model="ir.config_parameter">
+         <field name="key">tada.program_id</field>
+         <field name="value">1500923748327</field>
+     </record>
+     
      <record id="salesteam_tada_sales" model="crm.team">
           <field name="name">Tada</field>
           <field name="company_id" eval="False"/>
