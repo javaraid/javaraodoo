@@ -30,7 +30,6 @@ class TadaTada(models.Model):
     
     @api.constrains('username')
     def _check_username(self):
-        return
         regex = r'[\w.-]+@[\w.-]+.\w+'
         if not re.search(regex,self.username):  
             raise ValidationError("Invalid Email")
