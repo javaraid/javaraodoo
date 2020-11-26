@@ -61,6 +61,7 @@ class Partner(models.Model):
             partner_id = self.browse(partner_found)
             partner_id.write(vals)
         else:
+            vals.update({'active': False})
             partner_id = self.create(vals)
             partners_tadaid.update({tadaid: partner_id.id})
             partners_phone.update({phone: partner_id.id})

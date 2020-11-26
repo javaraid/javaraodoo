@@ -28,6 +28,7 @@
 						<!-- <field name="name" attrs="{'invisible': [('state', '=', 'new')]}" /> -->
 						<field name="username" />
 						<field name="expired_at" />
+						<field name="warehouse_id" />
 					</group>
 					<notebook>
 						<page name="category" string="Categories">
