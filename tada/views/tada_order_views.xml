@@ -5,6 +5,7 @@
 		<field name="arch" type="xml">
 			<tree>
 				<field name="order_number" />
+				<field name="status" />
 				<field name="total_all" />
 			</tree>
 		</field>
@@ -15,9 +16,18 @@
 		<field name="model">tada.order</field>
 		<field name="arch" type="xml">
 			<form>
+				<header>
+					<button name="act_create_sale_order" type="object" string="Create Sale Order" class="btn-primary" attrs="{'invisible':[('sale_order_id', '!=', False)]}" />
+				</header>
 				<sheet>
-					<field name="order_number" />
+					<div class="oe_title">
+                        <label for="name" string="Order Number"/>
+                        <h1>
+							<field name="order_number" />
+                        </h1>
+                    </div>
 					<group>
+						<field name="sale_order_id" attrs="{'invisible':[('sale_order_id', '=', False)]}" />
 						<field name="order_type" />
 						<field name="order_reference" />
 						<field name="recipient_id" />
@@ -30,6 +40,7 @@
 						<field name="fee_line_ids" />
 						<field name="total" />
 						<field name="total_all" />
+						<field name="orderid" />
 						<field name="createdAt" />
 						<field name="updatedAt" />
 					</group>

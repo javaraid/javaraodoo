@@ -10,6 +10,7 @@ VariantDetailUrl = '/v1/integration_merchants/manage/inventories/items/{itemid}/
 CategoryUrl = '/v1/integration_merchants/manage/inventories/categories'
 CategoryDetailUrl = '/v1/integration_merchants/manage/inventories/categories/{categoryId}'
 CatalogUrl = '/v1/integration_merchants/manage/inventories/catalogs/{catalogId}/categories'
+ValidateSkuUrl = '/v1/integration_merchants/manage/inventories/items/{itemid}/variants/validate_sku?sku={sku}'
 Headers = {'Content-Type': 'application/json', 'Authorization': None}
 
 TadaCategoryFields = {'parent_id','name','label','active','createdAt','updatedAt',}
@@ -223,6 +224,7 @@ class TadaProduct(models.Model):
     has_variant = fields.Boolean(compute='_compute_has_variant', store=True)
     count_variant = fields.Boolean(compute='_compute_has_variant', store=True)
     system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product')
+    bundling_quantity_ids = fields.One2many('tada.product.bundling.quantity', 'product_id', 'Bundling Quantity')
     
     @api.depends('variant_ids.quantity')
     def _compute_quantity(self):
@@ -425,7 +427,19 @@ class TadaProduct(models.Model):
                 has_next_page = False
     
     @api.model
+    def _check_sku_tada(self, vals):
+        tada_id = self.env['tada.tada'].browse(vals['tada_id'])
+        access_token = tada_id.access_token
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        response = requests.get(base_api_url + ValidateSkuUrl.format(itemid=1, sku=vals['sku']), params=params, headers=headers, timeout=10.0)
+        return
+    
+    @api.model
     def create(self, vals):
+        # self._check_sku_tada(vals)
         res = super(TadaProduct, self).create(vals)
         if not self._context.get('sync', False):
             stock_id = self.env['tada.stock'].create({'name': res.name, 'quantity': res.quantity, 'product_id': res.id, 'price': res.price})
@@ -444,8 +458,9 @@ class TadaProduct(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
+        programid = self.env['ir.config_parameter'].sudo().get_param('tada.program_id')
         body = {'itemType': 'item',
-                'programId': '1500923748327',
+                'programId': programid,
                 'name': self.name,
                 'image': self.image or None,
                 'description': self.description,
@@ -459,6 +474,8 @@ class TadaProduct(models.Model):
                                    "StockId": stock_id.stockid},}
         response = requests.post(base_api_url + ProductUrl, headers=headers, json=body, timeout=10.0)
         resp_json = response.json()
+        if response.status_code != 201:
+            raise ValidationError(_('Please Try Again Later'))
         resp_vals = {'productid': resp_json['id'],
                      'updatedAt': resp_json['updatedAt'],
                      'createdAt': resp_json['createdAt']
@@ -476,8 +493,8 @@ class TadaProduct(models.Model):
         if len(vals) == 0:
             return
         body = {TadaProductFieldsName[key]: value for key, value in vals.items()}
-        if 'category_id' in vals:
-            body.update({'CategoryId': self.category_id.categid})
+        category_id = self.category_id.browse(vals.get('category_id', self.category_id.id))
+        body.update({'CategoryId': category_id.categid})
         body.update(name=vals.get('name', self.name))
         bodyJson = json.dumps(body)
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
@@ -514,13 +531,14 @@ class TadaProductVariant(models.Model):
     updatedAt = fields.Datetime(readonly=True) # updatedAt
     stock_id = fields.Many2one('tada.stock', 'Stocks', required=False, index=True) # StockId
     image_view = fields.Char(related='image')
-    system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product', store=True)
+    system_product_ids = fields.Many2many('product.product', string='Products on System', compute='_compute_system_product')
     quantity = fields.Integer(related='stock_id.quantity', default=0, required=True, store=True)
+    bundling_quantity_ids = fields.One2many('tada.product.bundling.quantity', 'product_variant_id', 'Bundling Quantity')
     
     @api.constrains('sku')
     def _check_sku(self):
-        variant_sku = self.search([('sku', '=', self.sku), ('tada_id', self.tada_id.id)], limit=1)
-        if variant_sku.id:
+        variant_sku = self.search([('sku', '=', self.sku), ('tada_id', '=', self.tada_id.id)], limit=1)
+        if variant_sku.id and variant_sku.id != self.id and not self._context.get('sync', False):
             raise ValidationError(_('SKU has been exist'))
     
     @api.depends('sku')
@@ -647,10 +665,27 @@ class TadaProductVariant(models.Model):
         self.write(variant_vals)
         return
     
+    @api.model
+    def create(self, vals):
+        res = super(TadaProductVariant, self).create(vals)
+        if not self._context.get('sync', False):
+            res._create_to_tada(vals)
+        return res
+    
     def write(self, vals):
         res = super(TadaProductVariant, self).write(vals)
         if not self._context.get('sync', False):
             self._update_to_tada(vals)
         return res
+      
+            
+class TadaProductBundlingQuantity(models.Model):
+    _name = 'tada.product.bundling.quantity'
+    _description = 'Product Bundling'
+    
+    product_variant_id = fields.Many2one('tada.product.variant', 'Product Variant', required=True)
+    product_id = fields.Many2one('tada.product', 'Product', related='product_variant_id.product_id')
+    system_product_id = fields.Many2one('product.product', 'System Product', required=True)
+    quantity = fields.Float('Quantity')
     
     

@@ -1,9 +1,10 @@
-import json
 import requests
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 OrderUrl = '/v1/integration_merchants/manage/orders'
 OrderDetailUrl = '/v1/integration_merchants/manage/orders/detail/{orderNumberOrId}'
+OrderConfirmUrl = '/v1/integration_merchants/manage/orders/confirm'
 Headers = {'Content-Type': 'application/json', 'Authorization': None}
 
 
@@ -11,51 +12,67 @@ class TadaOrder(models.Model):
     _name = 'tada.order'
     _description = 'Order in Tada'
     _rec_name = 'order_number'
+    _rec_order = 'createdAt'
     
     tada_id = fields.Many2one('tada.tada', 'Tada Account', ondelete='cascade', required=True, index=True)
-    orderid = fields.Integer('Order ID') # id
-    requester_type = fields.Char() # requesterType
-    requesterId = fields.Integer() # requesterId
-    order_type = fields.Char() # orderType
-    order_number = fields.Char() # orderNumber
-    order_reference = fields.Char() # orderReference
-    total = fields.Float() # total
-    total_all = fields.Float() # totalAll
-    status = fields.Char() # status
-    request_delivery_date = fields.Datetime() # requestDeliveryDate
-    notes = fields.Char() # notes
+    orderid = fields.Integer('Order ID', readonly=True) # id
+    requester_type = fields.Char(readonly=True) # requesterType
+    requesterId = fields.Integer(readonly=True) # requesterId
+    order_type = fields.Char(readonly=True) # orderType
+    order_number = fields.Char(readonly=True) # orderNumber
+    order_reference = fields.Char(readonly=True) # orderReference
+    total = fields.Float(readonly=True) # total
+    total_all = fields.Float(readonly=True) # totalAll
+    status = fields.Char(readonly=True) # status
+    request_delivery_date = fields.Datetime(readonly=True) # requestDeliveryDate
+    notes = fields.Char(readonly=True) # notes
     receiver = None # receiver
-    recipient_id = fields.Many2one('res.partner', 'Partner') # RecipientId
-    internal_reference = fields.Char() # internalReference
+    recipient_id = fields.Many2one('res.partner', 'Partner', readonly=True) # RecipientId
+    internal_reference = fields.Char(readonly=True) # internalReference
     shippingId = None # ShippingId
-    store_idd = None # storeId
+    store_id = None # storeId
     createdAt = fields.Datetime(readonly=True) # createdAt
     updatedAt = fields.Datetime(readonly=True) # updatedAt
-    order_line_ids = fields.One2many('tada.order.line', 'order_id', 'Tada Order Items') # OrderItems
-    fee_line_ids = fields.One2many('tada.fee', 'order_id', 'Tada Order Fees') # Fees
-    payment_line_ids = fields.One2many('tada.payment', 'order_id', 'Tada Order Payments') # OrderPayments
+    order_line_ids = fields.One2many('tada.order.line', 'order_id', 'Tada Order Items', readonly=True) # OrderItems
+    fee_line_ids = fields.One2many('tada.fee', 'order_id', 'Tada Order Fees', readonly=True) # Fees
+    payment_line_ids = fields.One2many('tada.payment', 'order_id', 'Tada Order Payments', readonly=True) # OrderPayments
+    sale_order_id = fields.Many2one('sale.order', 'Order', readonly=True)
     
     def act_create_sale_order(self):
         team_id = self.env.ref('tada.salesteam_tada_sales')
         currency_id = None
-        date_order = self.order_date
-        name = None
-        partner_id = None
-        partner_invoice_id = None
-        partner_shipping_id = None
-        picking_policy = None
-        pricelist_id = None
-        warehouse_id = None
+        date_order = self.createdAt
+        name = self.order_number
+        partner_id = self.recipient_id
+#         partner_invoice_id = None
+#         partner_shipping_id = None
+        picking_policy = 'one'
+        pricelist_id = partner_id.property_product_pricelist or self.env['product.pricelist'].search([], limit=1)
+        warehouse_id = self.tada_id.warehouse_id
         vals = {'currency_id': currency_id,
                 'date_order': date_order,
                 'origin': name,
                 'partner_id': partner_id.id,
-                'partner_invoice_id': partner_invoice_id.id,
-                'partner_shipping_id': partner_shipping_id.id,
+#                 'partner_invoice_id': partner_invoice_id.id,
+#                 'partner_shipping_id': partner_shipping_id.id,
                 'picking_policy': picking_policy,
                 'pricelist_id': pricelist_id.id,
                 'warehouse_id': warehouse_id.id,
-                'team_id': team_id.id}
+                'team_id': team_id.id,
+                'is_from_tada': True}
+        order_line_vals = self.order_line_ids._generate_sale_order_line()
+        vals['order_line'] = [(0,0, vals) for vals in order_line_vals]
+        sale_order_id = self.env['sale.order'].create(vals)
+        self.sale_order_id= sale_order_id.id
+        return
+    
+    def action_confirm(self):
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        body['page'] += 1
+        response = requests.post(base_api_url + OrderUrl, headers=headers, json=body, timeout=10.0)
         return
     
     @api.model
@@ -136,8 +153,7 @@ class TadaOrder(models.Model):
         customers_phone = {fetch[2]: fetch[1] for fetch in partner_fetched}
         while has_next_page:
             body['page'] += 1
-            bodyJson = json.dumps(body)
-            response = requests.post(base_api_url + OrderUrl, headers=headers, data=bodyJson, timeout=10.0)
+            response = requests.post(base_api_url + OrderUrl, headers=headers, json=body, timeout=10.0)
             resp_json = response.json()
             if resp_json['totalItemPerPage'] == 0:
                 break
@@ -189,6 +205,13 @@ class TadaOrder(models.Model):
                 has_next_page = False
         return
     
+    @api.model
+    def create(self, vals):
+        order_id = self.sale_order_id.search([('origin', '=', vals['order_number'])], limit=1)
+        vals.update({'sale_order_id': order_id.id})
+        res = super(TadaOrder, self).create(vals)
+        return res
+
 
 class TadaOrderLine(models.Model):
     _name = 'tada.order.line'
@@ -231,6 +254,33 @@ class TadaOrderLine(models.Model):
                            'createdAt': createdAt,
                            'updatedAt': updatedAt,}
         return order_line_vals
+    
+    
+    def _generate_sale_order_line(self):
+        vals_list = []
+        bundling_product_ids = self.mapped('variant_id').mapped('bundling_quantity_ids')
+        for rec in self:
+            product_ids = rec.variant_id.system_product_ids
+            if len(product_ids) == 0:
+                raise ValidationError(_('Please create the product on system for SKU %s' %rec.variant_id.sku))
+            sku_lst = rec.variant_id.sku.split(';')
+            system_sku_lst = [product_id.default_code for product_id in product_ids] 
+            for sku in sku_lst:
+                if sku not in system_sku_lst:
+                    raise ValidationError(_('Please create the product on system for SKU %s' %sku))
+            for product_id in product_ids:
+                quantity = rec.quantity
+                bundling_id = bundling_product_ids.filtered(lambda product: product.id == product_id.id)
+                if bundling_id.id:
+                    quantity = bundling_id.quantity
+                vals = {'product_id': product_id.id,
+                        'name': product_id.name,
+                        'product_uom_qty': quantity,
+                        'price_unit': rec.price,
+#                         'tax_id': ,
+                        }
+                vals_list.append(vals)
+        return vals_list
     
     
 class TadaFee(models.Model):
