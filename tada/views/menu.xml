@@ -1,5 +1,5 @@
 <odoo>
-	<menuitem id="menu_tada" name="Tada" />
+	<menuitem id="menu_tada" name="Tada" web_icon="tada,static/description/icon.png"/>
 	<menuitem id="menu_tada_transaction" name="Transaction" parent="menu_tada" sequence="10" />
 	<menuitem id="menu_tada_order" name="Orders" parent="menu_tada_transaction" action="act_tada_order" sequence="10" />
 	<menuitem id="menu_tada_inventory" name="Inventory" parent="menu_tada" sequence="10" />
