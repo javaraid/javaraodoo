@@ -5,6 +5,7 @@ from odoo.exceptions import ValidationError
 OrderUrl = '/v1/integration_merchants/manage/orders'
 OrderDetailUrl = '/v1/integration_merchants/manage/orders/detail/{orderNumberOrId}'
 OrderConfirmUrl = '/v1/integration_merchants/manage/orders/confirm'
+OrderProcessUrl = '/v1/integration_merchants/manage/orders/process'
 Headers = {'Content-Type': 'application/json', 'Authorization': None}
 
 
@@ -68,11 +69,24 @@ class TadaOrder(models.Model):
     
     def action_confirm(self):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
-        authorization = 'Bearer {}'.format(access_token)
+        authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        body['page'] += 1
-        response = requests.post(base_api_url + OrderUrl, headers=headers, json=body, timeout=10.0)
+        body = {'orderNumbers': self.order_number}
+        response = requests.post(base_api_url + OrderConfirmUrl, headers=headers, json=body, timeout=10.0)
+        if response.status_code != 201:
+            raise ValidationError(_('Error'))
+        return
+    
+    def action_process(self):
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(self.tada_id.access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        body = {'orderNumbers': self.order_number}
+        response = requests.post(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=10.0)
+        if response.status_code != 201:
+            raise ValidationError(_('Error'))
         return
     
     @api.model
