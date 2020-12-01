@@ -2,6 +2,7 @@ from odoo import models, api, fields, _
 from odoo.tools.misc import format_date
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
+import pytz
 
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
@@ -45,3 +46,9 @@ class AccountInvoice(models.Model):
                                       help="Date by which the products are sure to be delivered. This is "
                                            "a date that you can promise to the customer, based on the "
                                            "Product Lead Times.")
+
+    def get_commitment_date(self):
+        self.ensure_one()
+        if not self.commitment_date :
+            return ''
+        return pytz.UTC.localize(datetime.strptime(self.commitment_date, '%Y-%m-%d %H:%M:%S')).astimezone(pytz.timezone(self.env.user.tz or 'Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')

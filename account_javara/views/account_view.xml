@@ -10,6 +10,14 @@
 			<xpath expr="//field[@name='payment_term_id']" position="after">
 				<field name="commitment_date"/>
 			</xpath>
+			<xpath expr="//field[@name='comment']" position="replace"/>
+			<page name="other_info" position="after">
+			    <page string="Notes">
+					<group>
+						<field name="comment" widget="html" nolabel="1"/>
+					</group>
+				</page>
+			</page>
 		</field>
 	</record>
 </odoo>
