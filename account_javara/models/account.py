@@ -29,4 +29,19 @@ class AccountMoveLine(models.Model):
 class AccountInvoice(models.Model):
     _inherit = "account.invoice"
 
+    @api.multi
+    @api.depends('invoice_line_ids.sale_line_ids.order_id.commitment_date')
+    def _compute_commitment_date(self):
+        for rec in self :
+            order_ids = rec.mapped('invoice_line_ids.sale_line_ids.order_id').filtered(lambda sale: sale.commitment_date)
+            if order_ids :
+                commitment_date = order_ids[0].commitment_date
+            else :
+                commitment_date = False
+            rec.commitment_date = commitment_date
+
     date_ttf = fields.Date(string='Date TTF')
+    commitment_date = fields.Datetime(compute='_compute_commitment_date', string='Commitment Date', store=True,
+                                      help="Date by which the products are sure to be delivered. This is "
+                                           "a date that you can promise to the customer, based on the "
+                                           "Product Lead Times.")

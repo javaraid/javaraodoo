@@ -62,6 +62,12 @@ class SaleOrderLine(models.Model):
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    @api.multi
+    def _set_commitment_date(self):
+        for rec in self :
+            for pick in rec.picking_ids :
+                pick.scheduled_date = rec.commitment_date
+
     delivery_status = fields.Selection([
             ('no', 'Not Delivered'),
             ('partial', 'Partially Delivered'),
@@ -69,6 +75,16 @@ class SaleOrder(models.Model):
         ], string='Delivery State', compute='_get_delivery', store='True')
     
     delivered_at = fields.Datetime('Delivered at', compute='_get_delivery', store='True')
+    commitment_date = fields.Datetime(inverse='_set_commitment_date')
+
+    @api.multi
+    def action_confirm(self):
+        res = super(SaleOrder, self).action_confirm()
+        for rec in self :
+            for pick in rec.picking_ids :
+                if pick.scheduled_date != rec.commitment_date :
+                    pick.scheduled_date = rec.commitment_date
+        return res
     
     @api.depends('state', 'picking_ids.state')
     def _get_delivery(self):

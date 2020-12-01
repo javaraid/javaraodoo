@@ -13,6 +13,7 @@
         'account_reports',
         'sale',
         'pos_sale',
+        'sale_order_dates'
     ],
     'data': [
         'wizard/view_aged_partner_wizard.xml',
