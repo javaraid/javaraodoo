@@ -106,6 +106,25 @@
         </field>
     </record>
 
+	<!-- Inherit Form View to Modify it -->
+	<record id="view_order_form" model="ir.ui.view">
+	    <field name="name">sale.order.form</field>
+	    <field name="model">sale.order</field>
+	    <field name="inherit_id" ref="sale.view_order_form"/>
+	    <field name="arch" type="xml">
+
+	        <xpath expr="//field[@name='note']" position="replace"/>
+			<xpath expr="//notebook" position="inside">
+				<page string="Notes">
+					<group>
+						<field name="note" widget="html" nolabel="1"/>
+					</group>
+				</page>
+			</xpath>
+
+	    </field>
+	</record>
+
 	<menuitem 
             id="sale_target_model" 
             name="Sale Target" 

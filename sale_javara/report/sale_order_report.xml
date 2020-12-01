@@ -70,6 +70,9 @@
                     </tbody>
                 </table>
             </xpath>
+            <xpath expr="//p[@t-field='doc.note']" position="replace">
+                <span t-raw="doc.note"/>
+            </xpath>
             <xpath expr="//p[@id='fiscal_position_remark']" position="after">
                 <style>
                     .block
