@@ -107,6 +107,18 @@
     </record>
 
 	<!-- Inherit Form View to Modify it -->
+	<record id="view_order_form_inherit_sale_stock_inherit_sale_order_dates" model="ir.ui.view">
+	    <field name="name">sale.order.form</field>
+	    <field name="model">sale.order</field>
+	    <field name="inherit_id" ref="sale_order_dates.view_order_form_inherit_sale_stock_inherit_sale_order_dates"/>
+	    <field name="arch" type="xml">
+
+			<xpath expr="//field[@name='commitment_date']" position="replace"/>
+
+	    </field>
+	</record>
+
+	<!-- Inherit Form View to Modify it -->
 	<record id="view_order_form" model="ir.ui.view">
 	    <field name="name">sale.order.form</field>
 	    <field name="model">sale.order</field>
@@ -120,6 +132,9 @@
 						<field name="note" widget="html" nolabel="1"/>
 					</group>
 				</page>
+			</xpath>
+			<xpath expr="//field[@name='payment_term_id']" position="after">
+				<field name="commitment_date"/>
 			</xpath>
 
 	    </field>
