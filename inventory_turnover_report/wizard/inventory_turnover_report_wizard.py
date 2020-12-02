@@ -7,7 +7,7 @@ from pytz import timezone
 import pytz
 import calendar
 
-class InventoryTurnoverReportWizard(models.Model):
+class InventoryTurnoverReportWizard(models.TransientModel):
     _name = "inventory.turnover.report.wizard"
     _description = "Inventory Turnover Report Wizard"
 
