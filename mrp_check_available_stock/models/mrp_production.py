@@ -56,3 +56,5 @@ class MrpProduction(models.Model):
             if rec.state != 'to_approve' :
                 continue
             rec.with_context(force_post=True).post_inventory()
+            if rec.state == 'to_approve' :
+                rec.write({'state':'progress'})
