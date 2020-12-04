@@ -210,6 +210,8 @@ class InventoryTurnoverReportWizard(models.TransientModel):
                     no += 1
 
             worksheet.write('A%s' % (row), 'Grand Total', wbf['total_orange'])
+            total_onhand = 0
+            total_order = 0
             for x in range(len(columns)):
                 if x == 0:
                     continue
@@ -222,7 +224,11 @@ class InventoryTurnoverReportWizard(models.TransientModel):
                     else:  # number
                         wbf_value = wbf['total_number_orange']
                     if x in column_float_number:
-                        worksheet.write(row - 1, x, column_float_number[x], wbf_value)
+                        if x == 3 :
+                            value = column_float_number[1]/column_float_number[2] if column_float_number[2] else 0.0
+                        else :
+                            value = column_float_number[x]
+                        worksheet.write(row - 1, x, value, wbf_value)
                     else:
                         worksheet.write(row - 1, x, 0, wbf_value)
 
