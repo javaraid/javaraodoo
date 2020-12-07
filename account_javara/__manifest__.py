@@ -16,7 +16,8 @@
     ],
     'data': [
         'wizard/view_aged_partner_wizard.xml',
-        'views/account_view.xml'
+        'views/account_view.xml',
+        'report/account_invoice_report_views.xml',
     ],
     'demo': [],
     'test': [

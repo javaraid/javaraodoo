@@ -27,8 +27,8 @@ class SaleReport(models.Model):
         SUM((l.amt_invoiced_untax / COALESCE(cr.rate, 1.0)) / (COALESCE(l.price_subtotal, 1.0) / COALESCE(cr.rate, 1.0)) * 100) as invoiced_amount_percentage,
         sum((l.qty_invoiced / u.factor * u2.factor) / (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0)) * 100) as invoiced_qty_percentage,
         sum((l.qty_delivered / u.factor * u2.factor) / (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0)) * 100) as delivered_qty_percentage,
-        sum(l.price_subtotal + (l.price_unit * l.discount / 100) * (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0))) as total_without_discount,
-        sum((l.price_unit * l.discount / 100) * (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0))) as total_discount
+        sum((l.price_subtotal / COALESCE(cr.rate, 1.0)) + ((l.price_unit / COALESCE(cr.rate, 1.0)) * l.discount / 100) * (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0))) as total_without_discount,
+        sum(((l.price_unit / COALESCE(cr.rate, 1.0)) * l.discount / 100) * (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0))) as total_discount
         """
 
     def _group_by(self):
