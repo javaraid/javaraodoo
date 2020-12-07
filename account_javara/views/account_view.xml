@@ -34,4 +34,5 @@
 			</xpath>
 		</field>
 	</record>
+	<menuitem name="Invoices" action="account.action_account_invoice_report_all" id="account.menu_action_account_invoice_report_all" parent="sale.menu_sale_report" sequence="20"/>
 </odoo>

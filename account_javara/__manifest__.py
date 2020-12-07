@@ -20,6 +20,7 @@
         'wizard/view_aged_partner_wizard.xml',
         'views/account_view.xml',
         'report/report_invoice_document.xml',
+        'report/account_invoice_report_views.xml',
     ],
     'demo': [],
     'test': [
