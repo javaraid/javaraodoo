@@ -14,6 +14,8 @@ class SaleReport(models.Model):
     invoiced_amount_percentage = fields.Float('% SL Invoiced vs Total', digits=(16, 2), readonly=True, group_operator="avg")
     invoiced_qty_percentage = fields.Float('% SL Qty Invoiced vs Ordered', digits=(16, 2), readonly=True, group_operator="avg")
     delivered_qty_percentage = fields.Float('% SL Qty Delivered vs Ordered', digits=(16, 2), readonly=True, group_operator="avg")
+    total_without_discount = fields.Float('Total w/o Discount', digits=(16, 2), readonly=True, group_operator="sum")
+    total_discount = fields.Float('Total Discount', digits=(16, 2), readonly=True, group_operator="sum")
 
     amt_invoiced_untax = fields.Float('Amount Invoiced Untaxed', readonly=True)
 
@@ -24,7 +26,9 @@ class SaleReport(models.Model):
         sum(l.amt_invoiced_untax / COALESCE(cr.rate, 1.0)) as amt_invoiced_untax,
         SUM((l.amt_invoiced_untax / COALESCE(cr.rate, 1.0)) / (COALESCE(l.price_subtotal, 1.0) / COALESCE(cr.rate, 1.0)) * 100) as invoiced_amount_percentage,
         sum((l.qty_invoiced / u.factor * u2.factor) / (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0)) * 100) as invoiced_qty_percentage,
-        sum((l.qty_delivered / u.factor * u2.factor) / (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0)) * 100) as delivered_qty_percentage
+        sum((l.qty_delivered / u.factor * u2.factor) / (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0)) * 100) as delivered_qty_percentage,
+        sum(l.price_subtotal + (l.price_unit * l.discount / 100) * (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0))) as total_without_discount,
+        sum((l.price_unit * l.discount / 100) * (COALESCE(l.product_uom_qty / u.factor * u2.factor, 1.0))) as total_discount
         """
 
     def _group_by(self):

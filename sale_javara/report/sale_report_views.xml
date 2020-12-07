@@ -13,6 +13,8 @@
                     <field name="invoiced_amount_percentage" type="measure"/>
                     <field name="invoiced_qty_percentage" type="measure"/>
                     <field name="delivered_qty_percentage" type="measure"/>
+                    <field name="total_without_discount" type="measure"/>
+                    <field name="total_discount" type="measure"/>
                 </xpath>
 
             </field>
