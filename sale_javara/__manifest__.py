@@ -15,7 +15,8 @@
         'security/record_rules.xml',
         'views/sale_view.xml',
         # 'views/_menu_item.xml',
-        'report/sale_order_report.xml'
+        'report/sale_order_report.xml',
+        'report/sale_report_views.xml',
     ],
     'demo': [],
     'test': [
