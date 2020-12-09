@@ -17,7 +17,32 @@
 			</tree>
 		</field>
 	</record>
-
+	<record model="ir.ui.view" id="view_sale_target_graph">
+		<field name="name">sale.target.graph</field>
+		<field name="model">sale.target</field>
+		<field name="arch" type="xml">
+			<graph string="Sales Target">
+				<field name="date_from"/>
+				<field name="date_to"/>
+				<field name="amount_target" type="measure"/>
+			</graph>
+		</field>
+	</record>
+	<record model="ir.ui.view" id="view_sale_target_pivot">
+		<field name="name">sale.target.pivot</field>
+		<field name="model">sale.target</field>
+		<field name="arch" type="xml">
+			<pivot string="Sales Target">
+				<field name="date_from" type="row"/>
+				<field name="date_to" type="row"/>
+				<field name="amount_target" type="measure"/>
+				<field name="amount_actual" type="measure"/>
+				<field name="amount_invoiced" type="measure"/>
+				<field name="qty_target" type="measure"/>
+				<field name="qty_actual" type="measure"/>
+			</pivot>
+		</field>
+	</record>
 	<record model="ir.ui.view" id="sale_target_form_view">
         <field name="name">sale.target.form</field>
         <field name="model">sale.target</field>
@@ -65,7 +90,7 @@
 	<record id="sale_target_action" model="ir.actions.act_window">
 		<field name="name">Sales Target</field>
 		<field name="res_model">sale.target</field>
-		<field name="view_mode">tree,form</field>
+		<field name="view_mode">tree,pivot,graph,form</field>
 		<field name="view_type">form</field>
 		<!-- <field name="domain">[('employee_id','=',active_id)]</field> -->
 	</record>

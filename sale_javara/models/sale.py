@@ -145,7 +145,6 @@ class SaleTarget(models.Model):
         ]
         if isinstance(target.id, int) :
             domain.append(('id','!=',target.id))
-        print("\n domain",domain)
         other_targets = self.search(domain)
         return other_targets.mapped(field)
 
@@ -155,71 +154,68 @@ class SaleTarget(models.Model):
                  'unselected_salesperson', 'unselected_customer', 'unselected_product')
     def _get_actual(self):
         for target in self:
-            if target.amount_target <= 0 or (target.product_id and target.qty_target <= 0):
-                continue
-            else:
-                if target.date_from and target.date_to:
-                    domain = [
-                        ('state', 'in', ['sale', 'done']),
-                        ('confirmation_date', '>=', target.date_from),
-                        ('confirmation_date', '<=', target.date_to),
-                    ]
+            if target.date_from and target.date_to:
+                domain = [
+                    ('state', 'in', ['sale', 'done']),
+                    ('confirmation_date', '>=', target.date_from),
+                    ('confirmation_date', '<=', target.date_to),
+                ]
 
-                    if target.unselected_salesperson :
-                        other_sales_person = self.get_same_period(target=target, field='user_id')
-                        if other_sales_person :
-                            domain.append(('user_id', 'not in', other_sales_person.ids))
-                    elif target.salesperson_id :
-                        domain.append(('user_id','=',target.salesperson_id.id))
+                if target.unselected_salesperson :
+                    other_sales_person = self.get_same_period(target=target, field='user_id')
+                    if other_sales_person :
+                        domain.append(('user_id', 'not in', other_sales_person.ids))
+                elif target.salesperson_id :
+                    domain.append(('user_id','=',target.salesperson_id.id))
 
-                    if target.unselected_saleschannel :
-                        other_sales_channel = self.get_same_period(target=target, field='team_id')
-                        if other_sales_channel :
-                            domain.append(('team_id', 'not in', other_sales_channel.ids))
-                    elif target.saleschannel_id :
-                        domain.append(('team_id','=',target.saleschannel_id.id))
+                if target.unselected_saleschannel :
+                    other_sales_channel = self.get_same_period(target=target, field='team_id')
+                    if other_sales_channel :
+                        domain.append(('team_id', 'not in', other_sales_channel.ids))
+                elif target.saleschannel_id :
+                    domain.append(('team_id','=',target.saleschannel_id.id))
 
-                    if target.company_id :
-                        domain.append(('company_id','=',target.company_id.id))
+                if target.company_id :
+                    domain.append(('company_id','=',target.company_id.id))
 
-                    if target.unselected_customer :
-                        other_customer = self.get_same_period(target=target, field='partner_id')
-                        if other_customer :
-                            domain += [
-                                ('partner_id', 'not in', other_customer.ids),
-                                ('partner_id.parent_id', 'not in', other_customer.ids),
-                            ]
-                    elif target.customer_id :
-                        if target.customer_id.child_ids:
-                            domain.append(('partner_id.parent_id','=',target.customer_id.id))
-                        else:
-                            domain.append(('partner_id','=',target.customer_id.id))
+                if target.unselected_customer :
+                    other_customer = self.get_same_period(target=target, field='partner_id')
+                    if other_customer :
+                        domain += [
+                            ('partner_id', 'not in', other_customer.ids),
+                            ('partner_id.parent_id', 'not in', other_customer.ids),
+                        ]
+                elif target.customer_id :
+                    if target.customer_id.child_ids:
+                        domain.append(('partner_id.parent_id','=',target.customer_id.id))
+                    else:
+                        domain.append(('partner_id','=',target.customer_id.id))
 
-                    sales = self.env['sale.order'].search(domain)
-                    order_lines = sales.mapped('order_line')
-                    if order_lines:
-                        if target.unselected_product or target.product_id :
-                            line_domain = [('order_id', 'in', sales.ids)]
-                            if target.unselected_product:
-                                other_product = self.get_same_period(target=target, field='product_id')
-                                if other_product:
-                                    line_domain.append(('product_id', 'not in', other_product.ids))
-                            elif target.product_id:
-                                line_domain.append(('product_id', '=', target.product_id.id))
-                            order_lines = self.env['sale.order.line'].search(line_domain)
-                            amount_actual = sum(order_lines.mapped(lambda l: l.product_uom_qty * l.price_unit))
-                            target.amount_actual = amount_actual
-                            amount_invoiced = sum(order_lines.mapped(lambda l: l.amt_invoiced))
-                            target.amount_invoiced = amount_invoiced
-                            qty_actual = sum(order_lines.mapped(lambda l: l.product_uom_qty))
-                            target.qty_actual = qty_actual
-                        else:
-                            amount_actual = sum(sales.mapped('amount_untaxed'))
-                            target.amount_actual = amount_actual
-                            amount_invoiced = sum(order_lines.mapped('amt_invoiced'))
-                            target.amount_invoiced = amount_invoiced
+                sales = self.env['sale.order'].search(domain)
+                order_lines = sales.mapped('order_line')
+                if order_lines:
+                    if target.unselected_product or target.product_id :
+                        line_domain = [('order_id', 'in', sales.ids)]
+                        if target.unselected_product:
+                            other_product = self.get_same_period(target=target, field='product_id')
+                            if other_product:
+                                line_domain.append(('product_id', 'not in', other_product.ids))
+                        elif target.product_id:
+                            line_domain.append(('product_id', '=', target.product_id.id))
+                        order_lines = self.env['sale.order.line'].search(line_domain)
+                        amount_actual = sum(order_lines.mapped(lambda l: l.product_uom_qty * l.price_unit))
+                        target.amount_actual = amount_actual
+                        amount_invoiced = sum(order_lines.mapped(lambda l: l.amt_invoiced))
+                        target.amount_invoiced = amount_invoiced
+                        qty_actual = sum(order_lines.mapped(lambda l: l.product_uom_qty))
+                        target.qty_actual = qty_actual
+                    else:
+                        amount_actual = sum(sales.mapped('amount_untaxed'))
+                        target.amount_actual = amount_actual
+                        amount_invoiced = sum(order_lines.mapped('amt_invoiced'))
+                        target.amount_invoiced = amount_invoiced
 
-                amount_target = target.amount_target
-                target.percentage_amount = target.amount_actual / amount_target * 100 if amount_target > 0 else 0
-                target.percentage_qty = target.qty_actual / target.qty_target * 100 if target.qty_target > 0 else 0
+            amount_target = target.amount_target
+            target.percentage_amount = target.amount_actual / amount_target * 100 if amount_target > 0 else 0
+            target.percentage_qty = target.qty_actual / target.qty_target * 100 if target.qty_target > 0 else 0
 
