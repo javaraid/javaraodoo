@@ -57,7 +57,9 @@ class MrpProduction(models.Model):
             if not self._context.get('force_done'):
                 to_approve += rec.check_material_consume()
         to_approve.write({'action':'done'})
-        return super(MrpProduction, self-to_approve).with_context(force_post=True).button_mark_done()
+        to_done = self-to_approve
+        if to_done :
+            return super(MrpProduction, to_done).with_context(force_post=True).button_mark_done()
 
     @api.multi
     def action_reject(self):
