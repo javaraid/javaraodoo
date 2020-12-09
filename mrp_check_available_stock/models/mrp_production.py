@@ -8,6 +8,12 @@ class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
     state = fields.Selection(selection_add=[('to_approve','To Approve')])
+    action = fields.Selection(
+        string='Action',
+        selection=[
+            ('post', 'post'),
+            ('done', 'done'),
+        ], copy=False, default='post')
 
     def check_available_qty(self):
         if self.availability not in ('assigned','none'):
@@ -41,7 +47,17 @@ class MrpProduction(models.Model):
         for rec in self :
             if not self._context.get('force_post'):
                 to_approve += rec.check_material_consume()
+        to_approve.write({'action':'post'})
         return super(MrpProduction, self-to_approve).post_inventory()
+
+    @api.multi
+    def button_mark_done(self):
+        to_approve = self.env['mrp.production']
+        for rec in self :
+            if not self._context.get('force_done'):
+                to_approve += rec.check_material_consume()
+        to_approve.write({'action':'done'})
+        return super(MrpProduction, self-to_approve).with_context(force_post=True).button_mark_done()
 
     @api.multi
     def action_reject(self):
@@ -55,6 +71,9 @@ class MrpProduction(models.Model):
         for rec in self :
             if rec.state != 'to_approve' :
                 continue
-            rec.with_context(force_post=True).post_inventory()
+            if rec.action == 'post' :
+                rec.with_context(force_post=True).post_inventory()
+            else :
+                rec.with_context(force_done=True).button_mark_done()
             if rec.state == 'to_approve' :
                 rec.write({'state':'progress'})
