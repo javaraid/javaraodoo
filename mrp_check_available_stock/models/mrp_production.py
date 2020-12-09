@@ -47,19 +47,17 @@ class MrpProduction(models.Model):
         for rec in self :
             if not self._context.get('force_post'):
                 to_approve += rec.check_material_consume()
-        to_approve.write({'action':'post'})
+        if to_approve :
+            to_approve.write({'action':'post'})
         return super(MrpProduction, self-to_approve).post_inventory()
 
     @api.multi
     def button_mark_done(self):
-        to_approve = self.env['mrp.production']
-        for rec in self :
-            if not self._context.get('force_done'):
-                to_approve += rec.check_material_consume()
-        to_approve.write({'action':'done'})
-        to_done = self-to_approve
-        if to_done :
-            return super(MrpProduction, to_done).with_context(force_post=True).button_mark_done()
+        if not self._context.get('force_done'):
+            to_approve = self.check_material_consume()
+            if to_approve :
+                return to_approve.write({'action':'done'})
+        return super(MrpProduction, self).with_context(force_post=True).button_mark_done()
 
     @api.multi
     def action_reject(self):
