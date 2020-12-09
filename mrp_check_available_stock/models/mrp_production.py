@@ -25,7 +25,7 @@ class MrpProduction(models.Model):
         if self.bom_id.stock_rule != 'less':
             bom_qty = 0
             consumed_qty = 0
-            for line in self.move_raw_ids:
+            for line in self.move_raw_ids.filtered(lambda raw: raw.state not in ('done','cancel')):
                 bom_qty += line.product_uom_qty
                 consumed_qty += line.quantity_done
             if bom_qty != consumed_qty :
@@ -57,7 +57,8 @@ class MrpProduction(models.Model):
             to_approve = self.check_material_consume()
             if to_approve :
                 return to_approve.write({'action':'done'})
-        return super(MrpProduction, self).with_context(force_post=True).button_mark_done()
+        self = self.with_context(force_post=True)
+        return super(MrpProduction, self).button_mark_done()
 
     @api.multi
     def action_reject(self):
