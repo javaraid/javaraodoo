@@ -31,12 +31,16 @@
 							<div>
 								<field name="date_from" class="oe_inline"/> - <field name="date_to" class="oe_inline"/>
 							</div>
-							<field name="salesperson_id" options="{&quot;always_reload&quot;: True}"/>
-							<field name="saleschannel_id" options="{&quot;always_reload&quot;: True}"/>
-							<field name="customer_id" domain="[('customer','=',True)]" options="{&quot;always_reload&quot;: True}"/>
+							<field name="unselected_salesperson"/>
+							<field name="salesperson_id" options="{&quot;always_reload&quot;: True}" attrs="{'invisible': [('unselected_salesperson', '!=', False)]}"/>
+							<field name="unselected_saleschannel"/>
+							<field name="saleschannel_id" options="{&quot;always_reload&quot;: True}" attrs="{'invisible': [('unselected_saleschannel', '!=', False)]}"/>
 						</group>
 						<group>
-							<field name="product_id" domain="[('sale_ok','=',True)]" options="{&quot;always_reload&quot;: True}"/>
+							<field name="unselected_customer"/>
+							<field name="customer_id" domain="[('customer','=',True)]" options="{&quot;always_reload&quot;: True}" attrs="{'invisible': [('unselected_customer', '!=', False)]}"/>
+							<field name="unselected_product"/>
+							<field name="product_id" domain="[('sale_ok','=',True)]" options="{&quot;always_reload&quot;: True}" attrs="{'invisible': [('unselected_product', '!=', False)]}"/>
 							<field name="company_id"/>
 						</group>
 					</group>

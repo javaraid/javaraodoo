@@ -102,17 +102,57 @@ class SaleTarget(models.Model):
     amount_target = fields.Float(string='Targeted Amount')
     amount_invoiced = fields.Float(string='Invoiced Amount', compute='_get_actual', store=True)
     percentage_amount = fields.Float(string='Accomplished Amount (%)', compute='_get_actual', store=True)
+    unselected_salesperson = fields.Boolean(
+        string='Unselected Salesperson',
+        help='All unselected salesperson in other records for the same period',
+        required=False)
     salesperson_id = fields.Many2one('res.users', 'Salesperson', ondelete='set null')
+    unselected_saleschannel = fields.Boolean(
+        string='Unselected Sales Channel',
+        help='All unselected sales channel in other records for the same period',
+        required=False)
     saleschannel_id = fields.Many2one('crm.team', 'Sales Channel', ondelete='set null')
     company_id = fields.Many2one('res.company', 'Company', ondelete='cascade')
+    unselected_customer = fields.Boolean(
+        string='Unselected Customer',
+        help='All unselected customer in other records for the same period',
+        required=False)
     customer_id = fields.Many2one('res.partner', 'Customer', ondelete='cascade')
+    unselected_product = fields.Boolean(
+        string='Unselected Product',
+        help='All unselected product in other records for the same period',
+        required=False)
     product_id = fields.Many2one('product.product', 'Product', ondelete='cascade')
     qty_target = fields.Integer(string='Target Qty')
     qty_actual = fields.Integer(string='Actual Qty', compute='_get_actual', store=True)
     percentage_qty = fields.Float(string='Accomplished Qty (%)', compute='_get_actual', store=True)
 
+    @api.onchange('unselected_salesperson','unselected_saleschannel','unselected_customer','unselected_product')
+    def onchange_set_null(self):
+        if self.unselected_salesperson :
+            self.salesperson_id = False
+        if self.unselected_saleschannel :
+            self.saleschannel_id = False
+        if self.unselected_customer :
+            self.customer_id = False
+        if self.unselected_product :
+            self.product_id = False
+
+    def get_same_period(self, target, field):
+        domain = [
+            ('date_from','=',target.date_from),
+            ('date_to','=',target.date_to),
+        ]
+        if isinstance(target.id, int) :
+            domain.append(('id','!=',target.id))
+        print("\n domain",domain)
+        other_targets = self.search(domain)
+        return other_targets.mapped(field)
+
     @api.multi
-    @api.depends('date_from', 'date_to', 'amount_target', 'salesperson_id', 'saleschannel_id', 'company_id', 'customer_id', 'product_id', 'qty_target')
+    @api.depends('date_from', 'date_to', 'amount_target', 'salesperson_id', 'saleschannel_id',
+                 'company_id', 'customer_id', 'product_id', 'qty_target', 'unselected_saleschannel',
+                 'unselected_salesperson', 'unselected_customer', 'unselected_product')
     def _get_actual(self):
         for target in self:
             if target.amount_target <= 0 or (target.product_id and target.qty_target <= 0):
@@ -124,17 +164,32 @@ class SaleTarget(models.Model):
                         ('confirmation_date', '>=', target.date_from),
                         ('confirmation_date', '<=', target.date_to),
                     ]
-                    
-                    if target.salesperson_id :
+
+                    if target.unselected_salesperson :
+                        other_sales_person = self.get_same_period(target=target, field='user_id')
+                        if other_sales_person :
+                            domain.append(('user_id', 'not in', other_sales_person.ids))
+                    elif target.salesperson_id :
                         domain.append(('user_id','=',target.salesperson_id.id))
 
-                    if target.saleschannel_id :
+                    if target.unselected_saleschannel :
+                        other_sales_channel = self.get_same_period(target=target, field='team_id')
+                        if other_sales_channel :
+                            domain.append(('team_id', 'not in', other_sales_channel.ids))
+                    elif target.saleschannel_id :
                         domain.append(('team_id','=',target.saleschannel_id.id))
 
                     if target.company_id :
                         domain.append(('company_id','=',target.company_id.id))
-                    
-                    if target.customer_id :
+
+                    if target.unselected_customer :
+                        other_customer = self.get_same_period(target=target, field='partner_id')
+                        if other_customer :
+                            domain += [
+                                ('partner_id', 'not in', other_customer.ids),
+                                ('partner_id.parent_id', 'not in', other_customer.ids),
+                            ]
+                    elif target.customer_id :
                         if target.customer_id.child_ids:
                             domain.append(('partner_id.parent_id','=',target.customer_id.id))
                         else:
@@ -142,13 +197,21 @@ class SaleTarget(models.Model):
 
                     sales = self.env['sale.order'].search(domain)
                     order_lines = sales.mapped('order_line')
-                    if sales: 
-                        if target.product_id:
-                            amount_actual = sum(order_lines.filtered(lambda l: l.product_id.id == target.product_id.id).mapped(lambda l: l.product_uom_qty * l.price_unit))
+                    if order_lines:
+                        if target.unselected_product or target.product_id :
+                            line_domain = [('order_id', 'in', sales.ids)]
+                            if target.unselected_product:
+                                other_product = self.get_same_period(target=target, field='product_id')
+                                if other_product:
+                                    line_domain.append(('product_id', 'not in', other_product.ids))
+                            elif target.product_id:
+                                line_domain.append(('product_id', '=', target.product_id.id))
+                            order_lines = self.env['sale.order.line'].search(line_domain)
+                            amount_actual = sum(order_lines.mapped(lambda l: l.product_uom_qty * l.price_unit))
                             target.amount_actual = amount_actual
-                            amount_invoiced = sum(order_lines.filtered(lambda l: l.product_id.id == target.product_id.id).mapped(lambda l: l.amt_invoiced))
+                            amount_invoiced = sum(order_lines.mapped(lambda l: l.amt_invoiced))
                             target.amount_invoiced = amount_invoiced
-                            qty_actual = sum(order_lines.filtered(lambda l: l.product_id.id == target.product_id.id).mapped(lambda l: l.product_uom_qty))
+                            qty_actual = sum(order_lines.mapped(lambda l: l.product_uom_qty))
                             target.qty_actual = qty_actual
                         else:
                             amount_actual = sum(sales.mapped('amount_untaxed'))
