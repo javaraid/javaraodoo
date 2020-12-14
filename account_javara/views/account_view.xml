@@ -7,6 +7,14 @@
 			<xpath expr="//field[@name='date_invoice']" position="after">
 				<field name="date_ttf" />
 			</xpath>
+			<xpath expr="//field[@name='comment']" position="replace"/>
+			<page name="other_info" position="after">
+			    <page string="Notes">
+					<group>
+						<field name="comment" widget="html" nolabel="1"/>
+					</group>
+				</page>
+			</page>
 		</field>
 	</record>
 </odoo>
