@@ -1,7 +1,8 @@
 from odoo import models, fields, api, _
 from odoo.tools.float_utils import float_compare, float_round, float_is_zero
 from odoo.exceptions import UserError
-
+from datetime import datetime
+import pytz
 
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
@@ -114,6 +115,12 @@ class SaleOrder(models.Model):
             for rec in self :
                 rec.invoice_ids.with_context({'force_write':True}).write({'comment':values['note']})
         return res
+
+    def get_commitment_date(self):
+        self.ensure_one()
+        if not self.commitment_date :
+            return ''
+        return pytz.UTC.localize(datetime.strptime(self.commitment_date, '%Y-%m-%d %H:%M:%S')).astimezone(pytz.timezone(self.env.user.tz or 'Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
 
 class SaleTarget(models.Model):
     _name = 'sale.target'
