@@ -26,6 +26,10 @@
                 </xpath>
                 <xpath expr="//button[@name='action_toggle_is_locked'][1]" position="attributes">
                     <attribute name="attrs">{'invisible': ['|', '|', '|', ('state', '=', 'cancel'), ('id', '=', False), ('is_locked', '=', False), ('state', 'in', ['to_approve'])]}</attribute>
+                    <attribute name="groups"></attribute>
+                </xpath>
+                <xpath expr="//button[@name='action_toggle_is_locked'][2]" position="attributes">
+                    <attribute name="groups"></attribute>
                 </xpath>
                 <xpath expr="//button[@name='action_toggle_is_locked'][1]" position="after">
                     <button name="action_reject" attrs="{'invisible': [('state', '!=', 'to_approve')]}" string="Reject" type="object" class="btn-danger" groups="mrp.group_mrp_manager"/>
