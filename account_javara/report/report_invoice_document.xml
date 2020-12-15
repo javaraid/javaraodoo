@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_invoice_document" inherit_id="account.report_invoice_document">
+            <xpath expr="//p[@t-if='o.comment']" position="replace">
+                <p t-if="o.comment">
+                    <span t-raw="o.comment"/>
+                </p>
+            </xpath>
+        </template>
+    </data>
+</odoo>

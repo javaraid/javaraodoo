@@ -8,7 +8,7 @@
     'website': 'https://www.arkana.co.id',
     'description': """Custom Sale Management for Javara""",
     'depends': [
-        'sale','sale_stock','stock_days'
+        'sale','sale_stock','stock_days','account_javara',
     ],
     'data': [
         'security/ir.model.access.csv',
