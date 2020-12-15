@@ -1,4 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_target_user,user access sale target,model_sale_target,sales_team.group_sale_salesman_all_leads,1,0,0,0
-access_target_manager,manager access sale target,model_sale_target,sales_team.group_sale_manager,1,0,0,0
-access_target_accounting,accounting access sale target,model_sale_target,account.group_account_manager,1,1,1,1
+access_target_sale_manager,sale manager access sale target,model_sale_target,sales_team.group_sale_manager,1,1,1,1
+access_target_accountant,accountant access sale target,model_sale_target,account.group_account_user,1,0,0,0
