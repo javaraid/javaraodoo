@@ -11,7 +11,7 @@
 			<page name="other_info" position="after">
 			    <page string="Notes">
 					<group>
-						<field name="comment" widget="html" nolabel="1"/>
+						<field name="comment" widget="html" nolabel="1" readonly="0" attrs="{'readonly': [('state','=','cancel')]}"/>
 					</group>
 				</page>
 			</page>
