@@ -107,6 +107,14 @@ class SaleOrder(models.Model):
                 'delivered_at': delivered_at
             })
 
+    @api.multi
+    def write(self, values):
+        res = super(SaleOrder, self).write(values)
+        if values.get('note') and not self._context.get('force_write'):
+            for rec in self :
+                rec.invoice_ids.with_context({'force_write':True}).write({'comment':values['note']})
+        return res
+
 class SaleTarget(models.Model):
     _name = 'sale.target'
     _description = 'Sales Target'
