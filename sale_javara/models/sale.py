@@ -93,9 +93,10 @@ class SaleOrder(models.Model):
 
 class SaleTarget(models.Model):
     _name = 'sale.target'
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'portal.mixin']
     _description = 'Sales Target'
 
-    name = fields.Char(string='Name')
+    name = fields.Char(string='Name', default='New')
     date_from = fields.Date(string='From', required=True)
     date_to = fields.Date(string='To', required=True)
     amount_actual = fields.Float(string='Actual Amount', compute='_get_actual', store=True)
@@ -123,9 +124,18 @@ class SaleTarget(models.Model):
         help='All unselected product in other records for the same period',
         required=False)
     product_id = fields.Many2one('product.product', 'Product', ondelete='cascade')
-    qty_target = fields.Integer(string='Target Qty')
-    qty_actual = fields.Integer(string='Actual Qty', compute='_get_actual', store=True)
+    qty_target = fields.Float(string='Target Qty')
+    qty_actual = fields.Float(string='Actual Qty', compute='_get_actual', store=True)
+    qty_invoiced = fields.Float(string='Invoiced Qty', compute='_get_actual', store=True)
     percentage_qty = fields.Float(string='Accomplished Qty (%)', compute='_get_actual', store=True)
+    amt_invoiced_vs_amt_target = fields.Float(string='Invoiced Amount vs Target Amount (%)', compute='_get_actual', store=True)
+    qty_invoiced_vs_amt_target = fields.Float(string='Invoiced Qty vs Target Qty (%)', compute='_get_actual', store=True)
+
+    @api.model
+    def create(self, values):
+        if values.get('name', 'New') == 'New' :
+            values['name'] = self.sudo().env['ir.sequence'].next_by_code('sale.target')
+        return super(SaleTarget, self).create(values)
 
     @api.onchange('unselected_salesperson','unselected_saleschannel','unselected_customer','unselected_product')
     def onchange_set_null(self):
@@ -154,6 +164,8 @@ class SaleTarget(models.Model):
                  'unselected_salesperson', 'unselected_customer', 'unselected_product')
     def _get_actual(self):
         for target in self:
+            amt_invoiced_vs_amt_target = 0
+            qty_invoiced_vs_amt_target = 0
             if target.date_from and target.date_to:
                 domain = [
                     ('state', 'in', ['sale', 'done']),
@@ -162,14 +174,14 @@ class SaleTarget(models.Model):
                 ]
 
                 if target.unselected_salesperson :
-                    other_sales_person = self.get_same_period(target=target, field='user_id')
+                    other_sales_person = self.get_same_period(target=target, field='salesperson_id')
                     if other_sales_person :
                         domain.append(('user_id', 'not in', other_sales_person.ids))
                 elif target.salesperson_id :
                     domain.append(('user_id','=',target.salesperson_id.id))
 
                 if target.unselected_saleschannel :
-                    other_sales_channel = self.get_same_period(target=target, field='team_id')
+                    other_sales_channel = self.get_same_period(target=target, field='saleschannel_id')
                     if other_sales_channel :
                         domain.append(('team_id', 'not in', other_sales_channel.ids))
                 elif target.saleschannel_id :
@@ -179,7 +191,7 @@ class SaleTarget(models.Model):
                     domain.append(('company_id','=',target.company_id.id))
 
                 if target.unselected_customer :
-                    other_customer = self.get_same_period(target=target, field='partner_id')
+                    other_customer = self.get_same_period(target=target, field='customer_id')
                     if other_customer :
                         domain += [
                             ('partner_id', 'not in', other_customer.ids),
@@ -215,7 +227,13 @@ class SaleTarget(models.Model):
                         amount_invoiced = sum(order_lines.mapped('amt_invoiced'))
                         target.amount_invoiced = amount_invoiced
 
+            target.qty_invoiced = sum(order_lines.mapped('qty_invoiced'))
             amount_target = target.amount_target
             target.percentage_amount = target.amount_actual / amount_target * 100 if amount_target > 0 else 0
             target.percentage_qty = target.qty_actual / target.qty_target * 100 if target.qty_target > 0 else 0
-
+            if target.amount_target :
+                amt_invoiced_vs_amt_target = target.amount_invoiced / target.amount_target * 100
+            if target.qty_target :
+                qty_invoiced_vs_amt_target = target.qty_invoiced / target.qty_target * 100
+            target.amt_invoiced_vs_amt_target = amt_invoiced_vs_amt_target
+            target.qty_invoiced_vs_amt_target = qty_invoiced_vs_amt_target

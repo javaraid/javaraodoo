@@ -1,4 +1,17 @@
 <odoo>
+	<record model="ir.ui.view" id="sale_target_view_search">
+		<field name="name">sale.target.search</field>
+		<field name="model">sale.target</field>
+		<field name="arch" type="xml">
+			<search string="Sales Target">
+				<field name="name" string="Sales Taret" filter_domain="['|',('name','ilike',self),('customer_id','child_of',self)]"/>
+				<field name="customer_id" operator="child_of"/>
+				<field name="salesperson_id"/>
+				<field name="saleschannel_id" string="Sales Channel"/>
+				<field name="product_id"/>
+			</search>
+		</field>
+	</record>
 	<record model="ir.ui.view" id="sale_target_view_tree">
 		<field name="name">sale.target.tree</field>
 		<field name="model">sale.target</field>
@@ -7,6 +20,9 @@
 				<field name="name" />
 				<field name="date_from"/>
 				<field name="date_to"/>
+				<field name="customer_id"/>
+				<field name="salesperson_id"/>
+				<field name="saleschannel_id"/>
 				<field name="product_id"/>
 				<field name="qty_target"/>
 				<field name="percentage_qty"/>
@@ -23,7 +39,6 @@
 		<field name="arch" type="xml">
 			<graph string="Sales Target">
 				<field name="date_from"/>
-				<field name="date_to"/>
 				<field name="amount_target" type="measure"/>
 			</graph>
 		</field>
@@ -34,12 +49,14 @@
 		<field name="arch" type="xml">
 			<pivot string="Sales Target">
 				<field name="date_from" type="row"/>
-				<field name="date_to" type="row"/>
 				<field name="amount_target" type="measure"/>
 				<field name="amount_actual" type="measure"/>
 				<field name="amount_invoiced" type="measure"/>
 				<field name="qty_target" type="measure"/>
 				<field name="qty_actual" type="measure"/>
+				<field name="qty_invoiced" type="measure"/>
+				<field name="amt_invoiced_vs_amt_target" type="measure"/>
+				<field name="qty_invoiced_vs_amt_target" type="measure"/>
 			</pivot>
 		</field>
 	</record>
@@ -49,7 +66,7 @@
         <field name="arch" type="xml">
             <form string="Sales Target">
 				<sheet>
-					<field name="name" placeholder="Target Name"/>
+					<field name="name" placeholder="Target Name" readonly="1"/>
 					<group string="Parameters">
 						<group>
 							<label for="date_from" string="Period"/>
@@ -79,10 +96,15 @@
 						<group>
 							<field name="qty_target" attrs="{'invisible': [('product_id','=',False)], 'required': [('product_id','=',True)]}"/>
 							<field name="qty_actual" attrs="{'invisible': [('product_id','=',False)]}"/>
+							<field name="qty_invoiced" attrs="{'invisible': [('product_id','=',False)]}"/>
 							<field name="percentage_qty" attrs="{'invisible': [('product_id','=',False)]}"/>
 						</group>
 					</group>
 				</sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
 			</form>
         </field>
     </record>
