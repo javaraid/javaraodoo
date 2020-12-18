@@ -10,4 +10,7 @@ class AccountInvoice(models.Model):
             for rec in self:
                 sale_ids = rec.mapped('invoice_line_ids.sale_line_ids.order_id')
                 sale_ids.with_context({'force_write':True}).write({'note': values['comment']})
+                other_inv_ids = sale_ids.mapped('invoice_ids').filtered(lambda inv: inv.id != rec.id)
+                if other_inv_ids :
+                    other_inv_ids.with_context({'force_write': True}).write({'comment': values['comment']})
         return res

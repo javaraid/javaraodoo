@@ -78,6 +78,16 @@
             </xpath>
             <xpath expr="//p[@t-field='doc.note']" position="replace">
                 <span t-raw="doc.note"/>
+<!--                <table>-->
+<!--                    <tr>-->
+<!--                        <td>-->
+<!--                            <span><![CDATA[&nbsp;]]></span>-->
+<!--                        </td>-->
+<!--                        <td>-->
+<!--                            <span t-raw="doc.note"/>-->
+<!--                        </td>-->
+<!--                    </tr>-->
+<!--                </table>-->
             </xpath>
             <xpath expr="//p[@id='fiscal_position_remark']" position="after">
                 <style>
