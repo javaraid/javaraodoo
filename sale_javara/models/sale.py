@@ -258,13 +258,13 @@ class SaleTarget(models.Model):
                         amount_invoiced = sum(order_lines.mapped('amt_invoiced'))
                         target.amount_invoiced = amount_invoiced
 
-            target.qty_invoiced = sum(order_lines.mapped('qty_invoiced'))
-            amount_target = target.amount_target
-            target.percentage_amount = target.amount_actual / amount_target * 100 if amount_target > 0 else 0
-            target.percentage_qty = target.qty_actual / target.qty_target * 100 if target.qty_target > 0 else 0
-            if target.amount_target :
-                amt_invoiced_vs_amt_target = target.amount_invoiced / target.amount_target * 100
-            if target.qty_target :
-                qty_invoiced_vs_amt_target = target.qty_invoiced / target.qty_target * 100
-            target.amt_invoiced_vs_amt_target = amt_invoiced_vs_amt_target
-            target.qty_invoiced_vs_amt_target = qty_invoiced_vs_amt_target
+                target.qty_invoiced = sum(order_lines.mapped('qty_invoiced'))
+                amount_target = target.amount_target
+                target.percentage_amount = target.amount_actual / amount_target * 100 if amount_target > 0 else 0
+                target.percentage_qty = target.qty_actual / target.qty_target * 100 if target.qty_target > 0 else 0
+                if target.amount_target :
+                    amt_invoiced_vs_amt_target = target.amount_invoiced / target.amount_target * 100
+                if target.qty_target :
+                    qty_invoiced_vs_amt_target = target.qty_invoiced / target.qty_target * 100
+                target.amt_invoiced_vs_amt_target = amt_invoiced_vs_amt_target
+                target.qty_invoiced_vs_amt_target = qty_invoiced_vs_amt_target
