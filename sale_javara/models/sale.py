@@ -126,6 +126,7 @@ class SaleTarget(models.Model):
     _name = 'sale.target'
     _inherit = ['mail.thread', 'mail.activity.mixin', 'portal.mixin']
     _description = 'Sales Target'
+    _order = 'id desc'
 
     name = fields.Char(string='Name', default='New')
     date_from = fields.Date(string='From', required=True)
