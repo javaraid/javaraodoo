@@ -10,11 +10,14 @@
     'website': 'https://www.arkana.co.id',
     'description': """Custom PoS for Javara""",
     'depends': [
+        'product',
         'pos_sale',
         'point_of_sale',
     ],
     'data': [
         'views/templates.xml',
+        'views/res_partner_member_views.xml',
+        'security/ir.model.access.csv',
     ],
     'qweb': [
         "static/src/xml/pos.xml"
