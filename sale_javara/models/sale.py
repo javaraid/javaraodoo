@@ -134,7 +134,7 @@ class SaleTarget(models.Model):
     amount_actual = fields.Float(string='Actual Amount', compute='_get_actual', store=True)
     amount_target = fields.Float(string='Targeted Amount')
     amount_invoiced = fields.Float(string='Invoiced Amount', compute='_get_actual', store=True)
-    percentage_amount = fields.Float(string='Accomplished Amount (%)', compute='_get_actual', store=True)
+    percentage_amount = fields.Float(string='Accomplished Amount (%)', compute='_get_actual', store=True, group_operator="avg")
     unselected_salesperson = fields.Boolean(
         string='Unselected Salesperson',
         help='All unselected salesperson in other records for the same period',
@@ -159,9 +159,9 @@ class SaleTarget(models.Model):
     qty_target = fields.Float(string='Target Qty')
     qty_actual = fields.Float(string='Actual Qty', compute='_get_actual', store=True)
     qty_invoiced = fields.Float(string='Invoiced Qty', compute='_get_actual', store=True)
-    percentage_qty = fields.Float(string='Accomplished Qty (%)', compute='_get_actual', store=True)
-    amt_invoiced_vs_amt_target = fields.Float(string='Invoiced Amount vs Target Amount (%)', compute='_get_actual', store=True)
-    qty_invoiced_vs_amt_target = fields.Float(string='Invoiced Qty vs Target Qty (%)', compute='_get_actual', store=True)
+    percentage_qty = fields.Float(string='Accomplished Qty (%)', compute='_get_actual', store=True, group_operator="avg")
+    amt_invoiced_vs_amt_target = fields.Float(string='Invoiced Amount vs Target Amount (%)', compute='_get_actual', store=True, group_operator="avg")
+    qty_invoiced_vs_amt_target = fields.Float(string='Invoiced Qty vs Target Qty (%)', compute='_get_actual', store=True, group_operator="avg")
 
     @api.model
     def create(self, values):
