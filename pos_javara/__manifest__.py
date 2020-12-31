@@ -19,6 +19,7 @@
         'views/pos_order_views.xml',
         'views/res_partner_member_views.xml',
         'views/pos_tender_type_views.xml',
+        'report/pos_order_report_views.xml',
         'security/ir.model.access.csv',
     ],
     'qweb': [
