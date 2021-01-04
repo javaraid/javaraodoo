@@ -1,6 +1,7 @@
 import json
 import requests
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 
 StockUrl = '/v1/integration_merchants/manage/inventories/stocks'
@@ -118,7 +119,7 @@ class TadaStock(models.Model):
         body = {'name': vals.get('name', self.name), 'price': vals.get('price', self.price), 'quantity': vals.get('quantity', self.quantity)}
         bodyJson = json.dumps(body)
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
-        access_token = self.product_id.tada_id.access_token
+        access_token = self.env['tada.product.variant'].search([('stock_id','=', self.id)]).mapped('product_id').tada_id.access_token
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization

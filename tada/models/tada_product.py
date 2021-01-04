@@ -208,7 +208,7 @@ class TadaProduct(models.Model):
     image = fields.Char(compute='_compute_image', inverse='_inverse_image', store=True) # image
     prefix = None # prefix
     delivery_type = fields.Char() # deliveryType
-    is_limited = fields.Boolean() # isLimited
+    is_limited = fields.Boolean(default=True) # isLimited
     limit_qty = fields.Integer() # limitQty
     gcfsItemId = None # gcfsItemId
     variant_ids = fields.One2many('tada.product.variant', 'product_id', 'Product Variants') # Variants
