@@ -70,6 +70,10 @@ class TadaOrder(models.Model):
         vals['order_line'] = [(0,0, vals) for vals in order_line_vals]
         sale_order_id = self.env['sale.order'].create(vals)
         self.sale_order_id= sale_order_id.id
+        return
+    
+    def _action_confirm(self):
+        sale_order_id = self.sale_order_id
         sale_order_id._action_confirm()
         sale_order_id.action_done()
         sale_payment_id = self.env['sale.advance.payment.inv'].with_context(active_ids=sale_order_id.ids, active_model='sale.order').create({'advance_payment_method': 'all'})
@@ -82,13 +86,15 @@ class TadaOrder(models.Model):
         account_payment_id = self.env['account.payment'].create(payment_vals)
         account_payment_id.action_validate_invoice_payment()
         return
-    
+        
     def action_confirm(self):
+        for rec in self:
+            rec._action_confirm()
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        body = {'orderNumbers': self.order_number}
+        body = {'orderNumbers': self.mapped('order_number')}
         response = requests.post(base_api_url + OrderConfirmUrl, headers=headers, json=body, timeout=10.0)
         if response.status_code != 201:
             raise ValidationError(_('Error'))
