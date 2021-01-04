@@ -62,6 +62,7 @@
 		<field name="arch" type="xml">
 			<tree>
 				<field name="variant_id" />
+				<field name="sku" />
 			    <field name="price" />
 			    <field name="quantity" />
 			    <field name="notes" />
@@ -79,6 +80,7 @@
 					<group>
 						<field name="order_id" />
 						<field name="variant_id" />
+						<field name="sku" />
 					    <field name="price" />
 					    <field name="quantity" />
 					    <field name="notes" />
