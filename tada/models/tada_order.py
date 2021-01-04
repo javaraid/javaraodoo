@@ -74,13 +74,14 @@ class TadaOrder(models.Model):
     
     def _action_confirm(self):
         sale_order_id = self.sale_order_id
-        sale_order_id._action_confirm()
-        sale_order_id.action_done()
+#         sale_order_id._action_confirm()
+#         sale_order_id.action_done()
         sale_payment_id = self.env['sale.advance.payment.inv'].with_context(active_ids=sale_order_id.ids, active_model='sale.order').create({'advance_payment_method': 'all'})
         sale_payment_id.create_invoices()
         sale_invoice_id = sale_order_id.invoice_ids
         sale_invoice_id.action_invoice_open()
         # karena katanya langsung ditransfer jadinya langsung di-register payment
+        # TODO: benerin nilai payment untuk ditambah dengan delivery cost
         pay_journal = self.env['account.journal'].search([('is_tada_available', '=', True), ('company_id', '=', self.tada_id.warehouse_id.company_id.id)], limit=1)
         payment_vals = sale_invoice_id._prepare_payment_vals(pay_journal, pay_amount=self.total_all, date=self.updatedAt, writeoff_acc=None, communication=None)
         account_payment_id = self.env['account.payment'].create(payment_vals)
@@ -90,13 +91,14 @@ class TadaOrder(models.Model):
     def action_confirm(self):
         for rec in self:
             rec._action_confirm()
+            rec.status = 'on process'
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
         body = {'orderNumbers': self.mapped('order_number')}
         response = requests.post(base_api_url + OrderConfirmUrl, headers=headers, json=body, timeout=10.0)
-        if response.status_code != 201:
+        if response.status_code != 200:
             raise ValidationError(_('Error'))
         return
     
@@ -105,9 +107,11 @@ class TadaOrder(models.Model):
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        body = {'orderNumbers': self.order_number}
+        # TODO: Add ShippingCompanyId, trackingNumber
+        body = {'orderNumber': self.mapped('order_number')}
         response = requests.post(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=10.0)
-        if response.status_code != 201:
+        import pdb;pdb.set_trace()
+        if response.status_code != 200:
             raise ValidationError(_('Error'))
         return
     
