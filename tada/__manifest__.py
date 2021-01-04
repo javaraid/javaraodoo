@@ -9,6 +9,7 @@
          'data/tada_data.xml',
          'wizard/tada_authenticate_wizard.xml',
          'views/tada_views.xml',
+         'views/tada_store_views.xml',
          'views/tada_product_views.xml',
          'views/tada_order_views.xml',
          'views/menu.xml'

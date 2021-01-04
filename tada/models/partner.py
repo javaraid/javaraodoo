@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, sql_db
 
 CustomerUrl = '/v1/integration_merchants/customers/{id}'
 
@@ -6,7 +6,7 @@ CustomerUrl = '/v1/integration_merchants/customers/{id}'
 class Partner(models.Model):
     _inherit = 'res.partner'
     
-    tadaid = fields.Integer('ID on Tada')
+    tadaid = fields.Integer('ID on Tada') 
     sex = fields.Char()
     birthday = fields.Date()
     
@@ -54,9 +54,9 @@ class Partner(models.Model):
                 'street': street,
                 'zip': zip,
                 'customer': True}
-        partner_found = partners_tadaid.get(tadaid, False)
+        partner_found = partners_phone.get(phone, False)
         if not partner_found:
-            partners_found = partners_phone.get(phone, False)
+            partner_found = partners_tadaid.get(tadaid, False)
         if partner_found:
             partner_id = self.browse(partner_found)
             partner_id.write(vals)

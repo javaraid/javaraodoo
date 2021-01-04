@@ -36,7 +36,7 @@
 					    <field name="is_digital" />
 					    <field name="item_type" invisible="1" />
 					    <field name="swap_redeem" />
-					    <field name="image" />
+					    <field name="image" required="1" />
 					    <field name="description" />
 					    <field name="delivery_type" invisible="1" />
 					    <field name="is_limited" />
