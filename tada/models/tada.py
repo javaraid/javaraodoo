@@ -1,7 +1,11 @@
 import re
+import requests
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 from addons.event_sale.models.product import Product
+
+StoreUrl = '/v1/integration_merchants/stores'
+Headers = {'Content-Type': 'application/json', 'Authorization': None}
 
 def sync(fun):
     def wrapper(par):
@@ -63,14 +67,66 @@ class TadaTada(models.Model):
         self = self.with_context(sync=True)
         Category = self.env['tada.category']
         Category._get_on_tada(self.access_token)
-
-
+    
+    def act_sync_store(self):
+        Store = self.env['tada.store'].sudo()
+        access_token = self.access_token
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        response = requests.get(base_api_url + StoreUrl, headers=headers, timeout=10.0)
+        resp_json = response.json()
+        store_ids = Store.search([('tada_id', '=', self.id),'|', ('active', '=', True), ('active', '=', False)])
+        for store in resp_json:
+            storeId = store['id']
+            sId = store['sId']
+            name = store['location']
+            phone = store['phone']
+            email = store['email']
+            coordinate = store['coordinate']
+            address = store['address']
+            active = store['active']
+            store_type = store['storeType']
+            store_vals = {'storeId': storeId,
+                    'sId': sId,
+                    'name': name,
+                    'phone': phone,
+                    'email': email,
+                    'coordinate': coordinate,
+                    'address': address,
+                    'active': active,
+                    'store_type': store_type,
+                    'tada_id': self.id}
+            store_id = store_ids.filtered(lambda rec: rec.storeId == storeId)
+            if store_id:
+                store_id.write.create(store_vals)
+            else:
+                Store.create(store_vals)
+        return
+        
+        
 class TadaStore(models.Model):
     _name = 'tada.store'
     _description = 'Tada Store'
     
-    name = fields.Char()
-    tada_id = fields.Many2one('tada.tada', 'Tada', ondelete='cascade')
-    
+    storeId = fields.Integer() # id
+    sId = fields.Char() # sId
+    name = fields.Char() # location
+    contact = None # contact
+    contactPosition = None # contactPosition
+    phone = fields.Char() # phone
+    email = fields.Char() # email
+    coordinate = fields.Char() # coordinate
+    address = fields.Char() # address
+    active = fields.Boolean() # active
+    store_type = fields.Char() # storeType
+    storeCode = None # storeCode
+    bankName = None # bankName
+    bankAccountNumber = None # bankAccountNumber
+    bankAccountHolder = None # bankAccountHolder
+    npwp = None # npwp
+    warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse')
+    tada_id = fields.Many2one('tada.tada', 'Tada', ondelete='cascade')    
     
     

@@ -17,7 +17,7 @@
 		<field name="arch" type="xml">
 			<form>
 				<header>
-					<button name="act_create_sale_order" type="object" string="Create Sale Order" class="btn-primary" attrs="{'invisible':[('sale_order_id', '!=', False)]}" />
+					<button name="act_create_sale_order" type="object" string="Create Sale Order" class="btn-primary" attrs="{'invisible':['|', ('sale_order_id', '!=', False), ('status', '!=', 'payment success')]}" />
 				</header>
 				<sheet>
 					<div class="oe_title">
@@ -31,6 +31,7 @@
 						<field name="order_type" />
 						<field name="order_reference" />
 						<field name="recipient_id" />
+						<field name="recipientName" />
 						<field name="status" />
 						<field name="request_delivery_date" />
 						<field name="notes" />

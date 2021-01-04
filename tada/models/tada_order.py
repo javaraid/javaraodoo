@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 import requests
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
@@ -13,7 +14,7 @@ class TadaOrder(models.Model):
     _name = 'tada.order'
     _description = 'Order in Tada'
     _rec_name = 'order_number'
-    _rec_order = 'createdAt'
+    _order = 'createdAt desc'
     
     tada_id = fields.Many2one('tada.tada', 'Tada Account', ondelete='cascade', required=True, index=True)
     orderid = fields.Integer('Order ID', readonly=True) # id
@@ -29,6 +30,8 @@ class TadaOrder(models.Model):
     notes = fields.Char(readonly=True) # notes
     receiver = None # receiver
     recipient_id = fields.Many2one('res.partner', 'Partner', readonly=True) # RecipientId
+    recipientId = fields.Integer(readonly=True) # RecipientId
+    recipientName = fields.Char(readonly=True) # Recipient.firstName
     internal_reference = fields.Char(readonly=True) # internalReference
     shippingId = None # ShippingId
     store_id = None # storeId
@@ -40,6 +43,8 @@ class TadaOrder(models.Model):
     sale_order_id = fields.Many2one('sale.order', 'Order', readonly=True)
     
     def act_create_sale_order(self):
+        if self.status != 'payment success':
+            raise ValidationError(_('Status of order %s is not payment success' %self.order_number))
         team_id = self.env.ref('tada.salesteam_tada_sales')
         currency_id = None
         date_order = self.createdAt
@@ -105,6 +110,7 @@ class TadaOrder(models.Model):
         notes = order['notes']
 #                 receiver = order['receiver']
 #                 recipient_id = customers.get(order['RecipientId'], False)
+        recipientId = order['RecipientId']
         internal_reference = order['internalReference']
 #                 shipping`Id = order['ShippingId']
 #                 store_id = order['storeId']
@@ -153,8 +159,9 @@ class TadaOrder(models.Model):
         latest_order_id = self.search([('tada_id', '=', tada_id.id)], order='createdAt desc', limit=1)
         body = {'page': 0}
         if latest_order_id.id:
-            today = fields.Date.today()
-            body.update({'periodStart': latest_order_id.createdAt.split(' ')[0], 'periodEnd': today})
+            periodStart = latest_order_id.createdAt.split(' ')[0]
+            periodEnd = str(date.today() + timedelta(days=1))
+            body.update({'periodStart': periodStart, 'periodEnd': periodEnd})
         self._cr.execute('select id, orderid from %s where tada_id=%d' %(Order._table, tada_id.id))
         orders = {orderid: id for id, orderid in self._cr.fetchall()}
         self._cr.execute('select id, variantid from %s where tada_id=%d' %(Variant._table, tada_id.id))
@@ -164,7 +171,7 @@ class TadaOrder(models.Model):
         self._cr.execute('select id, tadaid, phone from {table} where customer=True;'.format(table=Partner._table))
         partner_fetched = self._cr.fetchall()
         customers_tada = {fetch[1]: fetch[0] for fetch in partner_fetched}
-        customers_phone = {fetch[2]: fetch[1] for fetch in partner_fetched}
+        customers_phone = {fetch[2]: fetch[0] for fetch in partner_fetched}
         while has_next_page:
             body['page'] += 1
             response = requests.post(base_api_url + OrderUrl, headers=headers, json=body, timeout=10.0)
@@ -174,9 +181,11 @@ class TadaOrder(models.Model):
             for order in resp_json['data']:
                 count_item += 1
                 orderid = order['id']
-                partner_id = Partner._upsert_customer_tada(order['Recipient'], customers_tada, customers_phone)
+                Recipient = order['Recipient']
+                partner_id = Partner._upsert_customer_tada(Recipient, customers_tada, customers_phone)
                 order_vals = self._convert_resp_tada_to_vals(tada_id, order)
                 order_vals['recipient_id'] = partner_id
+                order_vals['recipientName'] = Recipient['firstName']
                 order_id = Order.browse(orders.get(orderid, False))
                 if order_id:
                     order_id.write(order_vals)
@@ -198,7 +207,7 @@ class TadaOrder(models.Model):
                 payment_line = []
                 for payment in order['OrderPayments']:
                     payment_vals = Payment._convert_resp_tada_to_vals(order_id.id, payment)
-                    payment_id = payments.get(line['id'])
+                    payment_id = payments.get(payment['id'])
                     if payment_id:
                         payment_line.append((1, payment_id, payment_vals))
                     else:
@@ -217,6 +226,13 @@ class TadaOrder(models.Model):
                 
             if count_item == resp_json['totalItems']:
                 has_next_page = False
+        return
+    
+    @api.model
+    def _confirm_paid_order(self):
+        paid_orders = self.search([('status', '=', 'payment success')])
+        for paid_order in paid_orders:
+            paid_order.act_create_sale_order()
         return
     
     @api.model
@@ -240,6 +256,7 @@ class TadaOrderLine(models.Model):
     status = fields.Char() # status
     createdAt = fields.Datetime() # createdAt
     updatedAt = fields.Datetime() # updatedAt
+    sku = fields.Char('SKU', related='variant_id.sku')
     
     @api.model
     def _convert_resp_tada_to_vals(self, order_id, resp_dict, order_lines=False, variants=False):

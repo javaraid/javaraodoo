@@ -21,6 +21,7 @@
 					<button name="act_sync_category" type="object" string="Get Categories" class="btn-primary" />
 					<button name="act_sync_product" type="object" string="Get Products" class="btn-primary" />
 					<button name="act_sync_order" type="object" string="Get Order" class="btn-primary" />
+					<button name="act_sync_store" type="object" string="Get Stores" class="btn-primary" />
 					<field name="state" widget="statusbar" />
 				</header>
 				<sheet>

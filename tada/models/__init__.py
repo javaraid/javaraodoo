@@ -1,3 +1,4 @@
+from . import account_journal
 from . import partner
 from . import sale
 from . import tada
