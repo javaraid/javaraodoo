@@ -14,8 +14,9 @@ class SaleOrder(models.Model):
     tada_order_ids = fields.One2many('tada.order', 'sale_order_id', 'Order')
     
     def action_confirm(self):
+        res = super(SaleOrder, self).action_confirm()
         if self.is_from_tada:
             self.tada_order_ids.action_confirm()
-        return super(SaleOrder, self).action_confirm()
+        return res
     
     
