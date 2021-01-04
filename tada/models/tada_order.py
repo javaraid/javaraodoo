@@ -70,6 +70,17 @@ class TadaOrder(models.Model):
         vals['order_line'] = [(0,0, vals) for vals in order_line_vals]
         sale_order_id = self.env['sale.order'].create(vals)
         self.sale_order_id= sale_order_id.id
+        sale_order_id._action_confirm()
+        sale_order_id.action_done()
+        sale_payment_id = self.env['sale.advance.payment.inv'].with_context(active_ids=sale_order_id.ids, active_model='sale.order').create({'advance_payment_method': 'all'})
+        sale_payment_id.create_invoices()
+        sale_invoice_id = sale_order_id.invoice_ids
+        sale_invoice_id.action_invoice_open()
+        # karena katanya langsung ditransfer jadinya langsung di-register payment
+        pay_journal = self.env['account.journal'].search([('is_tada_available', '=', True), ('company_id', '=', self.tada_id.warehouse_id.company_id.id)], limit=1)
+        payment_vals = sale_invoice_id._prepare_payment_vals(pay_journal, pay_amount=self.total_all, date=self.updatedAt, writeoff_acc=None, communication=None)
+        account_payment_id = self.env['account.payment'].create(payment_vals)
+        account_payment_id.action_validate_invoice_payment()
         return
     
     def action_confirm(self):
@@ -256,7 +267,7 @@ class TadaOrderLine(models.Model):
     status = fields.Char() # status
     createdAt = fields.Datetime() # createdAt
     updatedAt = fields.Datetime() # updatedAt
-    sku = fields.Char('SKU', related='variant_id.sku')
+    sku = fields.Char('SKU', related='variant_id.sku', readonly=True)
     
     @api.model
     def _convert_resp_tada_to_vals(self, order_id, resp_dict, order_lines=False, variants=False):
@@ -293,7 +304,7 @@ class TadaOrderLine(models.Model):
         for rec in self:
             product_ids = rec.variant_id.system_product_ids
             if len(product_ids) == 0:
-                raise ValidationError(_('Please create the product on system for SKU %s' %rec.variant_id.sku))
+                raise ValidationError(_('Please create the product on system for SKU %s (%s)' %(rec.variant_id.sku, rec.variant_id.name)))
             sku_lst = rec.variant_id.sku.split(';')
             system_sku_lst = [product_id.default_code for product_id in product_ids] 
             for sku in sku_lst:
