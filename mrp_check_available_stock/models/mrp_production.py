@@ -28,7 +28,7 @@ class MrpProduction(models.Model):
             for line in self.move_raw_ids.filtered(lambda raw: raw.state not in ('done','cancel')):
                 bom_qty += line.product_uom_qty
                 consumed_qty += line.quantity_done
-            if bom_qty != consumed_qty :
+            if bom_qty > consumed_qty :
                 if self.bom_id.stock_rule == 'not_less':
                     raise ValidationError(_('Can not consume qty less than to consume qty for MO %s' % (self.display_name)))
                 elif self.bom_id.stock_rule == 'less_approval' :
