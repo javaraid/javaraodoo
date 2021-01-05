@@ -1,6 +1,6 @@
 import json
 import requests
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
 
@@ -104,7 +104,7 @@ class TadaStock(models.Model):
                   "redemption"
                  ]
                 }
-        response = requests.post(base_api_url + StockUrl, headers=headers, json=body, timeout=10.0)
+        response = requests.post(base_api_url + StockUrl, headers=headers, json=body, timeout=50.0)
         resp_json = response.json()
         resp_vals = self._convert_resp_tada_to_vals(resp_json)
         return self.with_context(sync=True).write(resp_vals)
@@ -123,7 +123,7 @@ class TadaStock(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        response = requests.put(base_api_url + StockDetailUrl.format(stockId=self.stockid), headers=headers, data=bodyJson, timeout=10.0)
+        response = requests.put(base_api_url + StockDetailUrl.format(stockId=self.stockid), headers=headers, data=bodyJson, timeout=50.0)
         resp_json = response.json()
         if response.status_code != 200:
             raise ValidationError(_('Request cannot be completed'))

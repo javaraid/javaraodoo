@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 import requests
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
@@ -41,6 +41,9 @@ class TadaOrder(models.Model):
     fee_line_ids = fields.One2many('tada.fee', 'order_id', 'Tada Order Fees', readonly=True) # Fees
     payment_line_ids = fields.One2many('tada.payment', 'order_id', 'Tada Order Payments', readonly=True) # OrderPayments
     sale_order_id = fields.Many2one('sale.order', 'Order', readonly=True)
+    has_no_product = fields.Boolean('Has no product?')
+    awb_number = fields.Char('AWB Number') # OrderItems.AwbOrder.Awb.awbNumber
+    shipping_company_id = fields.Many2one('tada.shipping.company', 'Shipping Company')
     
     def act_create_sale_order(self):
         if self.status != 'payment success':
@@ -97,7 +100,7 @@ class TadaOrder(models.Model):
         headers = Headers.copy()
         headers['Authorization'] = authorization
         body = {'orderNumbers': self.mapped('order_number')}
-        response = requests.post(base_api_url + OrderConfirmUrl, headers=headers, json=body, timeout=10.0)
+        response = requests.post(base_api_url + OrderConfirmUrl, headers=headers, json=body, timeout=50.0)
         if response.status_code != 200:
             raise ValidationError(_('Error'))
         return
@@ -109,8 +112,7 @@ class TadaOrder(models.Model):
         headers['Authorization'] = authorization
         # TODO: Add ShippingCompanyId, trackingNumber
         body = {'orderNumber': self.mapped('order_number')}
-        response = requests.post(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=10.0)
-        import pdb;pdb.set_trace()
+        response = requests.post(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=50.0)
         if response.status_code != 200:
             raise ValidationError(_('Error'))
         return
@@ -177,12 +179,13 @@ class TadaOrder(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        latest_order_id = self.search([('tada_id', '=', tada_id.id)], order='createdAt desc', limit=1)
+        # Karena webhook belum ada info, jadi harus request dari awal setiap sinkron
+        #latest_order_id = self.search([('tada_id', '=', tada_id.id)], order='createdAt desc', limit=1)
         body = {'page': 0}
-        if latest_order_id.id:
-            periodStart = latest_order_id.createdAt.split(' ')[0]
-            periodEnd = str(date.today() + timedelta(days=1))
-            body.update({'periodStart': periodStart, 'periodEnd': periodEnd})
+        #if latest_order_id.id:
+        #    periodStart = latest_order_id.createdAt.split(' ')[0]
+        #    periodEnd = str(date.today() + timedelta(days=1))
+        #    body.update({'periodStart': periodStart, 'periodEnd': periodEnd})
         self._cr.execute('select id, orderid from %s where tada_id=%d' %(Order._table, tada_id.id))
         orders = {orderid: id for id, orderid in self._cr.fetchall()}
         self._cr.execute('select id, variantid from %s where tada_id=%d' %(Variant._table, tada_id.id))
@@ -195,7 +198,7 @@ class TadaOrder(models.Model):
         customers_phone = {fetch[2]: fetch[0] for fetch in partner_fetched}
         while has_next_page:
             body['page'] += 1
-            response = requests.post(base_api_url + OrderUrl, headers=headers, json=body, timeout=10.0)
+            response = requests.post(base_api_url + OrderUrl, headers=headers, json=body, timeout=50.0)
             resp_json = response.json()
             if resp_json['totalItemPerPage'] == 0:
                 break
@@ -243,17 +246,24 @@ class TadaOrder(models.Model):
                         fee_line.append((1, fee_id, fee_vals))
                     else:
                         fee_line.append((0, 0, fee_vals))
-                order_id.write({'order_line_ids': order_line, 'payment_line_ids': payment_line, 'fee_line_ids': fee_line})
+                awb_number = order['OrderItems'][0]['AwbOrder']['Awb']['awbNumber']
+                ShippingCompanyId = order['OrderItems'][0]['AwbOrder']['Awb']['ShippingCompanyId']
+                shipping_company_id = self.env['tada.shipping.company'].search([('shippingCompanyId', '=', ShippingCompanyId)], limit=1)
+                order_id.write({'order_line_ids': order_line, 'payment_line_ids': payment_line, 'fee_line_ids': fee_line, 'awb_number': awb_number, 'shipping_company_id': shipping_company_id.id})
                 
             if count_item == resp_json['totalItems']:
                 has_next_page = False
+        paid_order_cron_id = self.env.ref('tada.tada_order_paid_cron')
+        paid_order_cron_id.write({'active': True, 'nextcall': str(datetime.now()+timedelta(minutes=1))})
         return
     
     @api.model
     def _confirm_paid_order(self):
-        paid_orders = self.search([('status', '=', 'payment success')])
+        paid_orders = self.with_context(confirm_batch=True).search([('status', '=', 'payment success'), ('sale_order_id', '=', False)])
         for paid_order in paid_orders:
             paid_order.act_create_sale_order()
+        paid_order_cron_id = self.env.ref('tada.tada_order_paid_cron')
+        paid_order_cron_id.write({'active': False})
         return
     
     @api.model
@@ -311,15 +321,25 @@ class TadaOrderLine(models.Model):
     def _generate_sale_order_line(self):
         vals_list = []
         bundling_product_ids = self.mapped('variant_id').mapped('bundling_quantity_ids')
+        confirm_batch = self._context.get('confirm_batch', False)
         for rec in self:
             product_ids = rec.variant_id.system_product_ids
+            warning_text = _('Please create the product on system for SKU %s (%s)' %(rec.variant_id.sku, rec.variant_id.name))
             if len(product_ids) == 0:
-                raise ValidationError(_('Please create the product on system for SKU %s (%s)' %(rec.variant_id.sku, rec.variant_id.name)))
+                if not confirm_batch:
+                    raise ValidationError(warning_text)
+                else:
+                    rec.order_id.has_no_product = True
+                    continue
             sku_lst = rec.variant_id.sku.split(';')
             system_sku_lst = [product_id.default_code for product_id in product_ids] 
             for sku in sku_lst:
                 if sku not in system_sku_lst:
-                    raise ValidationError(_('Please create the product on system for SKU %s' %sku))
+                    if not confirm_batch:
+                        raise ValidationError(warning_text)
+                    else:
+                        rec.order_id.has_no_product = True
+                        continue
             for product_id in product_ids:
                 quantity = rec.quantity
                 bundling_id = bundling_product_ids.filtered(lambda product: product.id == product_id.id)
