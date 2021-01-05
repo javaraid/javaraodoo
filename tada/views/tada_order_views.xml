@@ -6,6 +6,7 @@
 			<tree>
 				<field name="order_number" />
 				<field name="status" />
+				<field name="awb_number" />
 				<field name="total_all" />
 			</tree>
 		</field>
@@ -33,6 +34,8 @@
 						<field name="recipient_id" />
 						<field name="recipientName" />
 						<field name="status" />
+						<field name="awb_number" readonly="1" />
+						<field name="shipping_company_id" readonly="1" />
 						<field name="request_delivery_date" />
 						<field name="notes" />
 						<field name="internal_reference" />

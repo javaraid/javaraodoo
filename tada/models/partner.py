@@ -16,7 +16,7 @@ class Partner(models.Model):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
         headers = {'Content-Type': 'application/json', 'Authorization': authorization}
-        auth_response = requests.get(base_api_url + CustomerUrl, headers=headers, timeout=10.0)
+        auth_response = requests.get(base_api_url + CustomerUrl, headers=headers, timeout=50.0)
         resp_json = auth_response.json()
         tadaid = resp_json['id'] # id
         name = resp_json['name'] # name

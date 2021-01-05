@@ -75,7 +75,7 @@ class TadaTada(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        response = requests.get(base_api_url + StoreUrl, headers=headers, timeout=10.0)
+        response = requests.get(base_api_url + StoreUrl, headers=headers, timeout=50.0)
         resp_json = response.json()
         store_ids = Store.search([('tada_id', '=', self.id),'|', ('active', '=', True), ('active', '=', False)])
         for store in resp_json:
