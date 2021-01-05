@@ -85,7 +85,7 @@ class TadaCategory(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        response = requests.get(base_api_url + CategoryUrl, headers=headers, timeout=10.0)
+        response = requests.get(base_api_url + CategoryUrl, headers=headers, timeout=50.0)
         resp_json = response.json()
         self._cr.execute('select id, categid from %s where tada_id=%d' %(self._table, tada_id.id))
         categories = {categid: id for id, categid in self._cr.fetchall()}
@@ -153,7 +153,7 @@ class TadaCategory(models.Model):
                     "EXTERNAL_PAYMENT"
                   ]
                 }
-        response = requests.post(base_api_url + CategoryUrl, headers=headers, json=body, timeout=10.0)
+        response = requests.post(base_api_url + CategoryUrl, headers=headers, json=body, timeout=50.0)
         resp_json = response.json()
         if response.status_code != 200:
             raise ValidationError(_('Request cannot be completed'))
@@ -184,7 +184,7 @@ class TadaCategory(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        response = requests.put(base_api_url + CategoryDetailUrl.format(categoryId=self.categid), headers=headers, data=bodyJson, timeout=10.0)
+        response = requests.put(base_api_url + CategoryDetailUrl.format(categoryId=self.categid), headers=headers, data=bodyJson, timeout=50.0)
         resp_json = response.json()
         if response.status_code != 200:
             raise ValidationError(_('Request cannot be completed'))
@@ -369,7 +369,7 @@ class TadaProduct(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        response = requests.get(base_api_url + ProductDetailUrl.format(itemid=self.productid), headers=headers, timeout=10.0)
+        response = requests.get(base_api_url + ProductDetailUrl.format(itemid=self.productid), headers=headers, timeout=50.0)
         resp_json = response.json()
         self._cr.execute('select id, categid from %s where tada_id=%d' % (Category._table, tada_id.id))
         categories = {categid: id for id, categid in self._cr.fetchall()}
@@ -404,14 +404,17 @@ class TadaProduct(models.Model):
         products = {prodid: id for id, prodid in self._cr.fetchall()}
         self._cr.execute('select id, stockid from %s' %(Stock._table))
         stocks = {stockid: id for id, stockid in self._cr.fetchall()}
-        self._cr.execute('select id, variantid from %s where product_id=%d' %(Variant._table, self.id))
-        variants = {variant: id for id, variantid in self._cr.fetchall()}
+        sql = 'select id, variantid from %s' %(Variant._table)
+        if self.id:
+            sql += ' where product_id=%d' %self.id
+        self._cr.execute(sql)
+        variants = {variantid: id for id, variantid in self._cr.fetchall()}
         has_next_page = True
         count_item = 0
         params = {'page': 0}
         while has_next_page:
             params['page'] += 1
-            response = requests.get(base_api_url + ProductUrl, params=params, headers=headers, timeout=10.0)
+            response = requests.get(base_api_url + ProductUrl, params=params, headers=headers, timeout=50.0)
             resp_json = response.json()
             for resp in resp_json['data']:
                 count_item += 1
@@ -434,7 +437,7 @@ class TadaProduct(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        response = requests.get(base_api_url + ValidateSkuUrl.format(itemid=1, sku=vals['sku']), params=params, headers=headers, timeout=10.0)
+        response = requests.get(base_api_url + ValidateSkuUrl.format(itemid=1, sku=vals['sku']), params=params, headers=headers, timeout=50.0)
         return
     
     @api.model
@@ -472,7 +475,7 @@ class TadaProduct(models.Model):
                                    "price": self.price, 
                                    "sku": self.sku, 
                                    "StockId": stock_id.stockid},}
-        response = requests.post(base_api_url + ProductUrl, headers=headers, json=body, timeout=10.0)
+        response = requests.post(base_api_url + ProductUrl, headers=headers, json=body, timeout=50.0)
         resp_json = response.json()
         if response.status_code != 201:
             raise ValidationError(_('Please Try Again Later'))
@@ -502,7 +505,7 @@ class TadaProduct(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        response = requests.put(base_api_url + ProductDetailUrl.format(itemid=self.productid), headers=headers, data=bodyJson, timeout=10.0)
+        response = requests.put(base_api_url + ProductDetailUrl.format(itemid=self.productid), headers=headers, data=bodyJson, timeout=50.0)
         resp_json = response.json()
         if response.status_code != 200:
             raise ValidationError(_('Request cannot be completed'))
@@ -545,6 +548,8 @@ class TadaProductVariant(models.Model):
     def _compute_system_product(self):
         Product = self.env['product.product']
         for rec in self:
+            if not rec.sku:
+                continue
             sku_lst = rec.sku.split(';')
             if len(sku_lst) == 1:
                 operator = '='
@@ -568,7 +573,7 @@ class TadaProductVariant(models.Model):
                "price": self.price, 
                "sku": self.sku,
                "StockId": self.stock_id.stockid}
-        response = requests.post(base_api_url + VariantUrl, headers=headers, json=body, timeout=10.0)
+        response = requests.post(base_api_url + VariantUrl, headers=headers, json=body, timeout=50.0)
         resp_json = response.json()
         resp_vals = self._convert_resp_tada_to_vals(self.tada_id, resp_json)
         return self.with_context(sync=True).write(resp_vals)
@@ -588,7 +593,7 @@ class TadaProductVariant(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        response = requests.put(base_api_url + VariantDetailUrl.format(itemid=self.product_id.productid, variantId=self.variantid), headers=headers, data=bodyJson, timeout=10.0)
+        response = requests.put(base_api_url + VariantDetailUrl.format(itemid=self.product_id.productid, variantId=self.variantid), headers=headers, data=bodyJson, timeout=50.0)
         resp_json = response.json()
         if response.status_code != 200:
             raise ValidationError(_('Request cannot be completed'))
@@ -659,7 +664,7 @@ class TadaProductVariant(models.Model):
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        response = requests.get(base_api_url + VariantDetailUrl.format(itemid=product_id.productid, variantId=self.variantid), headers=headers, timeout=10.0)
+        response = requests.get(base_api_url + VariantDetailUrl.format(itemid=product_id.productid, variantId=self.variantid), headers=headers, timeout=50.0)
         resp_json = response.json()
         variant_vals = self._convert_resp_tada_to_vals(resp_json, stocks)
         self.write(variant_vals)
