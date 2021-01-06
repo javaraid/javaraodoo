@@ -6,4 +6,3 @@ from . import tada
 from . import tada_product
 from . import tada_order
 from . import tada_stock
-from . import tada_shipping_company

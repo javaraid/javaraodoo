@@ -7,6 +7,7 @@ OrderUrl = '/v1/integration_merchants/manage/orders'
 OrderDetailUrl = '/v1/integration_merchants/manage/orders/detail/{orderNumberOrId}'
 OrderConfirmUrl = '/v1/integration_merchants/manage/orders/confirm'
 OrderProcessUrl = '/v1/integration_merchants/manage/orders/process'
+OrderRequestPickUrl = '/v1/integration_merchants/manage/orders/{orderid}/requestPickup'
 Headers = {'Content-Type': 'application/json', 'Authorization': None}
 
 
@@ -34,7 +35,7 @@ class TadaOrder(models.Model):
     recipientName = fields.Char(readonly=True) # Recipient.firstName
     internal_reference = fields.Char(readonly=True) # internalReference
     shippingId = None # ShippingId
-    store_id = None # storeId
+    store_id = fields.Many2one('tada.store', 'Store') # storeId
     createdAt = fields.Datetime(readonly=True) # createdAt
     updatedAt = fields.Datetime(readonly=True) # updatedAt
     order_line_ids = fields.One2many('tada.order.line', 'order_id', 'Tada Order Items', readonly=True) # OrderItems
@@ -106,6 +107,18 @@ class TadaOrder(models.Model):
         return
     
     def action_process(self):
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(self.tada_id.access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        # TODO: Add ShippingCompanyId, trackingNumber
+        body = {'orderNumber': self.mapped('order_number')}
+        response = requests.post(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=50.0)
+        if response.status_code != 200:
+            raise ValidationError(_('Error'))
+        return
+    
+    def action_request_pickup(self):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()

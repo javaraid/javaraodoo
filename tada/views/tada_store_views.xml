@@ -3,12 +3,14 @@
 		<field name="name">Store</field>
 		<field name="model">tada.store</field>
 		<field name="arch" type="xml">
-			<tree>
-				<field name="name" />
-				<field name="tada_id" />
-				<field name="phone" />
-				<field name="address" />
-				<field name="active" />
+			<tree create="0" editable="bottom">
+				<field name="name" readonly="1" />
+				<field name="tada_id" readonly="1" />
+				<field name="phone" readonly="1" />
+				<field name="address" readonly="1" />
+				<field name="company_id" invisible="1" />
+				<field name="warehouse_id" domain="[('company_id', '=', company_id)]" />
+				<field name="active" readonly="1" />
 			</tree>
 		</field>
 	</record>
@@ -17,12 +19,13 @@
 		<field name="name">Store</field>
 		<field name="model">tada.store</field>
 		<field name="arch" type="xml">
-			<form>
+			<form edit="0">
 				<group>
 					<field name="name" />
 					<field name="tada_id" />
 					<field name="phone" />
 					<field name="address" />
+					<field name="warehouse_id" />
 					<field name="active" />
 				</group>
 			</form>

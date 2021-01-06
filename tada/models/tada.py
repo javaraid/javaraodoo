@@ -5,6 +5,7 @@ from odoo.exceptions import ValidationError
 from addons.event_sale.models.product import Product
 
 StoreUrl = '/v1/integration_merchants/stores'
+ShippingCompanyUrl = '/v1/integration_merchants/shipping/companies'
 Headers = {'Content-Type': 'application/json', 'Authorization': None}
 
 def sync(fun):
@@ -28,9 +29,10 @@ class TadaTada(models.Model):
     product_ids = fields.One2many('tada.product', 'tada_id', 'Products')
     # mId = fields.Char()
     order_ids = fields.One2many('tada.order', 'tada_id', 'Orders')
-    
+    store_ids = fields.One2many('tada.store', 'tada_id', 'Stores')
     # Odoo settings
     warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse', required=True)
+    company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.user.company_id.id)
     
     @api.constrains('username')
     def _check_username(self):
@@ -127,6 +129,27 @@ class TadaStore(models.Model):
     bankAccountHolder = None # bankAccountHolder
     npwp = None # npwp
     warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse')
-    tada_id = fields.Many2one('tada.tada', 'Tada', ondelete='cascade')    
+    tada_id = fields.Many2one('tada.tada', 'Tada', ondelete='cascade')
+    company_id = fields.Many2one('res.company', 'Company', related='tada_id.company_id')
     
+
+class TadaShippingCompany(models.Model):
+    _name = "tada.shipping.company"
+    _description = "Tada Shipping Company"
     
+    shippingCompanyId = fields.Integer('Shipping Company ID')
+    brand = fields.Char('Brand Name')
+    company_name = fields.Char('Company Name')
+    
+    @api.model
+    def _get_on_tada(self, access_token=False):
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        response = requests.post(base_api_url + ShippingCompanyUrl, timeout=50.0)
+        if response.status_code != 200:
+            raise ValidationError(_('Error'))
+        return
+        
+        
