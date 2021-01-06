@@ -6,6 +6,7 @@
 			<tree>
 				<field name="name" /> 
 				<field name="username" />
+				<field name="company_id" />
 			</tree>
 		</field>
 	</record>
@@ -29,7 +30,8 @@
 						<!-- <field name="name" attrs="{'invisible': [('state', '=', 'new')]}" /> -->
 						<field name="username" />
 						<field name="expired_at" />
-						<field name="warehouse_id" />
+						<field name="company_id" />
+						<field name="warehouse_id" domain="[('company_id', '=', company_id)]" />
 					</group>
 					<notebook>
 						<page name="category" string="Categories">
@@ -40,6 +42,9 @@
 						</page>
 						<page name="order" string="Orders">
 							<field name="order_ids" />
+						</page>
+						<page name="store" string="Stores">
+							<field name="store_ids" />
 						</page>
 					</notebook>
 				</sheet>

@@ -379,6 +379,7 @@ class TadaProduct(models.Model):
         stocks = {stockid: id for id, stockid in self._cr.fetchall()}
         vals = self._convert_resp_tada_to_vals(tada_id, resp_json, categories, variants, stocks)
         self.write(vals)
+        tada_id.name = resp_json['Merchant']['company']
     
     @api.model
     def _get_on_tada(self, access_token=False):
@@ -412,6 +413,7 @@ class TadaProduct(models.Model):
         has_next_page = True
         count_item = 0
         params = {'page': 0}
+        resp = None
         while has_next_page:
             params['page'] += 1
             response = requests.get(base_api_url + ProductUrl, params=params, headers=headers, timeout=50.0)
@@ -428,6 +430,8 @@ class TadaProduct(models.Model):
                     product_id.write(vals)
             if count_item == resp_json['count']:
                 has_next_page = False
+        if resp:
+            product_id.act_sync()
     
     @api.model
     def _check_sku_tada(self, vals):
