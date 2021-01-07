@@ -7,6 +7,12 @@ from odoo.exceptions import ValidationError
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
+    def _compute_unreserve_visible(self):
+        super(MrpProduction, self)._compute_unreserve_visible()
+        for order in self:
+            already_reserved = order.is_locked and order.state not in ('done', 'cancel') and order.mapped('move_raw_ids.move_line_ids') and any(raw.reserved_availability for raw in order.move_raw_ids)
+            order.unreserve_visible = already_reserved
+
     state = fields.Selection(selection_add=[('to_approve','To Approve')])
     action = fields.Selection(
         string='Action',
