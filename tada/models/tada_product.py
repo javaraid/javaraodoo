@@ -211,7 +211,7 @@ class TadaProduct(models.Model):
     is_limited = fields.Boolean(default=True) # isLimited
     limit_qty = fields.Integer() # limitQty
     gcfsItemId = None # gcfsItemId
-    variant_ids = fields.One2many('tada.product.variant', 'product_id', 'Product Variants') # Variants
+    variant_ids = fields.One2many('tada.product.variant', 'product_id', 'Product Variants', readonly=True) # Variants
     active = fields.Boolean(default=True) # active
     enable_store_availability = fields.Boolean() # enableStoreAvailability
     store_ids = fields.Many2many('tada.store', string='Available on Store') # stores
