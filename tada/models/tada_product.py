@@ -504,7 +504,7 @@ class TadaProduct(models.Model):
         body = {TadaProductFieldsName[key]: value for key, value in vals.items()}
         category_id = self.category_id.browse(vals.get('category_id', self.category_id.id))
         catalogCategoryIds = [self.env.ref('tada.tada_catalog_id').value]
-        body.update({'Cate8goryId': category_id.categid, 'catalogCategoryIds': catalogCategoryIds})
+        body.update({'CategoryId': category_id.categid, 'catalogCategoryIds': catalogCategoryIds})
         body.update(name=vals.get('name', self.name))
         bodyJson = json.dumps(body)
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
