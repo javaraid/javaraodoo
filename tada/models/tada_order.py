@@ -112,9 +112,11 @@ class TadaOrder(models.Model):
         headers = Headers.copy()
         headers['Authorization'] = authorization
         # TODO: Add ShippingCompanyId, trackingNumber
-        body = {'orderNumber': self.mapped('order_number')}
+        shippingCompanyId = self.shipping_company_id.shippingCompanyId
+        awb_number = self.awb_number
+        body = {'orderNumber': self.order_number, 'shippingCompanyId': shippingCompanyId, 'awb_number': awb_number}
         response = requests.post(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=50.0)
-        if response.status_code != 200:
+        if response.status_code != 201:
             raise ValidationError(_('Error'))
         return
     
@@ -123,9 +125,7 @@ class TadaOrder(models.Model):
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
-        # TODO: Add ShippingCompanyId, trackingNumber
-        body = {'orderNumber': self.mapped('order_number')}
-        response = requests.post(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=50.0)
+        response = requests.post(base_api_url + OrderRequestPickUrl.format(orderid=self.orderid), headers=headers, timeout=50.0)
         if response.status_code != 200:
             raise ValidationError(_('Error'))
         return
