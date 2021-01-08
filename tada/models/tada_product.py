@@ -461,6 +461,7 @@ class TadaProduct(models.Model):
     
     def _create_to_tada(self, vals, stock_id):
         access_token = self.tada_id.access_token
+        catalogCategoryIds = [self.env.ref('tada.tada_catalog_id').value]
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
@@ -472,6 +473,7 @@ class TadaProduct(models.Model):
                 'image': self.image or None,
                 'description': self.description,
                 'CategoryId': str(self.category_id.categid),
+                'catalogCategoryIds': catalogCategoryIds,
                 'isLimited': self.is_limited,
                 'active': self.active,
                 'initialVariant': {"name": self.name, 
@@ -501,7 +503,8 @@ class TadaProduct(models.Model):
             return
         body = {TadaProductFieldsName[key]: value for key, value in vals.items()}
         category_id = self.category_id.browse(vals.get('category_id', self.category_id.id))
-        body.update({'CategoryId': category_id.categid})
+        catalogCategoryIds = [self.env.ref('tada.tada_catalog_id').value]
+        body.update({'Cate8goryId': category_id.categid, 'catalogCategoryIds': catalogCategoryIds})
         body.update(name=vals.get('name', self.name))
         bodyJson = json.dumps(body)
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')

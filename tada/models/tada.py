@@ -31,7 +31,7 @@ class TadaTada(models.Model):
     order_ids = fields.One2many('tada.order', 'tada_id', 'Orders')
     store_ids = fields.One2many('tada.store', 'tada_id', 'Stores')
     # Odoo settings
-    warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse', required=True)
+    warehouse_id = fields.Many2one('stock.warehouse', 'Default Warehouse', required=True)
     company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.user.company_id.id)
     
     @api.constrains('username')
@@ -136,6 +136,7 @@ class TadaStore(models.Model):
 class TadaShippingCompany(models.Model):
     _name = "tada.shipping.company"
     _description = "Tada Shipping Company"
+    _rec_name = 'company_name'
     
     shippingCompanyId = fields.Integer('Shipping Company ID')
     brand = fields.Char('Brand Name')
