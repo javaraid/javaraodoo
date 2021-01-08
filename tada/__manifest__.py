@@ -14,6 +14,7 @@
          'views/tada_store_views.xml',
          'views/tada_product_views.xml',
          'views/tada_order_views.xml',
+         'views/stock_picking_views.xml',
          'views/menu.xml'
          ]
 }
