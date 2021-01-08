@@ -130,6 +130,7 @@ odoo.define("pos_javara.PosModel", function(require) {
             var has_negative_product = false;
             for (var i = 0; i < orderlines.length; i++) {
                 if (
+                    orderlines[i].product.type == 'product' &&
                     orderlines[i].product.qty_available < orderlines[i].quantity
                 ) {
                     has_negative_product = true;
@@ -153,7 +154,7 @@ odoo.define("pos_javara.PosModel", function(require) {
             var click_product_handler_super = this.click_product_handler;
             this.click_product_handler = function() {
                 var product = self.pos.db.get_product_by_id(this.dataset.productId);
-                if (product.qty_available <= 0) {
+                if (product.type == 'product' && product.qty_available <= 0) {
                     return self.gui.show_popup("alert", {
                         title: _t("The Product is Out of Stock"),
                         body: _t("It's unavailable to add the product"),
