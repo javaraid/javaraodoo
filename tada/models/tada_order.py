@@ -259,10 +259,14 @@ class TadaOrder(models.Model):
                         fee_line.append((1, fee_id, fee_vals))
                     else:
                         fee_line.append((0, 0, fee_vals))
-                awb_number = order['OrderItems'][0]['AwbOrder']['Awb']['awbNumber']
-                ShippingCompanyId = order['OrderItems'][0]['AwbOrder']['Awb']['ShippingCompanyId']
-                shipping_company_id = self.env['tada.shipping.company'].search([('shippingCompanyId', '=', ShippingCompanyId)], limit=1)
-                order_id.write({'order_line_ids': order_line, 'payment_line_ids': payment_line, 'fee_line_ids': fee_line, 'awb_number': awb_number, 'shipping_company_id': shipping_company_id.id})
+                AwbOrder = order['OrderItems'][0]['AwbOrder']
+                awb_number = False
+                shipping_company_id = False
+                if AwbOrder:
+                    awb_number = AwbOrder['Awb']['awbNumber']
+                    ShippingCompanyId = AwbOrder['Awb']['ShippingCompanyId']
+                    shipping_company_id = self.env['tada.shipping.company'].search([('shippingCompanyId', '=', ShippingCompanyId)], limit=1).id
+                order_id.write({'order_line_ids': order_line, 'payment_line_ids': payment_line, 'fee_line_ids': fee_line, 'awb_number': awb_number, 'shipping_company_id': shipping_company_id})
                 
             if count_item == resp_json['totalItems']:
                 has_next_page = False
