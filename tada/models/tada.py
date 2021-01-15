@@ -33,6 +33,7 @@ class TadaTada(models.Model):
     # Odoo settings
     warehouse_id = fields.Many2one('stock.warehouse', 'Default Warehouse', required=True)
     company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.user.company_id.id)
+    product_fee_id = fields.Many2one('product.product', 'Tada Product Fee', required=True)
     
     @api.constrains('username')
     def _check_username(self):
