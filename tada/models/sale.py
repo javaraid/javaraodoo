@@ -17,6 +17,7 @@ class SaleOrder(models.Model):
         res = super(SaleOrder, self).action_confirm()
         if self.is_from_tada:
             self.tada_order_ids.action_confirm()
+            self.picking_ids.is_request_pickup = self.tada_order_ids.is_request_pickup
         return res
     
     
