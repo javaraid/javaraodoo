@@ -32,6 +32,7 @@
 						<field name="expired_at" />
 						<field name="company_id" />
 						<field name="warehouse_id" domain="[('company_id', '=', company_id)]" />
+						<field name="product_fee_id" />
 					</group>
 					<notebook>
 						<page name="category" string="Categories">

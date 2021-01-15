@@ -7,6 +7,7 @@ OrderUrl = '/v1/integration_merchants/manage/orders'
 OrderDetailUrl = '/v1/integration_merchants/manage/orders/detail/{orderNumberOrId}'
 OrderConfirmUrl = '/v1/integration_merchants/manage/orders/confirm'
 OrderProcessUrl = '/v1/integration_merchants/manage/orders/process'
+OrderCompleteUrl = '/v1/integration_merchants/manage/orders/complete'
 OrderRequestPickUrl = '/v1/integration_merchants/manage/orders/{orderid}/requestPickup'
 Headers = {'Content-Type': 'application/json', 'Authorization': None}
 
@@ -32,7 +33,8 @@ class TadaOrder(models.Model):
     receiver = None # receiver
     recipient_id = fields.Many2one('res.partner', 'Partner', readonly=True) # RecipientId
     recipientId = fields.Integer(readonly=True) # RecipientId
-    recipientName = fields.Char(readonly=True) # Recipient.firstName
+    recipientName = fields.Char('Recipient Name', readonly=True) # Recipient.firstName
+    recipientPhone = fields.Char('Recipient Phone', readonly=True) # Recipient.phone
     internal_reference = fields.Char(readonly=True) # internalReference
     shippingId = None # ShippingId
     store_id = fields.Many2one('tada.store', 'Store') # storeId
@@ -44,7 +46,9 @@ class TadaOrder(models.Model):
     sale_order_id = fields.Many2one('sale.order', 'Order', readonly=True)
     has_no_product = fields.Boolean('Has no product?')
     awb_number = fields.Char('AWB Number') # OrderItems.AwbOrder.Awb.awbNumber
+    tracking_number = fields.Char('Tracking Number') # OrderItems.AwbOrder.Awb.trackingNumber
     shipping_company_id = fields.Many2one('tada.shipping.company', 'Shipping Company')
+    is_request_pickup = fields.Boolean('Is Request Pickup?')
     
     def act_create_sale_order(self):
         if self.status != 'payment success':
@@ -72,6 +76,7 @@ class TadaOrder(models.Model):
                 'is_from_tada': True}
         order_line_vals = self.order_line_ids._generate_sale_order_line()
         vals['order_line'] = [(0,0, vals) for vals in order_line_vals]
+        vals['order_line'].append((0,0, self.fee_line_ids._generate_line_fee_product()))
         sale_order_id = self.env['sale.order'].create(vals)
         self.sale_order_id= sale_order_id.id
         return
@@ -113,10 +118,25 @@ class TadaOrder(models.Model):
         headers['Authorization'] = authorization
         # TODO: Add ShippingCompanyId, trackingNumber
         shippingCompanyId = self.shipping_company_id.shippingCompanyId
-        awb_number = self.awb_number
-        body = {'orderNumber': self.order_number, 'shippingCompanyId': shippingCompanyId, 'awb_number': awb_number}
+        tracking_number = self.tracking_number
+        body = {'orderNumber': self.order_number, 'ShippingCompanyId': shippingCompanyId, 'trackingNumber': tracking_number}
         response = requests.post(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=50.0)
-        if response.status_code != 201:
+        if response.status_code != 200:
+            raise ValidationError(_('Error'))
+        self.status = 'on courier'
+        return
+    
+    def action_complete(self):
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(self.tada_id.access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        # TODO: Add ShippingCompanyId, trackingNumber
+        shippingCompanyId = self.shipping_company_id.shippingCompanyId
+        tracking_number = self.tracking_number
+        body = {'orderNumber': self.order_number, 'trackingNumber': tracking_number}
+        response = requests.post(base_api_url + OrderCompleteUrl, headers=headers, json=body, timeout=50.0)
+        if response.status_code != 200:
             raise ValidationError(_('Error'))
         return
     
@@ -182,6 +202,7 @@ class TadaOrder(models.Model):
                 return
         else:
             tada_id = self.mapped('tada_id').search([('access_token', '=', access_token)])
+        Store = self.env['tada.store']
         Order = self.env['tada.order']
         OrderLine = self.env['tada.order.line']
         Partner = self.env['res.partner']
@@ -223,6 +244,7 @@ class TadaOrder(models.Model):
                 order_vals = self._convert_resp_tada_to_vals(tada_id, order)
                 order_vals['recipient_id'] = partner_id
                 order_vals['recipientName'] = Recipient['firstName']
+                order_vals['recipientPhone'] = Recipient['phone']
                 order_id = Order.browse(orders.get(orderid, False))
                 if order_id:
                     order_id.write(order_vals)
@@ -262,11 +284,17 @@ class TadaOrder(models.Model):
                 AwbOrder = order['OrderItems'][0]['AwbOrder']
                 awb_number = False
                 shipping_company_id = False
+                tracking_number = False
+                order_vals['store_id'] = Store.search([('sId', '=', order['storeId'])], limit=1).id
+                status = order['status']
                 if AwbOrder:
                     awb_number = AwbOrder['Awb']['awbNumber']
+                    tracking_number = AwbOrder['Awb']['trackingNumber']
+                    if AwbOrder['Awb']['status'] == 'on courier':
+                        status = AwbOrder['Awb']['status']
                     ShippingCompanyId = AwbOrder['Awb']['ShippingCompanyId']
                     shipping_company_id = self.env['tada.shipping.company'].search([('shippingCompanyId', '=', ShippingCompanyId)], limit=1).id
-                order_id.write({'order_line_ids': order_line, 'payment_line_ids': payment_line, 'fee_line_ids': fee_line, 'awb_number': awb_number, 'shipping_company_id': shipping_company_id})
+                order_id.write({'order_line_ids': order_line, 'payment_line_ids': payment_line, 'fee_line_ids': fee_line, 'awb_number': awb_number, 'shipping_company_id': shipping_company_id, 'tracking_number': tracking_number, 'status': status})
                 
             if count_item == resp_json['totalItems']:
                 has_next_page = False
@@ -305,6 +333,7 @@ class TadaOrderLine(models.Model):
     createdAt = fields.Datetime() # createdAt
     updatedAt = fields.Datetime() # updatedAt
     sku = fields.Char('SKU', related='variant_id.sku', readonly=True)
+    # has_system_product = fields.Boolean('Has System Product', compute='_')
     
     @api.model
     def _convert_resp_tada_to_vals(self, order_id, resp_dict, order_lines=False, variants=False):
@@ -399,6 +428,17 @@ class TadaFee(models.Model):
                 'value': value,
                 'createdAt': createdAt,
                 'updatedAt': updatedAt,}
+        return vals
+    
+    def _generate_line_fee_product(self):
+        fee_product_id = self.mapped('order_id').tada_id.product_fee_id
+        fee_price = sum(self.mapped('value'))
+        vals = {'product_id': fee_product_id.id,
+                'name': fee_product_id.name,
+                'product_uom_qty': 1.0,
+                'price_unit': fee_price,
+#                         'tax_id': ,
+                }
         return vals
     
     
