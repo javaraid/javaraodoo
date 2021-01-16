@@ -70,9 +70,9 @@ odoo.define("pos_javara.PosModel", function(require) {
         after_load_server_data: function() {
             var self = this;
             var res = PosModelSuper.after_load_server_data.apply(this, arguments);
-            _.each(this.db.product_qtys, function(v) {
-                _.extend(self.db.get_product_by_id(v.id), v);
-            });
+//            _.each(this.db.product_qtys, function(v) {
+//                _.extend(self.db.get_product_by_id(v.id), v);
+//            });
             return res;
         },
         refresh_qty_available: function(product) {
