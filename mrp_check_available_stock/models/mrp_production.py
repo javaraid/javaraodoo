@@ -84,3 +84,10 @@ class MrpProduction(models.Model):
                 rec.with_context(force_done=True).button_mark_done()
             if rec.state == 'to_approve' :
                 rec.write({'state':'progress'})
+
+    @api.multi
+    def action_assign(self):
+        moves_draft = self.mapped('move_raw_ids').filtered(lambda move: move.state == 'draft')
+        if moves_draft :
+            moves_draft.write({'state':'confirmed'})
+        return super(MrpProduction, self).action_assign()
