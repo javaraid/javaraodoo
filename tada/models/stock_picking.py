@@ -16,18 +16,17 @@ class Picking(models.Model):
             is_from_tada = sale_id.is_from_tada
             tada_order_id = sale_id.tada_order_ids
             if is_from_tada and tada_order_id:
-                tada_order_id.tracking_number = pick.tracking_number
-                tada_order_id.shipping_company_id = pick.shipping_company_id.id
-                tada_order_id.action_process()
+                if pick.is_request_pickup:
+                    tada_order_id = self.sale_id.tada_order_ids
+                    tada_order_id.action_request_pickup()
+                else:
+                    tada_order_id.tracking_number = pick.tracking_number
+                    tada_order_id.shipping_company_id = pick.shipping_company_id.id
+                    tada_order_id.action_process()
     
     def _compute_is_from_tada(self):
         for rec in self:
             rec.is_from_tada = rec.sale_id.is_from_tada
-        return
-    
-    def action_request_pickup(self):
-        tada_order_id = self.sale_id.tada_order_ids
-        tada_order_id.action_request_pickup()
         return
     
     

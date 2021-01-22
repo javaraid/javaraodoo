@@ -77,23 +77,23 @@ class TadaOrder(models.Model):
         order_line_vals = self.order_line_ids._generate_sale_order_line()
         vals['order_line'] = [(0,0, vals) for vals in order_line_vals]
         vals['order_line'].append((0,0, self.fee_line_ids._generate_line_fee_product()))
-        sale_order_id = self.env['sale.order'].create(vals)
+        sale_order_id = self.env['sale.order'].sudo().create(vals)
         self.sale_order_id= sale_order_id.id
         return
     
     def _action_confirm(self):
-        sale_order_id = self.sale_order_id
+        sale_order_id = self.sale_order_id.sudo()
 #         sale_order_id._action_confirm()
 #         sale_order_id.action_done()
-        sale_payment_id = self.env['sale.advance.payment.inv'].with_context(active_ids=sale_order_id.ids, active_model='sale.order').create({'advance_payment_method': 'all'})
+        sale_payment_id = self.env['sale.advance.payment.inv'].sudo().with_context(active_ids=sale_order_id.ids, active_model='sale.order').create({'advance_payment_method': 'all'})
         sale_payment_id.create_invoices()
         sale_invoice_id = sale_order_id.invoice_ids
         sale_invoice_id.action_invoice_open()
         # karena katanya langsung ditransfer jadinya langsung di-register payment
         # TODO: benerin nilai payment untuk ditambah dengan delivery cost
-        pay_journal = self.env['account.journal'].search([('is_tada_available', '=', True), ('company_id', '=', self.tada_id.warehouse_id.company_id.id)], limit=1)
+        pay_journal = self.env['account.journal'].sudo().search([('is_tada_available', '=', True), ('company_id', '=', self.tada_id.warehouse_id.company_id.id)], limit=1)
         payment_vals = sale_invoice_id._prepare_payment_vals(pay_journal, pay_amount=self.total_all, date=self.updatedAt, writeoff_acc=None, communication=None)
-        account_payment_id = self.env['account.payment'].create(payment_vals)
+        account_payment_id = self.env['account.payment'].sudo().create(payment_vals)
         account_payment_id.action_validate_invoice_payment()
         return
         
@@ -121,10 +121,23 @@ class TadaOrder(models.Model):
         tracking_number = self.tracking_number
         body = {'orderNumber': self.order_number, 'ShippingCompanyId': shippingCompanyId, 'trackingNumber': tracking_number}
         response = requests.post(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=50.0)
-        if response.status_code != 200:
+        if response.status_code != 200 or len(resp_json['failed']) != 0:
             raise ValidationError(_('Error'))
         self.status = 'on courier'
         return
+    
+    def act_sync(self):
+        base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        authorization = 'Bearer {}'.format(self.tada_id.access_token)
+        headers = Headers.copy()
+        headers['Authorization'] = authorization
+        # TODO: Add ShippingCompanyId, trackingNumber
+        shippingCompanyId = self.shipping_company_id.shippingCompanyId
+        tracking_number = self.tracking_number
+        body = {'orderNumber': self.order_number, 'ShippingCompanyId': shippingCompanyId, 'trackingNumber': tracking_number}
+        response = requests.get(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=50.0)
+        if response.status_code != 200 or len(resp_json['failed']) != 0:
+            raise ValidationError(_('Error'))
     
     def action_complete(self):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
@@ -136,8 +149,9 @@ class TadaOrder(models.Model):
         tracking_number = self.tracking_number
         body = {'orderNumber': self.order_number, 'trackingNumber': tracking_number}
         response = requests.post(base_api_url + OrderCompleteUrl, headers=headers, json=body, timeout=50.0)
-        if response.status_code != 200:
+        if response.status_code != 200 or len(resp_json['failed']) != 0:
             raise ValidationError(_('Error'))
+        self.status = 'completed'
         return
     
     def action_request_pickup(self):
@@ -287,7 +301,12 @@ class TadaOrder(models.Model):
                 tracking_number = False
                 order_vals['store_id'] = Store.search([('sId', '=', order['storeId'])], limit=1).id
                 status = order['status']
-                if AwbOrder:
+                Shipping = order['Shipping']
+                if Shipping:
+                    ShippingCompanyId = Shipping['ShippingCompanyId']
+                    shipping_company_id = self.env['tada.shipping.company'].search([('shippingCompanyId', '=', ShippingCompanyId)], limit=1).id
+                    self.is_request_pickup = True
+                elif AwbOrder:
                     awb_number = AwbOrder['Awb']['awbNumber']
                     tracking_number = AwbOrder['Awb']['trackingNumber']
                     if AwbOrder['Awb']['status'] == 'on courier':
