@@ -17,7 +17,7 @@
             <field name="model">pos.tender.type</field>
             <field name="arch" type="xml">
                 <tree string="Tender Types" editable="top">
-                    <field name="name"/>
+                    <field name="name" placeholder="Title"/>
                 </tree>
             </field>
         </record>
@@ -30,7 +30,7 @@
                     <sheet>
                         <div class="oe_title">
                             <label for="name" class="oe_edit_only" string="Tender Type"/>
-                            <h1><field name="name" placeholder="Tender Type"/></h1>
+                            <h1><field name="name" placeholder="Title"/></h1>
                         </div>
                     </sheet>
                 </form>
