@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 
 class Picking(models.Model):
@@ -23,10 +24,16 @@ class Picking(models.Model):
                     tada_order_id.tracking_number = pick.tracking_number
                     tada_order_id.shipping_company_id = pick.shipping_company_id.id
                     tada_order_id.action_process()
+        return res
     
     def _compute_is_from_tada(self):
         for rec in self:
             rec.is_from_tada = rec.sale_id.is_from_tada
         return
-    
-    
+
+    # sudah dipanggil saat validate
+    # def action_request_pickup(self):
+    #     for rec in self :
+    #         if not rec.sale_id.is_from_tada :
+    #             raise ValidationError(_('Request pickup is only for trx from TADA.'))
+    #         rec.sale_id.tada_order_ids.action_request_pickup()

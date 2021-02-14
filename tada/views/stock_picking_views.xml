@@ -4,9 +4,10 @@
         <field name="model">stock.picking</field>
         <field name="inherit_id" ref="stock.view_picking_form" />
         <field name="arch" type="xml">
-        	<header>
-        		<button name="action_request_pickup" type="object" string="Request Pickup" class="btn-primary" attrs="{'invisible': ['|', ('is_from_tada', '=', False), ('state', '=', 'done')]}" /> 
-        	</header>
+<!--				sudah dihandle saat validate picking-->
+<!--        	<header>-->
+<!--        		<button name="action_request_pickup" type="object" string="Request Pickup" class="btn-primary" attrs="{'invisible': ['|', ('is_from_tada', '=', False), ('state', '=', 'done')]}" /> -->
+<!--        	</header>-->
         	<field name="origin" position="after">
         		<field name="is_from_tada" invisible="1" />
 				<field name="tracking_number" attrs="{'invisible': [('is_from_tada', '=', False)], 'readonly': [('state', '=', 'done')]}" />
