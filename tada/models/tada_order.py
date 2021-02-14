@@ -123,8 +123,15 @@ class TadaOrder(models.Model):
         tracking_number = self.tracking_number
         body = {'orderNumber': self.order_number, 'ShippingCompanyId': shippingCompanyId, 'trackingNumber': tracking_number}
         response = requests.post(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=50.0)
-        if response.status_code != 200 or len(resp_json['failed']) != 0:
-            raise ValidationError(_('Error'))
+        resp_json = response.json()
+        if response.status_code != 200 or len(resp_json.get('failed',[])) != 0:
+            if 'message' in resp_json :
+                message = resp_json['message']
+            elif 'failed' in resp_json :
+                message = resp_json['failed'][0]['message']
+            else :
+                message = 'Error'
+            raise ValidationError(_(message))
         self.status = 'on courier'
         return
     
@@ -138,8 +145,15 @@ class TadaOrder(models.Model):
         tracking_number = self.tracking_number
         body = {'orderNumber': self.order_number, 'ShippingCompanyId': shippingCompanyId, 'trackingNumber': tracking_number}
         response = requests.get(base_api_url + OrderProcessUrl, headers=headers, json=body, timeout=50.0)
-        if response.status_code != 200 or len(resp_json['failed']) != 0:
-            raise ValidationError(_('Error'))
+        resp_json = response.json()
+        if response.status_code != 200 or len(resp_json.get('failed',[])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
     
     def action_complete(self):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
@@ -151,8 +165,15 @@ class TadaOrder(models.Model):
         tracking_number = self.tracking_number
         body = {'orderNumber': self.order_number, 'trackingNumber': tracking_number}
         response = requests.post(base_api_url + OrderCompleteUrl, headers=headers, json=body, timeout=50.0)
-        if response.status_code != 200 or len(resp_json['failed']) != 0:
-            raise ValidationError(_('Error'))
+        resp_json = response.json()
+        if response.status_code != 200 or len(resp_json.get('failed',[])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
         self.status = 'completed'
         return
     
@@ -162,8 +183,15 @@ class TadaOrder(models.Model):
         headers = Headers.copy()
         headers['Authorization'] = authorization
         response = requests.post(base_api_url + OrderRequestPickUrl.format(orderid=self.orderid), headers=headers, timeout=50.0)
-        if response.status_code != 200:
-            raise ValidationError(_('Error'))
+        resp_json = response.json()
+        if response.status_code != 200 or len(resp_json.get('failed', [])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
         return
     
     @api.model
