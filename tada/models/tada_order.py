@@ -92,6 +92,8 @@ class TadaOrder(models.Model):
         # karena katanya langsung ditransfer jadinya langsung di-register payment
         # TODO: benerin nilai payment untuk ditambah dengan delivery cost
         pay_journal = self.env['account.journal'].sudo().search([('is_tada_available', '=', True), ('company_id', '=', self.tada_id.warehouse_id.company_id.id)], limit=1)
+        if not pay_journal :
+            raise ValidationError(_('Payment journal for company %s that available on tada not found.'%(self.tada_id.warehouse_id.company_id.display_name)))
         payment_vals = sale_invoice_id._prepare_payment_vals(pay_journal, pay_amount=self.total_all, date=self.updatedAt, writeoff_acc=None, communication=None)
         account_payment_id = self.env['account.payment'].sudo().create(payment_vals)
         account_payment_id.action_validate_invoice_payment()
