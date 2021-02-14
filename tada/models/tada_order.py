@@ -303,16 +303,22 @@ class TadaOrder(models.Model):
                 status = order['status']
                 Shipping = order['Shipping']
                 if Shipping:
-                    ShippingCompanyId = Shipping['ShippingCompanyId']
-                    shipping_company_id = self.env['tada.shipping.company'].search([('shippingCompanyId', '=', ShippingCompanyId)], limit=1).id
-                    self.is_request_pickup = True
+                    ShippingCompanyId = Shipping.get('ShippingCompanyId', False)
+                    if ShippingCompanyId :
+                        shipping_company_id = self.env['tada.shipping.company'].search([('shippingCompanyId', '=', ShippingCompanyId)], limit=1).id
+                    else :
+                        shipping_company_id = False
+                    order_id.is_request_pickup = True
                 elif AwbOrder:
                     awb_number = AwbOrder['Awb']['awbNumber']
                     tracking_number = AwbOrder['Awb']['trackingNumber']
                     if AwbOrder['Awb']['status'] == 'on courier':
                         status = AwbOrder['Awb']['status']
-                    ShippingCompanyId = AwbOrder['Awb']['ShippingCompanyId']
-                    shipping_company_id = self.env['tada.shipping.company'].search([('shippingCompanyId', '=', ShippingCompanyId)], limit=1).id
+                    ShippingCompanyId = AwbOrder['Awb'].get('ShippingCompanyId', False)
+                    if ShippingCompanyId :
+                        shipping_company_id = self.env['tada.shipping.company'].search([('shippingCompanyId', '=', ShippingCompanyId)], limit=1).id
+                    else :
+                        shipping_company_id = False
                 order_id.write({'order_line_ids': order_line, 'payment_line_ids': payment_line, 'fee_line_ids': fee_line, 'awb_number': awb_number, 'shipping_company_id': shipping_company_id, 'tracking_number': tracking_number, 'status': status})
                 
             if count_item == resp_json['totalItems']:
