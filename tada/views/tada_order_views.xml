@@ -19,6 +19,7 @@
 			<form>
 				<header>
 					<button name="act_create_sale_order" type="object" string="Create Sale Order" class="btn-primary" attrs="{'invisible':['|', ('sale_order_id', '!=', False), ('status', '!=', 'payment success')]}" />
+					<button name="action_complete" type="object" string="Complete" class="btn-primary" attrs="{'invisible':['|',('status', '!=', 'on process'),('shipping_company_id', '=', False)]}"/>
 				</header>
 				<sheet>
 					<div class="oe_title">

@@ -338,7 +338,8 @@ class TadaOrder(models.Model):
                         shipping_company_id = self.env['tada.shipping.company'].search([('shippingCompanyId', '=', ShippingCompanyId)], limit=1).id
                     else :
                         shipping_company_id = False
-                    order_id.is_request_pickup = True
+                        # jika ShippingCompanyId kosong berarti pickup by gosend dan grab
+                        order_id.is_request_pickup = True
                 elif AwbOrder:
                     awb_number = AwbOrder['Awb']['awbNumber']
                     tracking_number = AwbOrder['Awb']['trackingNumber']
