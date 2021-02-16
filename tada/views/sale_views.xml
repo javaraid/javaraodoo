@@ -1,1 +1,0 @@
-<button name="action_complete" type="object" string="Complete" class="btn-primary" attrs="{'invisible':[('status', '!=', 'on courier')]}" />

@@ -92,16 +92,4 @@
 		<field name="brand">Haistar</field>
 		<field name="company_name">Haistar</field>
 	</record>
-
-	<record model="tada.shipping.company" id="shipping_15">
-		<field name="shippingCompanyId">15</field>
-		<field name="brand">Gosend Instant</field>
-		<field name="company_name">Gosend Instant</field>
-	</record>
-
-	<record model="tada.shipping.company" id="shipping_16">
-		<field name="shippingCompanyId">16</field>
-		<field name="brand">Grab Instant</field>
-		<field name="company_name">Grab Instant</field>
-	</record>
 </odoo>
