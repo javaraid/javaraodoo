@@ -17,7 +17,7 @@
 		<field name="arch" type="xml">
 			<form>
 				<header>
-					<button name="%(act_tada_authenticate)d" type="action" string="Authenticate" class="btn-primary" />
+					<button name="act_authenticate" type="object" string="Authenticate" class="btn-primary" invisible="1"/>
 					<button name="act_sync" type="object" string="Syncronize" class="btn-primary" />
 					<button name="act_sync_category" type="object" string="Get Categories" class="btn-primary" />
 					<button name="act_sync_product" type="object" string="Get Products" class="btn-primary" />
@@ -29,6 +29,7 @@
 					<group>
 						<!-- <field name="name" attrs="{'invisible': [('state', '=', 'new')]}" /> -->
 						<field name="username" />
+						<field name="password" password="True"/>
 						<field name="expired_at" />
 						<field name="company_id" />
 						<field name="warehouse_id" domain="[('company_id', '=', company_id)]" />

@@ -1,11 +1,14 @@
 import re
 import requests
-from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 from addons.event_sale.models.product import Product
+import json
+from odoo import models, fields, api, _
+from datetime import datetime
 
 StoreUrl = '/v1/integration_merchants/stores'
 ShippingCompanyUrl = '/v1/integration_merchants/shipping/companies'
+AUTHENTICATION_URL = '/v1/integration_merchants/token'
 Headers = {'Content-Type': 'application/json', 'Authorization': None}
 
 def sync(fun):
@@ -22,6 +25,9 @@ class TadaTada(models.Model):
     
     name = fields.Char('Name')
     username = fields.Char('Username', required=True)
+    password = fields.Char(
+        string='Password',
+        required=True)
     access_token = fields.Char('Token')
     expired_at = fields.Datetime('Expired At', readonly=True)
     state = fields.Selection([('new', 'New'), ('establish', 'Established'), ('expired', 'Expired')], 'State', default='new')
@@ -52,6 +58,7 @@ class TadaTada(models.Model):
         Category = self.env['tada.category']
         Product = self.env['tada.product']
         Order = self.env['tada.order']
+        self.check_token_validity()
         Category._get_on_tada(self.access_token)
         Product._get_on_tada(self.access_token)
         Order._get_on_tada(self.access_token)
@@ -59,20 +66,24 @@ class TadaTada(models.Model):
     def act_sync_order(self):
         self = self.with_context(sync=True)
         Order = self.env['tada.order']
+        self.check_token_validity()
         Order._get_on_tada(self.access_token)
     
     @sync
     def act_sync_product(self):
         Product = self.env['tada.product']
+        self.check_token_validity()
         Product._get_on_tada(self.access_token)
         
     def act_sync_category(self):
         self = self.with_context(sync=True)
         Category = self.env['tada.category']
+        self.check_token_validity()
         Category._get_on_tada(self.access_token)
     
     def act_sync_store(self):
         Store = self.env['tada.store'].sudo()
+        self.check_token_validity()
         access_token = self.access_token
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
@@ -107,7 +118,30 @@ class TadaTada(models.Model):
             else:
                 Store.create(store_vals)
         return
-        
+
+    @api.multi
+    def act_authenticate(self):
+        for tada_id in self :
+            base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+            API_KEY = 'zvgrki5NxWGPGXuqI7znBlqxF'
+            API_SECRET = 'aGooEXAiy7oyjO2TerlynSC9JV53VEs2IhwEuMvNNv36yjut94'
+            body = {'username': tada_id.username, 'password': tada_id.password, "grant_type": "password", "scope": "offline_access"}
+            bodyJson = json.dumps(body)
+            headers = {'Content-Type': 'application/json'}
+            auth_response = requests.post(base_api_url + AUTHENTICATION_URL, auth=(API_KEY, API_SECRET), data=bodyJson, headers=headers)
+            if auth_response.status_code != 200:
+                raise ValidationError(_('Please check your username or password'))
+            resp_json = auth_response.json()
+            tada_id.write({'state': 'establish',
+                           'access_token': "resp_json['access_token']",
+                           'expired_at': resp_json['expired_at']})
+        return
+
+    @api.multi
+    def check_token_validity(self):
+        for rec in self :
+            if not rec.access_token or not rec.expired_at or (rec.expired_at and rec.expired_at < datetime.now()):
+                rec.act_authenticate()
         
 class TadaStore(models.Model):
     _name = 'tada.store'

@@ -76,6 +76,7 @@ class TadaCategory(models.Model):
         if not access_token:
             if self.tada_id:
                 tada_id = self.tada_id
+                tada_id.check_token_validity()
                 access_token = tada_id.access_token
             else:
                 return
@@ -143,6 +144,7 @@ class TadaCategory(models.Model):
         return res
     
     def _create_to_tada(self, vals):
+        self.tada_id.check_token_validity()
         access_token = self.tada_id.access_token
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
@@ -180,6 +182,7 @@ class TadaCategory(models.Model):
         body.update(name=vals.get('name', self.name))
         bodyJson = json.dumps(body)
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        self.tada_id.check_token_validity()
         access_token = self.tada_id.access_token
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
@@ -365,6 +368,7 @@ class TadaProduct(models.Model):
         Stock = self.env['tada.stock']
         tada_id = self.tada_id
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        tada_id.check_token_validity()
         access_token = tada_id.access_token
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
@@ -386,6 +390,7 @@ class TadaProduct(models.Model):
         if not access_token:
             if self.tada_id:
                 tada_id = self.tada_id
+                tada_id.check_token_validity()
                 access_token = tada_id.access_token
             else:
                 return
@@ -436,6 +441,7 @@ class TadaProduct(models.Model):
     @api.model
     def _check_sku_tada(self, vals):
         tada_id = self.env['tada.tada'].browse(vals['tada_id'])
+        tada_id.check_token_validity()
         access_token = tada_id.access_token
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
@@ -460,6 +466,7 @@ class TadaProduct(models.Model):
         return res
     
     def _create_to_tada(self, vals, stock_id):
+        self.tada_id.check_token_validity()
         access_token = self.tada_id.access_token
         catalogCategoryIds = [self.env.ref('tada.tada_catalog_id').value]
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
@@ -508,6 +515,7 @@ class TadaProduct(models.Model):
         body.update(name=vals.get('name', self.name))
         bodyJson = json.dumps(body)
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        self.tada_id.check_token_validity()
         access_token = self.tada_id.access_token
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
@@ -570,6 +578,7 @@ class TadaProductVariant(models.Model):
         return
     
     def _create_to_tada(self, vals):
+        self.tada_id.check_token_validity()
         access_token = self.tada_id.access_token
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
@@ -596,6 +605,7 @@ class TadaProductVariant(models.Model):
         body.update(name=vals.get('name', self.name), price=vals.get('price', self.price))
         bodyJson = json.dumps(body)
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        self.tada_id.check_token_validity()
         access_token = self.tada_id.access_token
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
@@ -667,6 +677,7 @@ class TadaProductVariant(models.Model):
         self._cr.execute('select id, stockid from %s' %(Stock._table))
         stocks = {stockid: id for id, stockid in self._cr.fetchall()}
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        tada_id.check_token_validity()
         access_token = tada_id.access_token
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
