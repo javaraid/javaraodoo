@@ -104,6 +104,7 @@ class TadaOrder(models.Model):
             rec._action_confirm()
             rec.status = 'on process'
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        self.check_token_validity()
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
@@ -115,6 +116,7 @@ class TadaOrder(models.Model):
     
     def action_process(self):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        self.tada_id.check_token_validity()
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
@@ -137,6 +139,7 @@ class TadaOrder(models.Model):
     
     def act_sync(self):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        self.tada_id.check_token_validity()
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
@@ -157,6 +160,7 @@ class TadaOrder(models.Model):
     
     def action_complete(self):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        self.tada_id.check_token_validity()
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
@@ -179,6 +183,7 @@ class TadaOrder(models.Model):
     
     def action_request_pickup(self):
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
+        self.tada_id.check_token_validity()
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
