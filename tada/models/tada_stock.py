@@ -92,6 +92,7 @@ class TadaStock(models.Model):
         return res
     
     def _create_to_tada(self, vals):
+        self.product_id.tada_id.check_token_validity()
         access_token = self.product_id.tada_id.access_token
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
         authorization = 'Bearer {}'.format(access_token)
@@ -119,7 +120,9 @@ class TadaStock(models.Model):
         body = {'name': vals.get('name', self.name), 'price': vals.get('price', self.price), 'quantity': vals.get('quantity', self.quantity)}
         bodyJson = json.dumps(body)
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
-        access_token = self.env['tada.product.variant'].search([('stock_id','=', self.id)]).mapped('product_id').tada_id.access_token
+        tada_id = self.env['tada.product.variant'].search([('stock_id','=', self.id)]).mapped('product_id').tada_id
+        tada_id.check_token_validity()
+        access_token = tada_id.access_token
         authorization = 'Bearer {}'.format(access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
