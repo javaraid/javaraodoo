@@ -140,7 +140,7 @@ class TadaTada(models.Model):
     @api.multi
     def check_token_validity(self):
         for rec in self :
-            if not rec.access_token or not rec.expired_at or (rec.expired_at and rec.expired_at < datetime.now()):
+            if not rec.access_token or not rec.expired_at or (rec.expired_at and rec.expired_at < datetime.now().strftime('%Y-%m-%d %H:%M:%S')):
                 rec.act_authenticate()
         
 class TadaStore(models.Model):
