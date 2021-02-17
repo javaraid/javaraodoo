@@ -12,6 +12,10 @@ class SaleOrder(models.Model):
 
     is_from_tada = fields.Boolean('From Tada')
     tada_order_ids = fields.One2many('tada.order', 'sale_order_id', 'Order')
+    purchase_number_tada = fields.Char(
+        string='Purchase Order Number',
+        readonly=True,
+        copy=False)
     
     def action_confirm(self):
         res = super(SaleOrder, self).action_confirm()

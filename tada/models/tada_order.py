@@ -53,7 +53,7 @@ class TadaOrder(models.Model):
     def act_create_sale_order(self):
         if self.status != 'payment success':
             raise ValidationError(_('Status of order %s is not payment success' %self.order_number))
-        team_id = self.env.ref('tada.salesteam_tada_sales')
+        team_id = self.env.ref('tada.salesteam_online_sales')
         currency_id = None
         date_order = self.createdAt
         name = self.order_number
@@ -67,6 +67,7 @@ class TadaOrder(models.Model):
                 'date_order': date_order,
                 'origin': name,
                 'partner_id': partner_id.id,
+                'purchase_number_tada': name,
 #                 'partner_invoice_id': partner_invoice_id.id,
 #                 'partner_shipping_id': partner_shipping_id.id,
                 'picking_policy': picking_policy,
@@ -86,8 +87,10 @@ class TadaOrder(models.Model):
 #         sale_order_id._action_confirm()
 #         sale_order_id.action_done()
         sale_payment_id = self.env['sale.advance.payment.inv'].sudo().with_context(active_ids=sale_order_id.ids, active_model='sale.order').create({'advance_payment_method': 'all'})
+        print('\n sale_payment_id',sale_payment_id)
         sale_payment_id.create_invoices()
         sale_invoice_id = sale_order_id.invoice_ids
+        print('\n sale_invoice_id', sale_invoice_id)
         sale_invoice_id.action_invoice_open()
         # karena katanya langsung ditransfer jadinya langsung di-register payment
         # TODO: benerin nilai payment untuk ditambah dengan delivery cost
@@ -104,7 +107,7 @@ class TadaOrder(models.Model):
             rec._action_confirm()
             rec.status = 'on process'
         base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
-        self.check_token_validity()
+        self.tada_id.check_token_validity()
         authorization = 'Bearer {}'.format(self.tada_id.access_token)
         headers = Headers.copy()
         headers['Authorization'] = authorization
@@ -289,7 +292,9 @@ class TadaOrder(models.Model):
                 count_item += 1
                 orderid = order['id']
                 Recipient = order['Recipient']
-                partner_id = Partner._upsert_customer_tada(Recipient, customers_tada, customers_phone)
+                # partner_id = Partner._upsert_customer_tada(Recipient, customers_tada, customers_phone)
+                # 2021-02-17 customer hanya 1
+                partner_id = self.env.ref('tada.res_partner_online_tada').id
                 order_vals = self._convert_resp_tada_to_vals(tada_id, order)
                 order_vals['recipient_id'] = partner_id
                 order_vals['recipientName'] = Recipient['firstName']
