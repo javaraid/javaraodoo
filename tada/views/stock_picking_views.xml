@@ -14,7 +14,7 @@
 				<field name="shipping_company_id" attrs="{'invisible': ['|',('is_from_tada', '=', False),('is_request_pickup', '=', True)], 'readonly': [('state', '=', 'done')], 'required': [('is_from_tada', '=', True),('is_request_pickup', '=', False)]}"/>
         	</field>
         	<field name="partner_id" position="after">
-				<field name="is_request_pickup" invisible="0"/>
+				<field name="is_request_pickup" invisible="0" readonly="1"/>
         	</field>
         </field>
     </record>
