@@ -19,7 +19,7 @@
 			<form>
 				<header>
 					<button name="act_create_sale_order" type="object" string="Create Sale Order" class="btn-primary" attrs="{'invisible':['|', ('sale_order_id', '!=', False), ('status', '!=', 'payment success')]}" />
-					<button name="action_complete" type="object" string="Complete" class="btn-primary" attrs="{'invisible':['|',('status', '!=', 'on process'),('shipping_company_id', '=', False)]}"/>
+					<button name="action_complete" type="object" string="Complete" class="btn-primary" attrs="{'invisible':['|',('status', '!=', 'on courier'),('shipping_company_id', '=', False)]}"/>
 				</header>
 				<sheet>
 					<div class="oe_title">
@@ -36,7 +36,7 @@
 						<field name="recipientName" />
 						<field name="status" />
 						<field name="awb_number" invisible="1" />
-						<field name="is_request_pickup" invisible="1" />
+						<field name="is_request_pickup" invisible="0" readonly="1"/>
 						<field name="tracking_number" attrs="{'invisible': [('tracking_number', '=', False)]}" readonly="1" />
 						<field name="shipping_company_id" attrs="{'invisible': [('shipping_company_id', '=', False)]}" readonly="1" />
 						<field name="request_delivery_date" />
