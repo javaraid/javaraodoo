@@ -21,6 +21,21 @@
 		<field name="team_type" eval="'tada'" />
 	</record>
 
+	<record id="salesteam_online_sales" model="crm.team">
+		<field name="name">Online</field>
+		<field name="company_id" eval="False" />
+		<field name="active" eval="True" />
+		<field name="team_type" eval="'tada'" />
+	</record>
+
+	<record id="res_partner_online_tada" model="res.partner">
+		<field name="name">Online - Tada</field>
+		<field name="company_id" eval="False" />
+		<field name="active" eval="True" />
+		<field name="customer" eval="True"/>
+		<field name="supplier" eval="False"/>
+	</record>
+
 	<record model="tada.shipping.company" id="shipping_1">
 		<field name="shippingCompanyId">1</field>
 		<field name="brand">JNE</field>
