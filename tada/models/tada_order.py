@@ -49,6 +49,7 @@ class TadaOrder(models.Model):
     tracking_number = fields.Char('Tracking Number') # OrderItems.AwbOrder.Awb.trackingNumber
     shipping_company_id = fields.Many2one('tada.shipping.company', 'Shipping Company')
     is_request_pickup = fields.Boolean('Is Request Pickup?')
+    carrier_id = fields.Many2one('delivery.carrier', 'Carrier', copy=False, ondelete='restrict')
     
     def act_create_sale_order(self):
         if self.status != 'payment success':
@@ -74,6 +75,7 @@ class TadaOrder(models.Model):
                 'pricelist_id': pricelist_id.id,
                 'warehouse_id': warehouse_id.id,
                 'team_id': team_id.id,
+                'carrier_id': self.carrier_id.id,
                 'is_from_tada': True}
         order_line_vals = self.order_line_ids._generate_sale_order_line()
         vals['order_line'] = [(0,0, vals) for vals in order_line_vals]
@@ -87,10 +89,8 @@ class TadaOrder(models.Model):
 #         sale_order_id._action_confirm()
 #         sale_order_id.action_done()
         sale_payment_id = self.env['sale.advance.payment.inv'].sudo().with_context(active_ids=sale_order_id.ids, active_model='sale.order').create({'advance_payment_method': 'all'})
-        print('\n sale_payment_id',sale_payment_id)
         sale_payment_id.create_invoices()
         sale_invoice_id = sale_order_id.invoice_ids
-        print('\n sale_invoice_id', sale_invoice_id)
         sale_invoice_id.action_invoice_open()
         # karena katanya langsung ditransfer jadinya langsung di-register payment
         # TODO: benerin nilai payment untuk ditambah dengan delivery cost
@@ -224,6 +224,14 @@ class TadaOrder(models.Model):
 #                 store_id = order['storeId']
         createdAt = order['createdAt']
         updatedAt = order['updatedAt']
+        carrier_id = False
+        if resp_dict.get('Shipping'):
+            carrier = resp_dict['Shipping'].get('method','')
+            if carrier :
+                if carrier == 'gosend_instant' :
+                    carrier_id = self.env.ref('tada.delivery_gosend').id
+                elif carrier == 'grab_instant' :
+                    carrier_id = self.env.ref('tada.delivery_grab').id
         order_vals = {'tada_id': tada_id.id,
                     'orderid': orderid,
                     'requester_type': requester_type,
@@ -242,6 +250,7 @@ class TadaOrder(models.Model):
 #                             'shippingId': shippingId,
 #                             'store_id': store_id,
                     'createdAt': createdAt,
+                    'carrier_id': carrier_id,
                     'updatedAt': updatedAt,}
         return order_vals
     
