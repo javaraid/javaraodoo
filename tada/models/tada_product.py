@@ -157,8 +157,14 @@ class TadaCategory(models.Model):
                 }
         response = requests.post(base_api_url + CategoryUrl, headers=headers, json=body, timeout=50.0)
         resp_json = response.json()
-        if response.status_code != 200:
-            raise ValidationError(_('Request cannot be completed'))
+        if response.status_code != 200 or len(resp_json.get('failed', [])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
         resp_vals = {'categid': resp_json['id'],
                     'parent_id': resp_json['parent_id'],
                     'mId': resp_json['mId'],
@@ -189,8 +195,14 @@ class TadaCategory(models.Model):
         headers['Authorization'] = authorization
         response = requests.put(base_api_url + CategoryDetailUrl.format(categoryId=self.categid), headers=headers, data=bodyJson, timeout=50.0)
         resp_json = response.json()
-        if response.status_code != 200:
-            raise ValidationError(_('Request cannot be completed'))
+        if response.status_code != 200 or len(resp_json.get('failed', [])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
         self.with_context(sync=True).write({'updatedAt': resp_json['updatedAt']})
         return
     
@@ -522,8 +534,14 @@ class TadaProduct(models.Model):
         headers['Authorization'] = authorization
         response = requests.put(base_api_url + ProductDetailUrl.format(itemid=self.productid), headers=headers, data=bodyJson, timeout=50.0)
         resp_json = response.json()
-        if response.status_code != 200:
-            raise ValidationError(_('Request cannot be completed'))
+        if response.status_code != 200 or len(resp_json.get('failed', [])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
         self.with_context(sync=True).write({'updatedAt': resp_json['updatedAt']})
         return
     
@@ -612,8 +630,14 @@ class TadaProductVariant(models.Model):
         headers['Authorization'] = authorization
         response = requests.put(base_api_url + VariantDetailUrl.format(itemid=self.product_id.productid, variantId=self.variantid), headers=headers, data=bodyJson, timeout=50.0)
         resp_json = response.json()
-        if response.status_code != 200:
-            raise ValidationError(_('Request cannot be completed'))
+        if response.status_code != 200 or len(resp_json.get('failed', [])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
         self.with_context(sync=True).write({'updatedAt': resp_json['updatedAt']})
     
     @api.model
@@ -636,6 +660,9 @@ class TadaProductVariant(models.Model):
         active = variant['active']
         createdAt = variant['createdAt']
         updatedAt = variant['updatedAt']
+        quantity = 0
+        if resp_dict.get('Stock'):
+            quantity = resp_dict['Stock'].get('quantity',0)
         variant_vals = {'variantid': variantid,
                         'name': name,
                         'description': description,
@@ -649,6 +676,7 @@ class TadaProductVariant(models.Model):
                         'active': active,
                         'createdAt': createdAt,
                         'updatedAt': updatedAt,
+                        'quantity': quantity,
                         }
         stock = variant['Stock']
         if stock:
