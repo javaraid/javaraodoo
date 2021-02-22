@@ -113,8 +113,15 @@ class TadaOrder(models.Model):
         headers['Authorization'] = authorization
         body = {'orderNumbers': self.mapped('order_number')}
         response = requests.post(base_api_url + OrderConfirmUrl, headers=headers, json=body, timeout=50.0)
-        if response.status_code != 200:
-            raise ValidationError(_('Error'))
+        resp_json = response.json()
+        if response.status_code != 200 or len(resp_json.get('failed', [])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
         return
     
     def action_process(self):
@@ -309,10 +316,12 @@ class TadaOrder(models.Model):
                 order_vals['recipientName'] = Recipient['firstName']
                 order_vals['recipientPhone'] = Recipient['phone']
                 order_id = Order.browse(orders.get(orderid, False))
+                new_order = False
                 if order_id:
                     order_id.write(order_vals)
                 else:
                     order_id = Order.create(order_vals)
+                    new_order = True
                 # Appending Lines
                 self._cr.execute('select id, orderlineid from %s where order_id=%d' %(OrderLine._table, order_id.id))
                 order_lines = {orderlineid: id for id, orderlineid in self._cr.fetchall()}
@@ -370,6 +379,10 @@ class TadaOrder(models.Model):
                     else :
                         shipping_company_id = False
                 order_id.write({'order_line_ids': order_line, 'payment_line_ids': payment_line, 'fee_line_ids': fee_line, 'awb_number': awb_number, 'shipping_company_id': shipping_company_id, 'tracking_number': tracking_number, 'status': status})
+                if new_order :
+                    # sync product variant untuk memotong stok
+                    for order_line in order_id.order_line_ids:
+                        order_line.variant_id.act_sync()
                 
             if count_item == resp_json['totalItems']:
                 has_next_page = False
