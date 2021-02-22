@@ -184,8 +184,15 @@ class TadaShippingCompany(models.Model):
         headers = Headers.copy()
         headers['Authorization'] = authorization
         response = requests.post(base_api_url + ShippingCompanyUrl, timeout=50.0)
-        if response.status_code != 200:
-            raise ValidationError(_('Error'))
+        resp_json = response.json()
+        if response.status_code != 200 or len(resp_json.get('failed', [])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
         return
         
         

@@ -128,8 +128,14 @@ class TadaStock(models.Model):
         headers['Authorization'] = authorization
         response = requests.put(base_api_url + StockDetailUrl.format(stockId=self.stockid), headers=headers, data=bodyJson, timeout=50.0)
         resp_json = response.json()
-        if response.status_code != 200:
-            raise ValidationError(_('Request cannot be completed'))
+        if response.status_code != 200 or len(resp_json.get('failed', [])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
         self.with_context(sync=True).write({'updatedAt': resp_json['updatedAt']})
         
         
