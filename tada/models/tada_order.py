@@ -79,7 +79,8 @@ class TadaOrder(models.Model):
                 'is_from_tada': True}
         order_line_vals = self.order_line_ids._generate_sale_order_line()
         vals['order_line'] = [(0,0, vals) for vals in order_line_vals]
-        vals['order_line'].append((0,0, self.fee_line_ids._generate_line_fee_product()))
+        # fee tidak perlu masuk SO
+        # vals['order_line'].append((0,0, self.fee_line_ids._generate_line_fee_product()))
         sale_order_id = self.env['sale.order'].sudo().create(vals)
         self.sale_order_id= sale_order_id.id
         return
