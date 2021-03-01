@@ -11,10 +11,11 @@ Custom POS untuk Arkana: MemberShip Group
 """,
     'depends': ['point_of_sale','pos_javara'],
     'data': [
-        'security/ir.model.access.csv',
+        # 'security/ir.model.access.csv',
         'views/asset.xml',
-        'views/res_partner_member_views.xml',
         'views/product_pricelist_views.xml',    
+        'views/res_partner_views.xml',    
+        'views/res_partner_member_views.xml',    
     ],
     'qweb': [
         'static/src/xml/group_membership.xml',
