@@ -9,6 +9,7 @@
          'data/cron_data.xml',
          'data/tada_data.xml',
          'data/delivery_carrier.xml',
+         'data/ir_config_parameter.xml',
          'wizard/tada_authenticate_wizard.xml',
          'views/account_views.xml',
          'views/tada_views.xml',
