@@ -435,6 +435,7 @@ class TadaProduct(models.Model):
             params['page'] += 1
             response = requests.get(base_api_url + ProductUrl, params=params, headers=headers, timeout=50.0)
             resp_json = response.json()
+            print('\n resp_json',resp_json)
             for resp in resp_json['data']:
                 count_item += 1
                 productid = resp['id']
