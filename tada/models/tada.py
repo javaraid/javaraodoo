@@ -123,8 +123,8 @@ class TadaTada(models.Model):
     def act_authenticate(self):
         for tada_id in self :
             base_api_url = self.env['ir.config_parameter'].sudo().get_param('tada.base_api_url')
-            API_KEY = 'zvgrki5NxWGPGXuqI7znBlqxF'
-            API_SECRET = 'aGooEXAiy7oyjO2TerlynSC9JV53VEs2IhwEuMvNNv36yjut94'
+            API_KEY = self.env['ir.config_parameter'].sudo().get_param('tada.api_key')
+            API_SECRET = self.env['ir.config_parameter'].sudo().get_param('tada.api_secret')
             body = {'username': tada_id.username, 'password': tada_id.password, "grant_type": "password", "scope": "offline_access"}
             bodyJson = json.dumps(body)
             headers = {'Content-Type': 'application/json'}
