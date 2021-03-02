@@ -133,7 +133,7 @@ class TadaTada(models.Model):
                 raise ValidationError(_('Please check your username or password'))
             resp_json = auth_response.json()
             tada_id.write({'state': 'establish',
-                           'access_token': "resp_json['access_token']",
+                           'access_token': resp_json['access_token'],
                            'expired_at': resp_json['expired_at']})
         return
 
