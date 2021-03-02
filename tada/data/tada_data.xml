@@ -1,18 +1,4 @@
 <odoo>
-	<record id="tada_api_url_config" model="ir.config_parameter">
-		<field name="key">tada.base_api_url</field>
-		<field name="value">https://staging-distribution-api.gift.id</field>
-	</record>
-
-	<record id="tada_program_id" model="ir.config_parameter">
-		<field name="key">tada.program_id</field>
-		<field name="value">1500923748327</field>
-	</record>
-	
-	<record id="tada_catalog_id" model="ir.config_parameter">
-		<field name="key">tada.catalog_id</field>
-		<field name="value">76</field>
-	</record>
 
 	<record id="salesteam_tada_sales" model="crm.team">
 		<field name="name">Tada</field>
@@ -107,4 +93,5 @@
 		<field name="brand">Haistar</field>
 		<field name="company_name">Haistar</field>
 	</record>
+
 </odoo>
