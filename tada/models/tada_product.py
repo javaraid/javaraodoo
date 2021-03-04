@@ -699,7 +699,10 @@ class TadaProductVariant(models.Model):
         # Category = self.env['tada.category']
         Product = self.env['tada.product']
         product_id = self.product_id
+        print('\n product_id',product_id)
         tada_id = product_id.tada_id
+        if not tada_id :
+            return False
         self._cr.execute('select id, variantid from %s where product_id=%d' %(self._table, product_id.id))
         variants = {variantid: id for id, variantid in self._cr.fetchall()}
         self._cr.execute('select id, stockid from %s' %(Stock._table))
@@ -712,6 +715,14 @@ class TadaProductVariant(models.Model):
         headers['Authorization'] = authorization
         response = requests.get(base_api_url + VariantDetailUrl.format(itemid=product_id.productid, variantId=self.variantid), headers=headers, timeout=50.0)
         resp_json = response.json()
+        if response.status_code != 200 or len(resp_json.get('failed', [])) != 0:
+            if 'message' in resp_json:
+                message = resp_json['message']
+            elif 'failed' in resp_json:
+                message = resp_json['failed'][0]['message']
+            else:
+                message = 'Error'
+            raise ValidationError(_(message))
         variant_vals = self._convert_resp_tada_to_vals(resp_json, stocks)
         self.write(variant_vals)
         return
