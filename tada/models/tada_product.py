@@ -699,7 +699,6 @@ class TadaProductVariant(models.Model):
         # Category = self.env['tada.category']
         Product = self.env['tada.product']
         product_id = self.product_id
-        print('\n product_id',product_id)
         tada_id = product_id.tada_id
         if not tada_id :
             return False
