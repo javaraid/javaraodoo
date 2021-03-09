@@ -22,18 +22,23 @@
     # any module necessary for this one to work correctly
     'depends': [
         'sale',
+        'sales_team',
         'purchase',
         'account',
         'stock',
+        'mrp',
         'point_of_sale',
+        'web_settings_dashboard',
+        'base_setup',
         'security_base',
+        'sale_javara',
     ],
 
     # always loaded
     'data': [
         # 'security/ir.model.access.csv',
         'views/menuitem.xml',
-        # 'views/templates.xml',
+        # 'data/res_users.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
