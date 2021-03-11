@@ -2,17 +2,7 @@
 <odoo>
     <data noupdate="0">
 
-        <record id="user_adi_kristianto" model="res.users">
-            <field name="name">Adi Kristianto</field>
-            <field name="login">production1@javara.co.id</field>
-            <field name="password">1234</field>
-            <field name="company_ids" eval="[(6,0,[
-                ref('base.main_company'),
-            ])]"/>
-            <field name="groups_id" eval="[(6,0,[
-                ref('security_base.group_inventory_reporting'),
-            ])]"/>
-        </record>
+
 
     </data>
 </odoo>
