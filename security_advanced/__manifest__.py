@@ -26,12 +26,16 @@
         'purchase',
         'account',
         'stock',
+        'stock_account',
         'mrp',
         'point_of_sale',
         'web_settings_dashboard',
         'base_setup',
         'security_base',
         'sale_javara',
+        'delivery',
+        'stock_landed_costs',
+        'inventory_turnover_report',
     ],
 
     # always loaded

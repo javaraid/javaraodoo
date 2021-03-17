@@ -26,6 +26,19 @@
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_dashboard')])]"/>
         </record>
         <record id="stock.menu_stock_warehouse_mgmt" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[
+                ref('security_base.group_inventory_operation'),
+                ref('security_base.group_inventory_operation_inventory_adjustment'),
+                ref('security_base.group_inventory_operation_scrap'),
+            ])]"/>
+        </record>
+        <record id="stock.all_picking" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_operation')])]"/>
+        </record>
+        <record id="stock_landed_costs.menu_stock_landed_cost" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_operation')])]"/>
+        </record>
+        <record id="stock.menu_procurement_compute" model="ir.ui.menu">
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_operation')])]"/>
         </record>
         <record id="stock.menu_stock_scrap" model="ir.ui.menu">
@@ -38,18 +51,66 @@
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_batch_picking')])]"/>
         </record>
         <record id="stock.menu_stock_inventory_control" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[
+                ref('security_base.group_inventory_master_data'),
+                ref('security_base.group_inventory_master_data_lot')
+            ])]"/>
+        </record>
+        <record id="stock.menu_product_variant_config_stock" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_master_data')])]"/>
+        </record>
+        <record id="stock.menu_reordering_rules_config" model="ir.ui.menu">
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_master_data')])]"/>
         </record>
         <record id="stock.menu_action_production_lot_form" model="ir.ui.menu">
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_master_data_lot')])]"/>
         </record>
         <record id="stock.menu_warehouse_report" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[
+                ref('security_base.group_inventory_reporting'),
+                ref('security_base.group_inventory_reporting_inventory'),
+            ])]"/>
+        </record>
+        <record id="stock_account.menu_valuation" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_reporting')])]"/>
+        </record>
+        <record id="stock.stock_move_menu" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_reporting')])]"/>
+        </record>
+        <record id="stock.stock_move_line_menu" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_reporting')])]"/>
+        </record>
+        <record id="inventory_turnover_report.inventory_turnover_report_wizard_menu" model="ir.ui.menu">
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_reporting')])]"/>
         </record>
         <record id="stock.menu_valuation" model="ir.ui.menu">
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_reporting_inventory')])]"/>
         </record>
         <record id="stock.menu_stock_config_settings" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[
+                ref('security_base.group_inventory_configuration'),
+                ref('security_base.group_inventory_configuration_location')
+            ])]"/>
+        </record>
+        <record id="stock.menu_stock_general_settings" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_configuration')])]"/>
+        </record>
+        <record id="stock.menu_action_warehouse_form" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_configuration')])]"/>
+        </record>
+        <record id="stock.menu_routes_config" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_configuration')])]"/>
+        </record>
+        <record id="stock.menu_pickingtype" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_configuration')])]"/>
+        </record>
+        <record id="stock.menu_action_incoterm_open" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_configuration')])]"/>
+        </record>
+        <record id="stock.product_uom_menu" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_configuration')])]"/>
+        </record>
+        <record id="delivery.menu_delivery" model="ir.ui.menu">
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_inventory_configuration')])]"/>
         </record>
         <record id="stock.menu_action_location_form" model="ir.ui.menu">
@@ -58,6 +119,13 @@
 
 <!--        Manufacturing-->
         <record id="mrp.menu_mrp_manufacturing" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6,0,[
+                ref('security_base.group_mrp_operation'),
+                ref('security_base.group_mrp_operation_unbuild'),
+                ref('security_base.group_mrp_operation_scrap'),
+            ])]"/>
+        </record>
+        <record id="mrp.menu_mrp_production_action" model="ir.ui.menu">
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_mrp_operation')])]"/>
         </record>
         <record id="mrp.menu_mrp_unbuild" model="ir.ui.menu">
