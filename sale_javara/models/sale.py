@@ -128,40 +128,40 @@ class SaleTarget(models.Model):
     _description = 'Sales Target'
     _order = 'id desc'
 
-    name = fields.Char(string='Name', default='New')
-    date_from = fields.Date(string='From', required=True)
-    date_to = fields.Date(string='To', required=True)
-    amount_actual = fields.Float(string='Actual Amount', compute='_get_actual', store=True)
-    amount_target = fields.Float(string='Targeted Amount')
-    amount_invoiced = fields.Float(string='Invoiced Amount', compute='_get_actual', store=True)
-    percentage_amount = fields.Float(string='Accomplished Amount (%)', compute='_get_actual', store=True, group_operator="avg")
+    name = fields.Char(string='Name', default='New', track_visibility='onchange')
+    date_from = fields.Date(string='From', required=True, track_visibility='onchange')
+    date_to = fields.Date(string='To', required=True, track_visibility='onchange')
+    amount_actual = fields.Float(string='Actual Amount', compute='_get_actual', store=True, track_visibility='onchange')
+    amount_target = fields.Float(string='Targeted Amount', track_visibility='onchange')
+    amount_invoiced = fields.Float(string='Invoiced Amount', compute='_get_actual', store=True, track_visibility='onchange')
+    percentage_amount = fields.Float(string='Accomplished Amount (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
     unselected_salesperson = fields.Boolean(
         string='Unselected Salesperson',
         help='All unselected salesperson in other records for the same period',
-        required=False)
-    salesperson_id = fields.Many2one('res.users', 'Salesperson', ondelete='set null')
+        required=False, track_visibility='onchange')
+    salesperson_id = fields.Many2one('res.users', 'Salesperson', ondelete='set null', track_visibility='onchange')
     unselected_saleschannel = fields.Boolean(
         string='Unselected Sales Channel',
         help='All unselected sales channel in other records for the same period',
-        required=False)
-    saleschannel_id = fields.Many2one('crm.team', 'Sales Channel', ondelete='set null')
-    company_id = fields.Many2one('res.company', 'Company', ondelete='cascade')
+        required=False, track_visibility='onchange')
+    saleschannel_id = fields.Many2one('crm.team', 'Sales Channel', ondelete='set null', track_visibility='onchange')
+    company_id = fields.Many2one('res.company', 'Company', ondelete='cascade', track_visibility='onchange')
     unselected_customer = fields.Boolean(
         string='Unselected Customer',
         help='All unselected customer in other records for the same period',
-        required=False)
-    customer_id = fields.Many2one('res.partner', 'Customer', ondelete='cascade')
+        required=False, track_visibility='onchange')
+    customer_id = fields.Many2one('res.partner', 'Customer', ondelete='cascade', track_visibility='onchange')
     unselected_product = fields.Boolean(
         string='Unselected Product',
         help='All unselected product in other records for the same period',
-        required=False)
-    product_id = fields.Many2one('product.product', 'Product', ondelete='cascade')
-    qty_target = fields.Float(string='Target Qty')
-    qty_actual = fields.Float(string='Actual Qty', compute='_get_actual', store=True)
-    qty_invoiced = fields.Float(string='Invoiced Qty', compute='_get_actual', store=True)
-    percentage_qty = fields.Float(string='Accomplished Qty (%)', compute='_get_actual', store=True, group_operator="avg")
-    amt_invoiced_vs_amt_target = fields.Float(string='Invoiced Amount vs Target Amount (%)', compute='_get_actual', store=True, group_operator="avg")
-    qty_invoiced_vs_amt_target = fields.Float(string='Invoiced Qty vs Target Qty (%)', compute='_get_actual', store=True, group_operator="avg")
+        required=False, track_visibility='onchange')
+    product_id = fields.Many2one('product.product', 'Product', ondelete='cascade', track_visibility='onchange')
+    qty_target = fields.Float(string='Target Qty', track_visibility='onchange')
+    qty_actual = fields.Float(string='Actual Qty', compute='_get_actual', store=True, track_visibility='onchange')
+    qty_invoiced = fields.Float(string='Invoiced Qty', compute='_get_actual', store=True, track_visibility='onchange')
+    percentage_qty = fields.Float(string='Accomplished Qty (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
+    amt_invoiced_vs_amt_target = fields.Float(string='Invoiced Amount vs Target Amount (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
+    qty_invoiced_vs_amt_target = fields.Float(string='Invoiced Qty vs Target Qty (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
 
     @api.model
     def create(self, values):
