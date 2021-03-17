@@ -8,6 +8,11 @@
         <record id="sale.menu_sale_invoicing" model="ir.ui.menu">
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_sale_invoicing')])]"/>
         </record>
+        <menuitem
+            action="account.action_invoice_tree1"
+            id="menu_action_invoice_tree1"
+            parent="sale.menu_sale_invoicing"
+            sequence="1"/>
         <record id="sale.product_menu_catalog" model="ir.ui.menu">
             <field name="groups_id" eval="[(6,0,[ref('security_base.group_sale_catalog')])]"/>
         </record>
