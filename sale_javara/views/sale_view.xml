@@ -7,8 +7,14 @@
 				<field name="name" string="Sales Taret" filter_domain="['|',('name','ilike',self),('customer_id','child_of',self)]"/>
 				<field name="customer_id" operator="child_of"/>
 				<field name="salesperson_id"/>
-				<field name="saleschannel_id" string="Sales Channel"/>
+				<field name="saleschannel_id"/>
 				<field name="product_id"/>
+				<filter name="annual" string="Annual" domain="[('date_from','=', (context_today() - relativedelta(years=1)).strftime('%Y-01-01')), ('date_to','=', (context_today() - relativedelta(years=1)).strftime('%Y-12-31'))]"/>
+				<filter name="monthly" string="Monthly" domain="['|','&amp;',('date_from','=', (context_today() - relativedelta(years=1)).strftime('%Y-01-01')), ('date_to','!=', (context_today() - relativedelta(years=1)).strftime('%Y-12-31')),'&amp;',('date_from','!=', (context_today() - relativedelta(years=1)).strftime('%Y-01-01')), ('date_to','=', (context_today() - relativedelta(years=1)).strftime('%Y-12-31'))]"/>
+				<separator />
+				<filter name="this_mpnth" string="This Month" domain="[('date_from','&gt;=', context_today().strftime('%Y-%m-01')), ('date_to','&lt;=', context_today().strftime('%Y-%m-31'))]"/>
+				<filter name="this_year" string="This Year" domain="[('date_from','&gt;=', context_today().strftime('%Y-01-01')), ('date_to','&lt;=', context_today().strftime('%Y-12-31'))]"/>
+				<filter name="last_year" string="Last Year" domain="[('date_from','&gt;=', (context_today() - relativedelta(years=1)).strftime('%Y-01-01')), ('date_to','&lt;=', (context_today() - relativedelta(years=1)).strftime('%Y-12-31'))]"/>
 			</search>
 		</field>
 	</record>
@@ -24,6 +30,7 @@
 				<field name="salesperson_id"/>
 				<field name="saleschannel_id"/>
 				<field name="product_id"/>
+				<field name="categ_id"/>
 				<field name="qty_target"/>
 				<field name="percentage_qty"/>
 				<field name="amount_target"/>
@@ -83,6 +90,7 @@
 							<field name="customer_id" domain="[('customer','=',True)]" options="{&quot;always_reload&quot;: True}" attrs="{'invisible': [('unselected_customer', '!=', False)]}"/>
 							<field name="unselected_product"/>
 							<field name="product_id" domain="[('sale_ok','=',True)]" options="{&quot;always_reload&quot;: True}" attrs="{'invisible': [('unselected_product', '!=', False)]}"/>
+							<field name="categ_id"/>
 							<field name="company_id"/>
 						</group>
 					</group>
@@ -114,6 +122,7 @@
 		<field name="res_model">sale.target</field>
 		<field name="view_mode">tree,pivot,graph,form</field>
 		<field name="view_type">form</field>
+		<field name="search_view_id" ref="sale_target_view_search"/>
 		<!-- <field name="domain">[('employee_id','=',active_id)]</field> -->
 	</record>
 

@@ -156,6 +156,7 @@ class SaleTarget(models.Model):
         help='All unselected product in other records for the same period',
         required=False, track_visibility='onchange')
     product_id = fields.Many2one('product.product', 'Product', ondelete='cascade', track_visibility='onchange')
+    categ_id = fields.Many2one('product.category', 'Product Category', related='product_id.categ_id', store=True, ondelete='cascade', track_visibility='onchange', readonly=True)
     qty_target = fields.Float(string='Target Qty', track_visibility='onchange')
     qty_actual = fields.Float(string='Actual Qty', compute='_get_actual', store=True, track_visibility='onchange')
     qty_invoiced = fields.Float(string='Invoiced Qty', compute='_get_actual', store=True, track_visibility='onchange')
