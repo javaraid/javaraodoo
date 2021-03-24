@@ -591,7 +591,7 @@ class TadaProductVariant(models.Model):
                 operator = 'in'
                 sku = sku_lst
             
-            system_product_ids = Product.search([('default_code', operator, sku)])
+            system_product_ids = Product.search([('barcode', operator, sku)])
             rec.system_product_ids = [(6,0,system_product_ids.ids)]
         return
     

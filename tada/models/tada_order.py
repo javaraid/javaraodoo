@@ -467,7 +467,7 @@ class TadaOrderLine(models.Model):
                     rec.order_id.has_no_product = True
                     continue
             sku_lst = rec.variant_id.sku.split(';')
-            system_sku_lst = [product_id.default_code for product_id in product_ids] 
+            system_sku_lst = [product_id.barcode for product_id in product_ids]
             for sku in sku_lst:
                 if sku not in system_sku_lst:
                     if not confirm_batch:

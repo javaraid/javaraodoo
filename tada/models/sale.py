@@ -14,7 +14,7 @@ class SaleOrder(models.Model):
     tada_order_ids = fields.One2many('tada.order', 'sale_order_id', 'Order')
     purchase_number_tada = fields.Char(
         string='Purchase Order Number',
-        readonly=True,
+        readonly=False,
         copy=False)
     
     def action_confirm(self):
