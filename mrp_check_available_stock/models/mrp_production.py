@@ -7,6 +7,12 @@ from odoo.exceptions import ValidationError
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
+    def _compute_unreserve_visible(self):
+        super(MrpProduction, self)._compute_unreserve_visible()
+        for order in self:
+            already_reserved = order.is_locked and order.state not in ('done', 'cancel') and order.mapped('move_raw_ids.move_line_ids') and any(raw.reserved_availability for raw in order.move_raw_ids)
+            order.unreserve_visible = already_reserved
+
     state = fields.Selection(selection_add=[('to_approve','To Approve')])
     action = fields.Selection(
         string='Action',
@@ -28,7 +34,7 @@ class MrpProduction(models.Model):
             for line in self.move_raw_ids.filtered(lambda raw: raw.state not in ('done','cancel')):
                 bom_qty += line.product_uom_qty
                 consumed_qty += line.quantity_done
-            if bom_qty != consumed_qty :
+            if bom_qty > consumed_qty :
                 if self.bom_id.stock_rule == 'not_less':
                     raise ValidationError(_('Can not consume qty less than to consume qty for MO %s' % (self.display_name)))
                 elif self.bom_id.stock_rule == 'less_approval' :
@@ -78,3 +84,10 @@ class MrpProduction(models.Model):
                 rec.with_context(force_done=True).button_mark_done()
             if rec.state == 'to_approve' :
                 rec.write({'state':'progress'})
+
+    @api.multi
+    def action_assign(self):
+        moves_draft = self.mapped('move_raw_ids').filtered(lambda move: move.state == 'draft')
+        if moves_draft :
+            moves_draft.write({'state':'confirmed'})
+        return super(MrpProduction, self).action_assign()
