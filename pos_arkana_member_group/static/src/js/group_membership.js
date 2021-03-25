@@ -11,6 +11,16 @@ odoo.define("pos_arkana_member_group.member_group", function (require) {
   var ClientListScreenWidget = screens.ClientListScreenWidget.include({
     save_changes: function () {
       var order = this.pos.get_order();
+      if (order.choose_disc != undefined && order.choose_disc != "membership") {
+        this.pos.gui.show_popup("error", {
+          title: _t("Membership : Discount Already set another discount "),
+          body: _t("Please return to the original settings Or Refresh"),
+        });
+        return;
+      }
+
+      order.set_choose_disc("membership");
+
       if (this.has_client_changed()) {
         var default_fiscal_position_id = _.findWhere(
           this.pos.fiscal_positions,
@@ -35,14 +45,24 @@ odoo.define("pos_arkana_member_group.member_group", function (require) {
         } else {
           order.fiscal_position = default_fiscal_position_id;
           order.set_pricelist(this.pos.default_pricelist);
+          order.set_choose_disc(undefined);
         }
       }
     },
   });
 
   // Override
-  var _super_order = models.Order.prototype;
+  var _super = models.Order.prototype;
   models.Order = models.Order.extend({
+    export_as_JSON: function () {
+      var json = _super.export_as_JSON.apply(this, arguments);
+      json.choose_disc = this.choose_disc ? this.choose_disc : "";
+      return json;
+    },
+    set_choose_disc: function (choose_disc) {
+      this.choose_disc = choose_disc;
+      this.trigger("change", this);
+    },
     set_pricelist: function (pricelist) {
       var self = this;
       var order = this.pos.get_order();
