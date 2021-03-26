@@ -77,6 +77,8 @@ odoo.define("pos_arkana_discount.discount", function (require) {
             return;
           }
 
+          order.set_choose_disc("global_disc");
+
           if (order.disc_type == "") {
             order.set_choose_disc(undefined);
           }
@@ -92,7 +94,6 @@ odoo.define("pos_arkana_discount.discount", function (require) {
             return;
           }
 
-          order.set_choose_disc("global_disc");
           order.set_global_disc(global_disc, disc_type);
           order.trigger("change");
         },
@@ -168,7 +169,7 @@ odoo.define("pos_arkana_discount.discount", function (require) {
       this.disc_type = disc_type;
 
       var orderLines = this.get_orderlines();
-      var summary_price = this.get_total_with_tax();
+      var summary_price = this.get_total_without_tax();
 
       if (this.disc_type != "fix") {
         this.global_disc_amount = (summary_price * this.global_disc) / 100;
