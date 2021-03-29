@@ -73,7 +73,7 @@ odoo.define("pos_arkana_member_group.member_group", function (require) {
         if (client) {
           var member = this.pos.member_by_id[client.active_member_id[0]];
 
-          if (member.pricelist_id[0] != pricelist.id) {
+          if (member && member.pricelist_id[0] != pricelist.id) {
             return self.pos.gui.show_popup("error", {
               title: _t("Error: 'Member Not Match With Pricelist'"),
               body: _t(

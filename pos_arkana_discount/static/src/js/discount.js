@@ -5,8 +5,13 @@ odoo.define("pos_arkana_discount.discount", function (require) {
   var gui = require("point_of_sale.gui");
   var screens = require("point_of_sale.screens");
   var PopupWidget = require("point_of_sale.popups");
+  var utils = require('web.utils');
+
 
   var core = require("web.core");
+  var round_pr = utils.round_precision;
+  var round_di = utils.round_decimals;
+
 
   var QWeb = core.qweb;
   var _t = core._t;
@@ -63,6 +68,7 @@ odoo.define("pos_arkana_discount.discount", function (require) {
         confirm: function (disc_type, global_disc) {
           var order = self.pos.get_order();
           var lines = order.get_orderlines();
+
 
           if (
             order.choose_disc != undefined &&
@@ -169,7 +175,7 @@ odoo.define("pos_arkana_discount.discount", function (require) {
       this.disc_type = disc_type;
 
       var orderLines = this.get_orderlines();
-      var summary_price = this.get_total_without_tax();
+      var summary_price = this.summary_for_global_disc();
 
       if (this.disc_type != "fix") {
         this.global_disc_amount = (summary_price * this.global_disc) / 100;
@@ -182,11 +188,19 @@ odoo.define("pos_arkana_discount.discount", function (require) {
 
         var global_disc_line = 0;
         var price = line.get_price_with_tax(); //sudah apply discount line
-        // hitung disc line
+        
         global_disc_line = (price / summary_price) * this.global_disc_amount;
-        // update line
+        
         line.set_global_disc_line(global_disc_line);
       }
+    },
+    get_global_disc_amount: function (){
+      return this.global_disc_amount;
+    },
+    summary_for_global_disc:function() {
+      return round_pr(this.orderlines.reduce((function(sum, orderLine) {
+        return sum + orderLine.get_price_with_tax();
+      }), 0), this.pos.currency.rounding);
     },
     export_as_JSON: function () {
       var json = _super_order.export_as_JSON.apply(this, arguments);
@@ -219,10 +233,13 @@ odoo.define("pos_arkana_discount.discount", function (require) {
       this.choose_disc = choose_disc;
       this.trigger("change", this);
     },
-    // reset_choose_disc: function (choose_disc) {
-    //   var choose_global_disc = choose_disc;
-    //   return choose_global_disc;
-    // },
+    get_total_with_tax_and_global_disc: function() {
+      if (this.get_global_disc_amount() == undefined){
+        return 0;
+      }else{
+        return this.get_total_without_tax() + this.get_total_tax() + this.get_global_disc_amount();
+      }
+    },
     set_global_disc: function (global_disc, disc_type) {
       this.calculate_gloal_disc_line(global_disc, disc_type);
     },
@@ -244,20 +261,87 @@ odoo.define("pos_arkana_discount.discount", function (require) {
     get_global_disc_line: function () {
       return this.global_disc_line;
     },
-    // get_subtotal: function () {
-    //   return round_pr(
-    //     this.orderlines.reduce(function (sum, orderLine) {
-    //       return sum + (orderLine.get_display_price() - this.global_disc_line);
-    //     }, 0),
-    //     this.pos.currency.rounding
-    //   );
-    // },
-    // get_total_with_tax: function () {
-    //   return (
-    //     this.get_total_without_tax() +
-    //     this.get_total_tax() -
-    //     this.global_disc_line
-    //   );
+    get_all_prices: function(){
+      var disc_global = this.get_global_disc_line();
+
+      if(disc_global == undefined){
+        var price_unit = this.get_unit_price()  * (1.0 - (this.get_discount() / 100.0));
+      }else{
+        var price_unit = this.get_unit_price_disc_global()   * (1.0 - (this.get_discount() / 100.0));
+      }
+      // console.log(price_unit)
+      var taxtotal = 0;
+
+      var product =  this.get_product();
+      var taxes_ids = product.taxes_id;
+      var taxes =  this.pos.taxes;
+      var taxdetail = {};
+      var product_taxes = [];
+
+      _(taxes_ids).each(function(el){
+          product_taxes.push(_.detect(taxes, function(t){
+              return t.id === el;
+          }));
+      });
+
+      var all_taxes = this.compute_all(product_taxes, price_unit, this.get_quantity(), this.pos.currency.rounding);
+      _(all_taxes.taxes).each(function(tax) {
+          taxtotal += tax.amount;
+          taxdetail[tax.id] = tax.amount;
+      });
+
+      return {
+          "priceWithTax": all_taxes.total_included,
+          "priceWithoutTax": all_taxes.total_excluded,
+          "tax": taxtotal,
+          "taxDetails": taxdetail,
+      };
+    },
+    get_unit_price_disc_global: function(){
+      var digits = this.pos.dp['Product Price'];
+      // round and truncate to mimic _symbol_set behavior
+      var disc_global = this.get_global_disc_line();
+      
+      if(disc_global == undefined){
+        var unit_price = parseFloat(round_di(this.price || 0, digits).toFixed(digits));
+      }else{
+        var unit_price = parseFloat(round_di(this.price || 0, digits).toFixed(digits) - (disc_global / this.get_quantity()));
+      } 
+      return unit_price;
+    },
+    get_base_price: function(){
+      var disc_global = this.get_global_disc_line();
+      var rounding = this.pos.currency.rounding;
+      
+      
+      if (disc_global == undefined){
+        var base_price = round_pr(this.get_unit_price() * this.get_quantity() * (1 - this.get_discount()/100), rounding);
+      }else {
+        var base_price = round_pr(this.get_unit_price_disc_global() * this.get_quantity() * (1 - this.get_discount()/100), rounding);
+      }
+      return base_price;
+    },
+    get_display_price_without_global_disc: function(){
+      var disc_global = this.get_global_disc_line();
+
+      if(disc_global == undefined){
+        if (this.pos.config.iface_tax_included === 'total') {
+          return this.get_price_with_tax();
+        } else {
+          return this.get_base_price();
+        }
+      }else{
+        if (this.pos.config.iface_tax_included === 'total') {
+          return this.get_price_with_tax() + (disc_global / this.get_quantity());
+        } else {
+          return this.get_base_price() + (disc_global / this.get_quantity());
+        }
+      }
+    },
+    // get_total_price_without_global_disc: function () {
+    //   var disc_global = this.get_global_disc_line();
+
+    //   return this.get_total_with_tax() + (disc_global / this.get_quantity());
     // },
     export_as_JSON: function () {
       var json = _super_orderline.export_as_JSON.call(this);
@@ -273,6 +357,14 @@ odoo.define("pos_arkana_discount.discount", function (require) {
   screens.OrderWidget.include({
     update_summary: function () {
       this._super();
+      var order = this.pos.get_order();
+      
+      if(order.global_disc_amount == undefined){
+        return this.format_currency(0);
+      }
+
+      this.el.querySelector('.summary .total .global_disc .value').textContent =  this.format_currency(order.global_disc_amount);
+
     },
   });
 });

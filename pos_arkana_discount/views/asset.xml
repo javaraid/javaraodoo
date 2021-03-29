@@ -2,7 +2,8 @@
 <odoo>
     <template id="assets" inherit_id="point_of_sale.assets">
         <xpath expr="." position="inside">
-            <!-- <script type="text/javascript" src="/pos_arkana_discount/static/src/js/discount.js"></script> -->
+            <link href="/pos_arkana_discount/static/src/css/disc_total.css" rel="stylesheet"/>
+            <script type="text/javascript" src="/pos_arkana_discount/static/src/js/discount.js"></script>
             <script type="text/javascript" src="/pos_arkana_discount/static/src/js/discount_bank.js"></script>
         </xpath>
     </template>
