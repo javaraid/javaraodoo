@@ -18,7 +18,7 @@
 		<field name="arch" type="xml">
 			<form>
 				<header>
-					<button name="act_create_sale_order" type="object" string="Create Sale Order" class="btn-primary" attrs="{'invisible':['|', ('sale_order_id', '!=', False), ('status', '!=', 'payment success')]}" />
+					<button name="act_create_sale_order" type="object" string="Create Sale Order" class="btn-primary" attrs="{'invisible':['|', ('sale_order_id', '!=', False), ('status', 'not in', ['payment success','on process'])]}" />
 					<button name="action_complete" type="object" string="Complete" class="btn-primary" attrs="{'invisible':['|',('status', '!=', 'on courier'),('shipping_company_id', '=', False)]}"/>
 				</header>
 				<sheet>

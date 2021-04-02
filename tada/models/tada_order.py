@@ -52,8 +52,8 @@ class TadaOrder(models.Model):
     carrier_id = fields.Many2one('delivery.carrier', 'Carrier', copy=False, ondelete='restrict')
     
     def act_create_sale_order(self):
-        if self.status != 'payment success':
-            raise ValidationError(_('Status of order %s is not payment success' %self.order_number))
+        if self.status not in ['payment success', 'on process']:
+            raise ValidationError(_('Status of order %s is not payment success or on process' %self.order_number))
         team_id = self.env.ref('tada.salesteam_online_sales')
         currency_id = None
         date_order = self.createdAt

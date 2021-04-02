@@ -19,9 +19,8 @@ class SaleOrder(models.Model):
     
     def action_confirm(self):
         res = super(SaleOrder, self).action_confirm()
-        if self.is_from_tada:
-            self.tada_order_ids.action_confirm()
-            self.picking_ids.is_request_pickup = self.tada_order_ids[:1].is_request_pickup
+        for rec in self :
+            if rec.is_from_tada:
+                rec.tada_order_ids.filtered(lambda order: order.status != 'on process').action_confirm()
+                rec.picking_ids.write({'is_request_pickup': self.tada_order_ids[:1].is_request_pickup})
         return res
-    
-    
