@@ -61,6 +61,7 @@ class AccountInvoice(models.Model):
     is_cancelable = fields.Boolean(
         string='Is Cancelable',
         compute='_compute_is_cancelable')
+
     commitment_date = fields.Datetime(compute='_compute_commitment_date', string='Commitment Date', store=True,
                                       help="Date by which the products are sure to be delivered. This is "
                                            "a date that you can promise to the customer, based on the "

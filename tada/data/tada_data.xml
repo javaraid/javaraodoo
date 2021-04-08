@@ -1,0 +1,97 @@
+<odoo>
+
+	<record id="salesteam_tada_sales" model="crm.team">
+		<field name="name">Tada</field>
+		<field name="company_id" eval="False" />
+		<field name="active" eval="True" />
+		<field name="team_type" eval="'tada'" />
+	</record>
+
+	<record id="salesteam_online_sales" model="crm.team">
+		<field name="name">Online</field>
+		<field name="company_id" eval="False" />
+		<field name="active" eval="True" />
+		<field name="team_type" eval="'tada'" />
+	</record>
+
+	<record id="res_partner_online_tada" model="res.partner">
+		<field name="name">Online - Tada</field>
+		<field name="company_id" eval="False" />
+		<field name="active" eval="True" />
+		<field name="customer" eval="True"/>
+		<field name="supplier" eval="False"/>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_1">
+		<field name="shippingCompanyId">1</field>
+		<field name="brand">JNE</field>
+		<field name="company_name">PT. Jalur Nugraha Eka Kurir</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_2">
+		<field name="shippingCompanyId">2</field>
+		<field name="brand">Others</field>
+		<field name="company_name">Other Courier</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_3">
+		<field name="shippingCompanyId">3</field>
+		<field name="brand">GPL</field>
+		<field name="company_name">GPL Express Indonesia</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_4">
+		<field name="shippingCompanyId">4</field>
+		<field name="brand">SAP</field>
+		<field name="company_name">PT SAP Express Tbk.</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_5">
+		<field name="shippingCompanyId">5</field>
+		<field name="brand">Ninja</field>
+		<field name="company_name">Ninja Xpress</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_6">
+		<field name="shippingCompanyId">6</field>
+		<field name="brand">J&amp;T</field>
+		<field name="company_name">J&amp;T Express</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_7">
+		<field name="shippingCompanyId">7</field>
+		<field name="brand">Si Cepat</field>
+		<field name="company_name">PT Sicepat Express</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_8">
+		<field name="shippingCompanyId">8</field>
+		<field name="brand">Kerry</field>
+		<field name="company_name">Kerry Express</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_10">
+		<field name="shippingCompanyId">10</field>
+		<field name="brand">Test</field>
+		<field name="company_name">Test</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_11">
+		<field name="shippingCompanyId">11</field>
+		<field name="brand">Shipper.id</field>
+		<field name="company_name">Shipper.id</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_13">
+		<field name="shippingCompanyId">13</field>
+		<field name="brand">Internal Courier</field>
+		<field name="company_name">Brand's own internal courier</field>
+	</record>
+
+	<record model="tada.shipping.company" id="shipping_14">
+		<field name="shippingCompanyId">14</field>
+		<field name="brand">Haistar</field>
+		<field name="company_name">Haistar</field>
+	</record>
+
+</odoo>

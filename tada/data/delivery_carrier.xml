@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="delivery_gosend" model="delivery.carrier">
+            <field name="name">Gosend Instant</field>
+            <field name="product_id" ref="delivery.product_product_delivery"/>
+            <field name="company_id"/>
+        </record>
+        <record id="delivery_grab" model="delivery.carrier">
+            <field name="name">Grab Instant</field>
+            <field name="product_id" ref="delivery.product_product_delivery"/>
+            <field name="company_id"/>
+        </record>
+
+    </data>
+</odoo>

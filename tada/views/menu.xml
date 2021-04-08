@@ -1,0 +1,13 @@
+<odoo>
+	<menuitem id="menu_tada" name="Tada" web_icon="tada,static/description/icon.png"/>
+	<menuitem id="menu_tada_transaction" name="Transaction" parent="menu_tada" sequence="10" />
+	<menuitem id="menu_tada_order" name="Orders" parent="menu_tada_transaction" action="act_tada_order" sequence="10" />
+	<menuitem id="menu_tada_inventory" name="Inventory" parent="menu_tada" sequence="10" />
+	<menuitem id="menu_tada_category" name="Categories" parent="menu_tada_inventory" action="act_tada_category" sequence="10" />
+	<menuitem id="menu_tada_product" name="Products" parent="menu_tada_inventory" action="act_tada_product" sequence="20" />
+	<menuitem id="menu_tada_product_variant" name="Variants" parent="menu_tada_inventory" action="act_tada_product_variant" sequence="30" />
+	<!-- <menuitem id="menu_tada_stock" name="Stocks" parent="menu_tada_inventory" action="act_tada_stock" sequence="40" /> -->
+	<menuitem id="menu_tada_merchant" name="Merchant Configuration" parent="menu_tada" />
+	<menuitem id="menu_tada_tada" name="Account" parent="menu_tada_merchant" action="act_tada_tada" sequence="10" />
+	<menuitem id="menu_tada_store" name="Store" parent="menu_tada_merchant" action="act_tada_store" sequence="20" />
+</odoo>

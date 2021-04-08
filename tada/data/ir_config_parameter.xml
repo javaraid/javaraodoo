@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="parameter_api_key" model="ir.config_parameter">
+            <field name="key">tada.api_key</field>
+            <field name="value">wvflPpfzs6HyATu71zJqyMz9Z</field>
+        </record>
+        <record id="parameter_api_secret" model="ir.config_parameter">
+            <field name="key">tada.api_secret</field>
+            <field name="value">uw6pXxm5QDHB3FjUOnytLsdk444BhWQKSb71qsDkyW5x6t8j6K</field>
+        </record>
+        <record id="tada_api_url_config" model="ir.config_parameter">
+            <field name="key">tada.base_api_url</field>
+            <field name="value">https://staging-distribution-api.gift.id</field>
+        </record>
+        <record id="tada_program_id" model="ir.config_parameter">
+            <field name="key">tada.program_id</field>
+            <field name="value">1500923748327</field>
+        </record>
+        <record id="tada_catalog_id" model="ir.config_parameter">
+            <field name="key">tada.catalog_id</field>
+            <field name="value">76</field>
+        </record>
+
+    </data>
+</odoo>

@@ -54,7 +54,7 @@ class Binary(http.Controller):
         export_data = []
         for line in record.invoice_line_ids:
             export_data.append(
-                [['OB', line.product_id.default_code, line.product_id.name, line.price_unit]])
+                [['OB', line.product_id.barcode, line.product_id.name, line.price_unit]])
 
         if not filename:
             filename = '%s_%s' % (model.replace('.', '_'), id)
