@@ -20,4 +20,10 @@
         id="menu_report_account"
         sequence="10"
     />
+    <menuitem
+        parent="account.account_reports_management_menu"
+        action="act_date_report_wizard"
+        id="menu_report_account_accounting"
+        sequence="30"
+    />
 </odoo>

@@ -2,6 +2,7 @@ from odoo import models, api, fields, _
 from odoo.tools.misc import format_date
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
+import pytz
 
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
@@ -45,7 +46,29 @@ class AccountInvoice(models.Model):
                         is_cancelable = False
             rec.is_cancelable = is_cancelable
 
+    @api.multi
+    @api.depends('invoice_line_ids.sale_line_ids.order_id.commitment_date')
+    def _compute_commitment_date(self):
+        for rec in self :
+            order_ids = rec.mapped('invoice_line_ids.sale_line_ids.order_id').filtered(lambda sale: sale.commitment_date)
+            if order_ids :
+                commitment_date = order_ids[0].commitment_date
+            else :
+                commitment_date = False
+            rec.commitment_date = commitment_date
+
     date_ttf = fields.Date(string='Date TTF')
     is_cancelable = fields.Boolean(
         string='Is Cancelable',
         compute='_compute_is_cancelable')
+
+    commitment_date = fields.Datetime(compute='_compute_commitment_date', string='Commitment Date', store=True,
+                                      help="Date by which the products are sure to be delivered. This is "
+                                           "a date that you can promise to the customer, based on the "
+                                           "Product Lead Times.")
+
+    def get_commitment_date(self):
+        self.ensure_one()
+        if not self.commitment_date :
+            return ''
+        return pytz.UTC.localize(datetime.strptime(self.commitment_date, '%Y-%m-%d %H:%M:%S')).astimezone(pytz.timezone(self.env.user.tz or 'Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')

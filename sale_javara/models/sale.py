@@ -1,7 +1,8 @@
 from odoo import models, fields, api, _
 from odoo.tools.float_utils import float_compare, float_round, float_is_zero
 from odoo.exceptions import UserError
-
+from datetime import datetime
+import pytz
 
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
@@ -62,6 +63,12 @@ class SaleOrderLine(models.Model):
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    @api.multi
+    def _set_commitment_date(self):
+        for rec in self :
+            for pick in rec.picking_ids :
+                pick.scheduled_date = rec.commitment_date
+
     delivery_status = fields.Selection([
             ('no', 'Not Delivered'),
             ('partial', 'Partially Delivered'),
@@ -69,6 +76,16 @@ class SaleOrder(models.Model):
         ], string='Delivery State', compute='_get_delivery', store='True')
     
     delivered_at = fields.Datetime('Delivered at', compute='_get_delivery', store='True')
+    commitment_date = fields.Datetime(inverse='_set_commitment_date')
+
+    @api.multi
+    def action_confirm(self):
+        res = super(SaleOrder, self).action_confirm()
+        for rec in self :
+            for pick in rec.picking_ids :
+                if pick.scheduled_date != rec.commitment_date :
+                    pick.scheduled_date = rec.commitment_date
+        return res
     
     @api.depends('state', 'picking_ids.state')
     def _get_delivery(self):
@@ -91,72 +108,165 @@ class SaleOrder(models.Model):
                 'delivered_at': delivered_at
             })
 
+    @api.multi
+    def write(self, values):
+        res = super(SaleOrder, self).write(values)
+        if values.get('note') and not self._context.get('force_write'):
+            for rec in self :
+                rec.invoice_ids.with_context({'force_write':True}).write({'comment':values['note']})
+        return res
+
+    def get_commitment_date(self):
+        self.ensure_one()
+        if not self.commitment_date :
+            return ''
+        return pytz.UTC.localize(datetime.strptime(self.commitment_date, '%Y-%m-%d %H:%M:%S')).astimezone(pytz.timezone(self.env.user.tz or 'Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
+
 class SaleTarget(models.Model):
     _name = 'sale.target'
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'portal.mixin']
     _description = 'Sales Target'
+    _order = 'id desc'
 
-    name = fields.Char(string='Name')
-    date_from = fields.Date(string='From', required=True)
-    date_to = fields.Date(string='To', required=True)
-    amount_actual = fields.Float(string='Actual Amount', compute='_get_actual', store=True)
-    amount_target = fields.Float(string='Targeted Amount')
-    amount_invoiced = fields.Float(string='Invoiced Amount', compute='_get_actual', store=True)
-    percentage_amount = fields.Float(string='Accomplished Amount (%)', compute='_get_actual', store=True)
-    salesperson_id = fields.Many2one('res.users', 'Salesperson', ondelete='set null')
-    saleschannel_id = fields.Many2one('crm.team', 'Sales Channel', ondelete='set null')
-    company_id = fields.Many2one('res.company', 'Company', ondelete='cascade')
-    customer_id = fields.Many2one('res.partner', 'Customer', ondelete='cascade')
-    product_id = fields.Many2one('product.product', 'Product', ondelete='cascade')
-    qty_target = fields.Integer(string='Target Qty')
-    qty_actual = fields.Integer(string='Actual Qty', compute='_get_actual', store=True)
-    percentage_qty = fields.Float(string='Accomplished Qty (%)', compute='_get_actual', store=True)
+    name = fields.Char(string='Name', default='New', track_visibility='onchange')
+    date_from = fields.Date(string='From', required=True, track_visibility='onchange')
+    date_to = fields.Date(string='To', required=True, track_visibility='onchange')
+    amount_actual = fields.Float(string='Actual Amount', compute='_get_actual', store=True, track_visibility='onchange')
+    amount_target = fields.Float(string='Targeted Amount', track_visibility='onchange')
+    amount_invoiced = fields.Float(string='Invoiced Amount', compute='_get_actual', store=True, track_visibility='onchange')
+    percentage_amount = fields.Float(string='Accomplished Amount (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
+    unselected_salesperson = fields.Boolean(
+        string='Unselected Salesperson',
+        help='All unselected salesperson in other records for the same period',
+        required=False, track_visibility='onchange')
+    salesperson_id = fields.Many2one('res.users', 'Salesperson', ondelete='set null', track_visibility='onchange')
+    unselected_saleschannel = fields.Boolean(
+        string='Unselected Sales Channel',
+        help='All unselected sales channel in other records for the same period',
+        required=False, track_visibility='onchange')
+    saleschannel_id = fields.Many2one('crm.team', 'Sales Channel', ondelete='set null', track_visibility='onchange')
+    company_id = fields.Many2one('res.company', 'Company', ondelete='cascade', track_visibility='onchange')
+    unselected_customer = fields.Boolean(
+        string='Unselected Customer',
+        help='All unselected customer in other records for the same period',
+        required=False, track_visibility='onchange')
+    customer_id = fields.Many2one('res.partner', 'Customer', ondelete='cascade', track_visibility='onchange')
+    unselected_product = fields.Boolean(
+        string='Unselected Product',
+        help='All unselected product in other records for the same period',
+        required=False, track_visibility='onchange')
+    product_id = fields.Many2one('product.product', 'Product', ondelete='cascade', track_visibility='onchange')
+    categ_id = fields.Many2one('product.category', 'Product Category', related='product_id.categ_id', store=True, ondelete='cascade', track_visibility='onchange', readonly=True)
+    qty_target = fields.Float(string='Target Qty', track_visibility='onchange')
+    qty_actual = fields.Float(string='Actual Qty', compute='_get_actual', store=True, track_visibility='onchange')
+    qty_invoiced = fields.Float(string='Invoiced Qty', compute='_get_actual', store=True, track_visibility='onchange')
+    percentage_qty = fields.Float(string='Accomplished Qty (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
+    amt_invoiced_vs_amt_target = fields.Float(string='Invoiced Amount vs Target Amount (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
+    qty_invoiced_vs_amt_target = fields.Float(string='Invoiced Qty vs Target Qty (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
+
+    @api.model
+    def create(self, values):
+        if values.get('name', 'New') == 'New' :
+            values['name'] = self.sudo().env['ir.sequence'].next_by_code('sale.target')
+        return super(SaleTarget, self).create(values)
+
+    @api.onchange('unselected_salesperson','unselected_saleschannel','unselected_customer','unselected_product')
+    def onchange_set_null(self):
+        if self.unselected_salesperson :
+            self.salesperson_id = False
+        if self.unselected_saleschannel :
+            self.saleschannel_id = False
+        if self.unselected_customer :
+            self.customer_id = False
+        if self.unselected_product :
+            self.product_id = False
+
+    def get_same_period(self, target, field):
+        domain = [
+            ('date_from','=',target.date_from),
+            ('date_to','=',target.date_to),
+        ]
+        if isinstance(target.id, int) :
+            domain.append(('id','!=',target.id))
+        other_targets = self.search(domain)
+        return other_targets.mapped(field)
 
     @api.multi
-    @api.depends('date_from', 'date_to', 'amount_target', 'salesperson_id', 'saleschannel_id', 'company_id', 'customer_id', 'product_id', 'qty_target')
+    @api.depends('date_from', 'date_to', 'amount_target', 'salesperson_id', 'saleschannel_id',
+                 'company_id', 'customer_id', 'product_id', 'qty_target', 'unselected_saleschannel',
+                 'unselected_salesperson', 'unselected_customer', 'unselected_product')
     def _get_actual(self):
         for target in self:
-            if target.amount_target <= 0 or (target.product_id and target.qty_target <= 0):
-                continue
-            else:
-                if target.date_from and target.date_to:
-                    domain = [
-                        ('state', 'in', ['sale', 'done']),
-                        ('confirmation_date', '>=', target.date_from),
-                        ('confirmation_date', '<=', target.date_to),
-                    ]
-                    
-                    if target.salesperson_id :
-                        domain.append(('user_id','=',target.salesperson_id.id))
+            amt_invoiced_vs_amt_target = 0
+            qty_invoiced_vs_amt_target = 0
+            if target.date_from and target.date_to:
+                domain = [
+                    ('state', 'in', ['sale', 'done']),
+                    ('confirmation_date', '>=', target.date_from),
+                    ('confirmation_date', '<=', target.date_to),
+                ]
 
-                    if target.saleschannel_id :
-                        domain.append(('team_id','=',target.saleschannel_id.id))
+                if target.unselected_salesperson :
+                    other_sales_person = self.get_same_period(target=target, field='salesperson_id')
+                    if other_sales_person :
+                        domain.append(('user_id', 'not in', other_sales_person.ids))
+                elif target.salesperson_id :
+                    domain.append(('user_id','=',target.salesperson_id.id))
 
-                    if target.company_id :
-                        domain.append(('company_id','=',target.company_id.id))
-                    
-                    if target.customer_id :
-                        if target.customer_id.child_ids:
-                            domain.append(('partner_id.parent_id','=',target.customer_id.id))
-                        else:
-                            domain.append(('partner_id','=',target.customer_id.id))
+                if target.unselected_saleschannel :
+                    other_sales_channel = self.get_same_period(target=target, field='saleschannel_id')
+                    if other_sales_channel :
+                        domain.append(('team_id', 'not in', other_sales_channel.ids))
+                elif target.saleschannel_id :
+                    domain.append(('team_id','=',target.saleschannel_id.id))
 
-                    sales = self.env['sale.order'].search(domain)
-                    order_lines = sales.mapped('order_line')
-                    if sales: 
-                        if target.product_id:
-                            amount_actual = sum(order_lines.filtered(lambda l: l.product_id.id == target.product_id.id).mapped(lambda l: l.product_uom_qty * l.price_unit))
-                            target.amount_actual = amount_actual
-                            amount_invoiced = sum(order_lines.filtered(lambda l: l.product_id.id == target.product_id.id).mapped(lambda l: l.amt_invoiced))
-                            target.amount_invoiced = amount_invoiced
-                            qty_actual = sum(order_lines.filtered(lambda l: l.product_id.id == target.product_id.id).mapped(lambda l: l.product_uom_qty))
-                            target.qty_actual = qty_actual
-                        else:
-                            amount_actual = sum(sales.mapped('amount_untaxed'))
-                            target.amount_actual = amount_actual
-                            amount_invoiced = sum(order_lines.mapped('amt_invoiced'))
-                            target.amount_invoiced = amount_invoiced
+                if target.company_id :
+                    domain.append(('company_id','=',target.company_id.id))
 
+                if target.unselected_customer :
+                    other_customer = self.get_same_period(target=target, field='customer_id')
+                    if other_customer :
+                        domain += [
+                            ('partner_id', 'not in', other_customer.ids),
+                            ('partner_id.parent_id', 'not in', other_customer.ids),
+                        ]
+                elif target.customer_id :
+                    if target.customer_id.child_ids:
+                        domain.append(('partner_id.parent_id','=',target.customer_id.id))
+                    else:
+                        domain.append(('partner_id','=',target.customer_id.id))
+
+                sales = self.env['sale.order'].search(domain)
+                order_lines = sales.mapped('order_line')
+                if order_lines:
+                    if target.unselected_product or target.product_id :
+                        line_domain = [('order_id', 'in', sales.ids)]
+                        if target.unselected_product:
+                            other_product = self.get_same_period(target=target, field='product_id')
+                            if other_product:
+                                line_domain.append(('product_id', 'not in', other_product.ids))
+                        elif target.product_id:
+                            line_domain.append(('product_id', '=', target.product_id.id))
+                        order_lines = self.env['sale.order.line'].search(line_domain)
+                        amount_actual = sum(order_lines.mapped(lambda l: l.product_uom_qty * l.price_unit))
+                        target.amount_actual = amount_actual
+                        amount_invoiced = sum(order_lines.mapped(lambda l: l.amt_invoiced))
+                        target.amount_invoiced = amount_invoiced
+                        qty_actual = sum(order_lines.mapped(lambda l: l.product_uom_qty))
+                        target.qty_actual = qty_actual
+                    else:
+                        amount_actual = sum(sales.mapped('amount_untaxed'))
+                        target.amount_actual = amount_actual
+                        amount_invoiced = sum(order_lines.mapped('amt_invoiced'))
+                        target.amount_invoiced = amount_invoiced
+
+                target.qty_invoiced = sum(order_lines.mapped('qty_invoiced'))
                 amount_target = target.amount_target
                 target.percentage_amount = target.amount_actual / amount_target * 100 if amount_target > 0 else 0
                 target.percentage_qty = target.qty_actual / target.qty_target * 100 if target.qty_target > 0 else 0
-
+                if target.amount_target :
+                    amt_invoiced_vs_amt_target = target.amount_invoiced / target.amount_target * 100
+                if target.qty_target :
+                    qty_invoiced_vs_amt_target = target.qty_invoiced / target.qty_target * 100
+                target.amt_invoiced_vs_amt_target = amt_invoiced_vs_amt_target
+                target.qty_invoiced_vs_amt_target = qty_invoiced_vs_amt_target
