@@ -49,7 +49,7 @@ class TadaTada(models.Model):
     
     @api.model
     def _sync(self):
-        tada_ids = self.search([('state', '=', 'establish')])
+        tada_ids = self.search([])
         for tada_id in tada_ids:
             tada_id.act_sync()
     
