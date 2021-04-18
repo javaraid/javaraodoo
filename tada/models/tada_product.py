@@ -375,7 +375,7 @@ class TadaProduct(models.Model):
 
     @api.model
     def cron_get_on_tada(self):
-        tada_ids = self.search([])
+        tada_ids = self.env['tada.tada'].search([])
         for tada_id in tada_ids:
             tada_id.act_sync_product()
     
