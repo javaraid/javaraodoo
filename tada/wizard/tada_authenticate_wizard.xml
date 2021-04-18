@@ -1,0 +1,23 @@
+<odoo>
+	<record model="ir.ui.view" id="tada_authenticate_wizard">
+		<field name="name">Tada Authentication</field>
+		<field name="model">tada.authenticate</field>
+		<field name="arch" type="xml">
+			<form>
+				<group>
+					<field name="name" password="1" />
+				</group>
+				<footer>
+					<button name="act_authenticate" type="object" string="Authenticate" class="btn-primary" />
+				</footer>
+			</form>
+		</field>
+	</record>
+	
+	<record model="ir.actions.act_window" id="act_tada_authenticate">
+		<field name="name">Tada Authentication</field>
+		<field name="res_model">tada.authenticate</field>
+		<field name="view_id" ref="tada_authenticate_wizard" />
+		<field name="target">new</field>
+	</record>
+</odoo>

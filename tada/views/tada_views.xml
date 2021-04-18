@@ -1,0 +1,62 @@
+<odoo>
+	<record model="ir.ui.view" id="tada_view_tree">
+		<field name="name">Tada Account</field>
+		<field name="model">tada.tada</field>
+		<field name="arch" type="xml">
+			<tree>
+				<field name="name" /> 
+				<field name="username" />
+				<field name="company_id" />
+			</tree>
+		</field>
+	</record>
+	
+	<record model="ir.ui.view" id="tada_view_form">
+		<field name="name">Tada Account</field>
+		<field name="model">tada.tada</field>
+		<field name="arch" type="xml">
+			<form>
+				<header>
+					<button name="act_authenticate" type="object" string="Authenticate" class="btn-primary" invisible="1"/>
+					<button name="act_sync" type="object" string="Syncronize" class="btn-primary" />
+					<button name="act_sync_category" type="object" string="Get Categories" class="btn-primary" />
+					<button name="act_sync_product" type="object" string="Get Products" class="btn-primary" />
+					<button name="act_sync_order" type="object" string="Get Order" class="btn-primary" />
+					<button name="act_sync_store" type="object" string="Get Stores" class="btn-primary" />
+					<field name="state" widget="statusbar" />
+				</header>
+				<sheet>
+					<group>
+						<!-- <field name="name" attrs="{'invisible': [('state', '=', 'new')]}" /> -->
+						<field name="username" />
+						<field name="password" password="True"/>
+						<field name="expired_at" />
+						<field name="company_id" />
+						<field name="warehouse_id" domain="[('company_id', '=', company_id)]" />
+						<field name="product_fee_id" />
+					</group>
+					<notebook>
+						<page name="category" string="Categories">
+							<field name="category_ids" />
+						</page>
+						<page name="product" string="Products">
+							<field name="product_ids" />
+						</page>
+						<page name="order" string="Orders">
+							<field name="order_ids" />
+						</page>
+						<page name="store" string="Stores">
+							<field name="store_ids" />
+						</page>
+					</notebook>
+				</sheet>
+			</form>
+		</field>
+	</record>
+	
+	<record model="ir.actions.act_window" id="act_tada_tada">
+		<field name="name">Tada Account</field>
+		<field name="res_model">tada.tada</field>
+		<field name="view_mode">tree,form</field>
+	</record>
+</odoo>

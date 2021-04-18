@@ -4,6 +4,7 @@
     <record id="product_product_returnable_bottle" model="product.product">
         <field name="name">Returnable Bottle</field>
         <field name="default_code">RET-BOTL</field>
+        <field name="barcode">RET-BOTL</field>
         <field name="categ_id" ref="product.product_category_all" />
         <field name="uom_id" ref="product.product_uom_unit" />
         <field name="sale_ok" eval="True" />

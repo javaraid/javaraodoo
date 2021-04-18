@@ -1,0 +1,40 @@
+<odoo>
+	<record model="ir.ui.view" id="store_view_tree">
+		<field name="name">Store</field>
+		<field name="model">tada.store</field>
+		<field name="arch" type="xml">
+			<tree create="0" editable="bottom">
+				<field name="name" readonly="1" />
+				<field name="tada_id" readonly="1" />
+				<field name="phone" readonly="1" />
+				<field name="address" readonly="1" />
+				<field name="company_id" invisible="1" />
+				<field name="warehouse_id" domain="[('company_id', '=', company_id)]" />
+				<field name="active" readonly="1" />
+			</tree>
+		</field>
+	</record>
+	
+	<record model="ir.ui.view" id="store_view_form">
+		<field name="name">Store</field>
+		<field name="model">tada.store</field>
+		<field name="arch" type="xml">
+			<form edit="0">
+				<group>
+					<field name="name" />
+					<field name="tada_id" />
+					<field name="phone" />
+					<field name="address" />
+					<field name="warehouse_id" />
+					<field name="active" />
+				</group>
+			</form>
+		</field>
+	</record>
+	
+	<record model="ir.actions.act_window" id="act_tada_store">
+		<field name="name">Tada Store</field>
+		<field name="res_model">tada.store</field>
+		<field name="view_mode">tree</field>
+	</record>
+</odoo>

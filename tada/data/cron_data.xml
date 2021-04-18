@@ -1,0 +1,53 @@
+<odoo>
+    <data noupdate="1">
+
+        <record id="tada_product_cron" model="ir.cron">
+            <field name="name">Tada: Data Synchronization</field>
+            <field name="model_id" ref="model_tada_tada" />
+            <field name="state">code</field>
+            <field name="code">model._sync()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="False"/>
+        </record>
+
+        <record id="tada_product_variant_cron" model="ir.cron">
+            <field name="name">Tada: Product Synchronization</field>
+            <field name="model_id" ref="model_tada_product" />
+            <field name="state">code</field>
+            <field name="code">model.cron_get_on_tada()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="False"/>
+        </record>
+
+        <record id="tada_order_cron" model="ir.cron">
+            <field name="name">Tada: Order Synchronization</field>
+            <field name="model_id" ref="model_tada_order" />
+            <field name="state">code</field>
+            <field name="code">model.cron_get_on_tada()</field>
+            <field name="interval_number">10</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="tada_order_paid_cron" model="ir.cron">
+            <field name="name">Tada: Paid Order Synchronization</field>
+            <field name="model_id" ref="model_tada_order" />
+            <field name="state">code</field>
+            <field name="code">model._confirm_paid_order()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="False"/>
+        </record>
+
+    </data>
+</odoo>
