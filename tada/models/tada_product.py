@@ -372,6 +372,12 @@ class TadaProduct(models.Model):
                 variant_line.append((0, 0, variant_vals))
         vals['variant_ids'] = variant_line
         return vals
+
+    @api.model
+    def cron_get_on_tada(self):
+        tada_ids = self.search([('state', '=', 'establish')])
+        for tada_id in tada_ids:
+            tada_id.act_sync_product()
     
     def act_sync(self):
         self = self.with_context(sync=True)

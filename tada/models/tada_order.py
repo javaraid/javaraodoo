@@ -261,12 +261,20 @@ class TadaOrder(models.Model):
                     'carrier_id': carrier_id,
                     'updatedAt': updatedAt,}
         return order_vals
+
+    @api.model
+    def cron_get_on_tada(self):
+        tada_ids = self.search([('state', '=', 'establish')])
+        for tada_id in tada_ids :
+            tada_id.act_sync_order()
     
     @api.model
     def _get_on_tada(self, access_token=False):
         if not access_token:
             if self.tada_id:
                 tada_id = self.tada_id
+                tada_id.check_token_validity()
+                access_token = self.tada_id.access_token
             else:
                 return
         else:
@@ -388,7 +396,8 @@ class TadaOrder(models.Model):
             if count_item == resp_json['totalItems']:
                 has_next_page = False
         paid_order_cron_id = self.env.ref('tada.tada_order_paid_cron')
-        paid_order_cron_id.write({'active': True, 'nextcall': str(datetime.now()+timedelta(minutes=1))})
+        # comment karna create sale ordernya manual
+        # paid_order_cron_id.write({'active': True, 'nextcall': str(datetime.now()+timedelta(minutes=1))})
         return
     
     @api.model
