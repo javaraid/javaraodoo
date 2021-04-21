@@ -134,7 +134,7 @@ class SaleTarget(models.Model):
     amount_actual = fields.Float(string='Actual Amount', compute='_get_actual', store=True, track_visibility='onchange')
     amount_target = fields.Float(string='Targeted Amount', track_visibility='onchange')
     amount_invoiced = fields.Float(string='Invoiced Amount', compute='_get_actual', store=True, track_visibility='onchange')
-    percentage_amount = fields.Float(string='Accomplished Amount (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
+    # percentage_amount = fields.Float(string='Accomplished Amount (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
     unselected_salesperson = fields.Boolean(
         string='Unselected Salesperson',
         help='All unselected salesperson in other records for the same period',
@@ -160,9 +160,9 @@ class SaleTarget(models.Model):
     qty_target = fields.Float(string='Target Qty', track_visibility='onchange')
     qty_actual = fields.Float(string='Actual Qty', compute='_get_actual', store=True, track_visibility='onchange')
     qty_invoiced = fields.Float(string='Invoiced Qty', compute='_get_actual', store=True, track_visibility='onchange')
-    percentage_qty = fields.Float(string='Accomplished Qty (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
-    amt_invoiced_vs_amt_target = fields.Float(string='Invoiced Amount vs Target Amount (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
-    qty_invoiced_vs_amt_target = fields.Float(string='Invoiced Qty vs Target Qty (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
+    # percentage_qty = fields.Float(string='Accomplished Qty (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
+    # amt_invoiced_vs_amt_target = fields.Float(string='Invoiced Amount vs Target Amount (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
+    # qty_invoiced_vs_amt_target = fields.Float(string='Invoiced Qty vs Target Qty (%)', compute='_get_actual', store=True, group_operator="avg", track_visibility='onchange')
 
     @api.model
     def create(self, values):
@@ -197,8 +197,8 @@ class SaleTarget(models.Model):
                  'unselected_salesperson', 'unselected_customer', 'unselected_product')
     def _get_actual(self):
         for target in self:
-            amt_invoiced_vs_amt_target = 0
-            qty_invoiced_vs_amt_target = 0
+            # amt_invoiced_vs_amt_target = 0
+            # qty_invoiced_vs_amt_target = 0
             if target.date_from and target.date_to:
                 domain = [
                     ('state', 'in', ['sale', 'done']),
@@ -262,11 +262,11 @@ class SaleTarget(models.Model):
 
                 target.qty_invoiced = sum(order_lines.mapped('qty_invoiced'))
                 amount_target = target.amount_target
-                target.percentage_amount = target.amount_actual / amount_target * 100 if amount_target > 0 else 0
-                target.percentage_qty = target.qty_actual / target.qty_target * 100 if target.qty_target > 0 else 0
-                if target.amount_target :
-                    amt_invoiced_vs_amt_target = target.amount_invoiced / target.amount_target * 100
-                if target.qty_target :
-                    qty_invoiced_vs_amt_target = target.qty_invoiced / target.qty_target * 100
-                target.amt_invoiced_vs_amt_target = amt_invoiced_vs_amt_target
-                target.qty_invoiced_vs_amt_target = qty_invoiced_vs_amt_target
+                # target.percentage_amount = target.amount_actual / amount_target * 100 if amount_target > 0 else 0
+                # target.percentage_qty = target.qty_actual / target.qty_target * 100 if target.qty_target > 0 else 0
+                # if target.amount_target :
+                #     amt_invoiced_vs_amt_target = target.amount_invoiced / target.amount_target * 100
+                # if target.qty_target :
+                #     qty_invoiced_vs_amt_target = target.qty_invoiced / target.qty_target * 100
+                # target.amt_invoiced_vs_amt_target = amt_invoiced_vs_amt_target
+                # target.qty_invoiced_vs_amt_target = qty_invoiced_vs_amt_target

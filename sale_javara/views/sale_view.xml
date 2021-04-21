@@ -32,10 +32,10 @@
 				<field name="product_id"/>
 				<field name="categ_id"/>
 				<field name="qty_target"/>
-				<field name="percentage_qty"/>
+<!--				<field name="percentage_qty"/>-->
 				<field name="amount_target"/>
 				<field name="amount_invoiced"/>
-				<field name="percentage_amount"/>
+<!--				<field name="percentage_amount"/>-->
 				<field name="company_id"/>
 			</tree>
 		</field>
@@ -62,8 +62,8 @@
 				<field name="qty_target" type="measure"/>
 				<field name="qty_actual" type="measure"/>
 				<field name="qty_invoiced" type="measure"/>
-				<field name="amt_invoiced_vs_amt_target" type="measure"/>
-				<field name="qty_invoiced_vs_amt_target" type="measure"/>
+<!--				<field name="amt_invoiced_vs_amt_target" type="measure"/>-->
+<!--				<field name="qty_invoiced_vs_amt_target" type="measure"/>-->
 			</pivot>
 		</field>
 	</record>
@@ -99,13 +99,13 @@
 							<field name="amount_target"/>
 							<field name="amount_actual"/>
 							<field name="amount_invoiced"/>
-							<field name="percentage_amount"/>
+<!--							<field name="percentage_amount"/>-->
 						</group>
 						<group>
 							<field name="qty_target" attrs="{'invisible': [('product_id','=',False)], 'required': [('product_id','=',True)]}"/>
 							<field name="qty_actual" attrs="{'invisible': [('product_id','=',False)]}"/>
 							<field name="qty_invoiced" attrs="{'invisible': [('product_id','=',False)]}"/>
-							<field name="percentage_qty" attrs="{'invisible': [('product_id','=',False)]}"/>
+<!--							<field name="percentage_qty" attrs="{'invisible': [('product_id','=',False)]}"/>-->
 						</group>
 					</group>
 				</sheet>
