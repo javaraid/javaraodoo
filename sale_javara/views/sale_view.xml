@@ -1,4 +1,23 @@
 <odoo>
+	<record model="ir.ui.view" id="sale_target_view_search">
+		<field name="name">sale.target.search</field>
+		<field name="model">sale.target</field>
+		<field name="arch" type="xml">
+			<search string="Sales Target">
+				<field name="name" string="Sales Taret" filter_domain="['|',('name','ilike',self),('customer_id','child_of',self)]"/>
+				<field name="customer_id" operator="child_of"/>
+				<field name="salesperson_id"/>
+				<field name="saleschannel_id"/>
+				<field name="product_id"/>
+				<filter name="annual" string="Annual" domain="[('date_from','=', (context_today() - relativedelta(years=1)).strftime('%Y-01-01')), ('date_to','=', (context_today() - relativedelta(years=1)).strftime('%Y-12-31'))]"/>
+				<filter name="monthly" string="Monthly" domain="['|','&amp;',('date_from','=', (context_today() - relativedelta(years=1)).strftime('%Y-01-01')), ('date_to','!=', (context_today() - relativedelta(years=1)).strftime('%Y-12-31')),'&amp;',('date_from','!=', (context_today() - relativedelta(years=1)).strftime('%Y-01-01')), ('date_to','=', (context_today() - relativedelta(years=1)).strftime('%Y-12-31'))]"/>
+				<separator />
+				<filter name="this_mpnth" string="This Month" domain="[('date_from','&gt;=', context_today().strftime('%Y-%m-01')), ('date_to','&lt;=', context_today().strftime('%Y-%m-31'))]"/>
+				<filter name="this_year" string="This Year" domain="[('date_from','&gt;=', context_today().strftime('%Y-01-01')), ('date_to','&lt;=', context_today().strftime('%Y-12-31'))]"/>
+				<filter name="last_year" string="Last Year" domain="[('date_from','&gt;=', (context_today() - relativedelta(years=1)).strftime('%Y-01-01')), ('date_to','&lt;=', (context_today() - relativedelta(years=1)).strftime('%Y-12-31'))]"/>
+			</search>
+		</field>
+	</record>
 	<record model="ir.ui.view" id="sale_target_view_tree">
 		<field name="name">sale.target.tree</field>
 		<field name="model">sale.target</field>
@@ -7,7 +26,11 @@
 				<field name="name" />
 				<field name="date_from"/>
 				<field name="date_to"/>
+				<field name="customer_id"/>
+				<field name="salesperson_id"/>
+				<field name="saleschannel_id"/>
 				<field name="product_id"/>
+				<field name="categ_id"/>
 				<field name="qty_target"/>
 				<field name="percentage_qty"/>
 				<field name="amount_target"/>
@@ -17,26 +40,57 @@
 			</tree>
 		</field>
 	</record>
-
+	<record model="ir.ui.view" id="view_sale_target_graph">
+		<field name="name">sale.target.graph</field>
+		<field name="model">sale.target</field>
+		<field name="arch" type="xml">
+			<graph string="Sales Target">
+				<field name="date_from"/>
+				<field name="amount_target" type="measure"/>
+			</graph>
+		</field>
+	</record>
+	<record model="ir.ui.view" id="view_sale_target_pivot">
+		<field name="name">sale.target.pivot</field>
+		<field name="model">sale.target</field>
+		<field name="arch" type="xml">
+			<pivot string="Sales Target">
+				<field name="date_from" type="row"/>
+				<field name="amount_target" type="measure"/>
+				<field name="amount_actual" type="measure"/>
+				<field name="amount_invoiced" type="measure"/>
+				<field name="qty_target" type="measure"/>
+				<field name="qty_actual" type="measure"/>
+				<field name="qty_invoiced" type="measure"/>
+				<field name="amt_invoiced_vs_amt_target" type="measure"/>
+				<field name="qty_invoiced_vs_amt_target" type="measure"/>
+			</pivot>
+		</field>
+	</record>
 	<record model="ir.ui.view" id="sale_target_form_view">
         <field name="name">sale.target.form</field>
         <field name="model">sale.target</field>
         <field name="arch" type="xml">
             <form string="Sales Target">
 				<sheet>
-					<field name="name" placeholder="Target Name"/>
+					<field name="name" placeholder="Target Name" readonly="1"/>
 					<group string="Parameters">
 						<group>
 							<label for="date_from" string="Period"/>
 							<div>
 								<field name="date_from" class="oe_inline"/> - <field name="date_to" class="oe_inline"/>
 							</div>
-							<field name="salesperson_id" options="{&quot;always_reload&quot;: True}"/>
-							<field name="saleschannel_id" options="{&quot;always_reload&quot;: True}"/>
-							<field name="customer_id" domain="[('customer','=',True)]" options="{&quot;always_reload&quot;: True}"/>
+							<field name="unselected_salesperson"/>
+							<field name="salesperson_id" options="{&quot;always_reload&quot;: True}" attrs="{'invisible': [('unselected_salesperson', '!=', False)]}"/>
+							<field name="unselected_saleschannel"/>
+							<field name="saleschannel_id" options="{&quot;always_reload&quot;: True}" attrs="{'invisible': [('unselected_saleschannel', '!=', False)]}"/>
 						</group>
 						<group>
-							<field name="product_id" domain="[('sale_ok','=',True)]" options="{&quot;always_reload&quot;: True}"/>
+							<field name="unselected_customer"/>
+							<field name="customer_id" domain="[('customer','=',True)]" options="{&quot;always_reload&quot;: True}" attrs="{'invisible': [('unselected_customer', '!=', False)]}"/>
+							<field name="unselected_product"/>
+							<field name="product_id" domain="[('sale_ok','=',True)]" options="{&quot;always_reload&quot;: True}" attrs="{'invisible': [('unselected_product', '!=', False)]}"/>
+							<field name="categ_id"/>
 							<field name="company_id"/>
 						</group>
 					</group>
@@ -50,10 +104,15 @@
 						<group>
 							<field name="qty_target" attrs="{'invisible': [('product_id','=',False)], 'required': [('product_id','=',True)]}"/>
 							<field name="qty_actual" attrs="{'invisible': [('product_id','=',False)]}"/>
+							<field name="qty_invoiced" attrs="{'invisible': [('product_id','=',False)]}"/>
 							<field name="percentage_qty" attrs="{'invisible': [('product_id','=',False)]}"/>
 						</group>
 					</group>
 				</sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
 			</form>
         </field>
     </record>
@@ -61,8 +120,9 @@
 	<record id="sale_target_action" model="ir.actions.act_window">
 		<field name="name">Sales Target</field>
 		<field name="res_model">sale.target</field>
-		<field name="view_mode">tree,form</field>
+		<field name="view_mode">tree,pivot,graph,form</field>
 		<field name="view_type">form</field>
+		<field name="search_view_id" ref="sale_target_view_search"/>
 		<!-- <field name="domain">[('employee_id','=',active_id)]</field> -->
 	</record>
 
@@ -105,6 +165,40 @@
             </data>
         </field>
     </record>
+
+	<!-- Inherit Form View to Modify it -->
+	<record id="view_order_form_inherit_sale_stock_inherit_sale_order_dates" model="ir.ui.view">
+	    <field name="name">sale.order.form</field>
+	    <field name="model">sale.order</field>
+	    <field name="inherit_id" ref="sale_order_dates.view_order_form_inherit_sale_stock_inherit_sale_order_dates"/>
+	    <field name="arch" type="xml">
+
+			<xpath expr="//field[@name='commitment_date']" position="replace"/>
+
+	    </field>
+	</record>
+
+	<!-- Inherit Form View to Modify it -->
+	<record id="view_order_form" model="ir.ui.view">
+	    <field name="name">sale.order.form</field>
+	    <field name="model">sale.order</field>
+	    <field name="inherit_id" ref="sale.view_order_form"/>
+	    <field name="arch" type="xml">
+
+	        <xpath expr="//field[@name='note']" position="replace"/>
+			<xpath expr="//notebook" position="inside">
+				<page string="Notes">
+					<group>
+						<field name="note" widget="html" nolabel="1"/>
+					</group>
+				</page>
+			</xpath>
+			<xpath expr="//field[@name='payment_term_id']" position="after">
+				<field name="commitment_date"/>
+			</xpath>
+
+	    </field>
+	</record>
 
 	<menuitem 
             id="sale_target_model" 

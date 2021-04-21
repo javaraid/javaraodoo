@@ -2,6 +2,12 @@
 <odoo>
     <data>
         <template id="saleorder_custom_reports" inherit_id="sale.report_saleorder_document">
+            <xpath expr="//div[@id='informations']" position="inside">
+                <div t-if="doc.commitment_date" class="col-xs-3">
+                    <strong>Commitment Date:</strong>
+                    <p t-field="doc.commitment_date"/>
+                </div>
+            </xpath>
             <xpath expr="//table[@class='table table-condensed']" position="replace">
                 <table class="table table-condensed">
                     <thead style="border: 1px solid #000;">
@@ -69,6 +75,19 @@
                         </t>
                     </tbody>
                 </table>
+            </xpath>
+            <xpath expr="//p[@t-field='doc.note']" position="replace">
+                <span t-raw="doc.note"/>
+<!--                <table>-->
+<!--                    <tr>-->
+<!--                        <td>-->
+<!--                            <span><![CDATA[&nbsp;]]></span>-->
+<!--                        </td>-->
+<!--                        <td>-->
+<!--                            <span t-raw="doc.note"/>-->
+<!--                        </td>-->
+<!--                    </tr>-->
+<!--                </table>-->
             </xpath>
             <xpath expr="//p[@id='fiscal_position_remark']" position="after">
                 <style>

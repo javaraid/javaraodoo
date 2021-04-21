@@ -14,10 +14,13 @@
         'sale',
         'pos_sale',
         'account_cancel',
+        'sale_order_dates'
     ],
     'data': [
         'wizard/view_aged_partner_wizard.xml',
-        'views/account_view.xml'
+        'views/account_view.xml',
+        'report/report_invoice_document.xml',
+        'report/account_invoice_report_views.xml',
     ],
     'demo': [],
     'test': [

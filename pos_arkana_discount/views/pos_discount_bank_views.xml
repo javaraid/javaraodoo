@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data>
+        <!-- pos.discount.bank inherit form view -->
+        <record id="pos_discount_bank_view_form_inherit" model="ir.ui.view">
+            <field name="name">pos.discount.bank.inherit.view.form</field>
+            <field name="model">pos.discount.bank</field>
+            <field name="inherit_id" ref="pos_javara.pos_discount_bank_view_form"/>
+            <field name="arch" type="xml">
+                <field name="disc_percent" position="after">
+                    <field name="product_disc_bank_id"/>
+                    <field name="bank_id"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>
