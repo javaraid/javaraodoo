@@ -4,7 +4,7 @@
         <xpath expr="." position="inside">
             <link href="/pos_arkana_discount/static/src/css/disc_total.css" rel="stylesheet"/>
             <script type="text/javascript" src="/pos_arkana_discount/static/src/js/discount.js"></script>
-            <script type="text/javascript" src="/pos_arkana_discount/static/src/js/discount_bank.js"></script>
         </xpath>
     </template>
+
 </odoo>

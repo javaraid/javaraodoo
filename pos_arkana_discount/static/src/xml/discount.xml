@@ -51,7 +51,8 @@
                                     <div class='entry total'>
                                         <span class="label">Total: </span> <span class="value">0.00 €</span>
                                         <div class='subentry'>Taxes: <span class="value">0.00€</span></div>
-                                        <div class='global_disc'>Disc Total:<span class="value">0.00</span></div>
+                                        <div class='disc_bank'>Disc Bank:<span class="value">0.00</span></div>
+                                        <div class='global_disc'>Disc Global:<span class="value">0.00</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -104,6 +105,11 @@
                                     With discount global
                                 </div>
                             </t>
+                            <t t-if="orderline.get_bank_disc_line() > 0">
+                                <div class="pos-disc-font">
+                                    With discount bank
+                                </div>
+                            </t>
                         </td>
                         <td class="pos-right-align">
                             <t t-esc="orderline.get_quantity_str_with_unit()"/>
@@ -112,10 +118,18 @@
                                     - <t t-esc="widget.format_currency(orderline.get_global_disc_line())"/>
                                 </div>
                             </t>
+                            <t t-if="order.get_disc_bank_amount() > 0 ">
+                                <div class="pos-disc-font">
+                                    - <t t-esc="widget.format_currency(orderline.get_bank_disc_line())"/>
+                                </div>
+                            </t>
                         </td>
                         <td class="pos-right-align">
-                            <t t-esc="widget.format_currency(orderline.get_display_price_without_global_disc())"/>
+                            <t t-esc="widget.format_currency(orderline.get_display_price_without_disc_bank_global())"/>
                             <t t-if="order.get_global_disc_amount() > 0 ">
+                                <t t-esc="widget.format_currency(orderline.get_display_price())"/>
+                            </t>
+                            <t t-if="order.get_disc_bank_amount() > 0 ">
                                 <t t-esc="widget.format_currency(orderline.get_display_price())"/>
                             </t>
                         </td>
@@ -141,7 +155,7 @@
                         <t t-if="order.get_global_disc_amount() > 0 ">
                             <td>Subtotal:</td>
                             <td class="pos-right-align">
-                                <t t-esc="widget.format_currency(order.get_total_with_tax_and_global_disc())"/>
+                                <t t-esc="widget.format_currency(order.get_total_with_tax_and_global_bank())"/>
                             </td>
                         </t>
                     </tr>
@@ -158,6 +172,12 @@
                             <td>Discount Global:</td>
                             <td class="pos-right-align">
                                 - <t t-esc="widget.format_currency(order.get_global_disc_amount())"/>
+                            </td>
+                        </t>
+                        <t t-if="order.get_disc_bank_amount() > 0">
+                            <td>Discount Bank:</td>
+                            <td class="pos-right-align">
+                                - <t t-esc="widget.format_currency(order.get_disc_bank_amount())"/>
                             </td>
                         </t>
                     </tr>

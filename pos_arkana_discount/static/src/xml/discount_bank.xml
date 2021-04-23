@@ -5,4 +5,5 @@
             <i class='fa fa-percent' /> <t t-esc='widget.get_current_bank_discount_name()'/>
         </div>
     </t>
+
 </templates>

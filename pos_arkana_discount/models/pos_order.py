@@ -9,8 +9,13 @@ class PosOrderDiscount(models.Model):
     disc_type = fields.Selection(string='Global Discount Type', 
         selection=[('fix', 'Fix'), ('percent', 'Percent'),],
         default=False,)
+    
     global_disc = fields.Float(string='Global Discount', help="Dalam persen atau fixed")
+
     global_disc_amount = fields.Float(string='Global Discount Fixed', help="Dalam fixed", readonly=True,)
+
+    disc_bank_amount = fields.Float(string='Bank Discount Fixed', help="Dalam Fixed", readonly=True)
+
 
     @api.model
     def _order_fields(self, ui_order):
@@ -18,6 +23,7 @@ class PosOrderDiscount(models.Model):
         fields['disc_type'] = ui_order.get('disc_type', False)
         fields['global_disc'] = ui_order.get('global_disc', 0.0)
         fields['global_disc_amount'] = ui_order.get('global_disc_amount', 0.0)
+        fields['disc_bank_amount'] = ui_order.get('disc_bank_amount', 0.0)
         return fields
     
     # override
@@ -28,6 +34,8 @@ class PosOrderDiscount(models.Model):
             taxes = fiscal_position_id.map_tax(taxes, line.product_id, line.order_id.partner_id)
         if line.global_disc_line:
             price = (line.price_unit - (line.global_disc_line / line.qty)) * (1 - (line.discount or 0.0) / 100.0)
+        elif line.bank_disc_line:
+            price = (line.price_unit - (line.bank_disc_line / line.qty)) * (1 - (line.discount or 0.0) / 100.0)
         else:
             price = line.price_unit * (1 - (line.discount or 0.0) / 100.0)
         taxes = taxes.compute_all(price, line.order_id.pricelist_id.currency_id, line.qty, product=line.product_id, partner=line.order_id.partner_id or False)['taxes']
@@ -41,6 +49,10 @@ class PosOrderDiscount(models.Model):
         if line.global_disc_line:
             InvoiceLine.write({
                 'price_unit': line.price_unit - (line.global_disc_line / line.qty)
+            })
+        elif line.bank_disc_line:
+            InvoiceLine.write({
+                'price_unit': line.price_unit - (line.bank_disc_line / line.qty)
             })
         return InvoiceLine
     
@@ -210,6 +222,8 @@ class PosOrderDiscount(models.Model):
                 # change price_unit if global_discount_line not 0
                 if line.global_disc_line:
                     price = (line.price_unit - (line.global_disc_line / line.qty)) * (1 - (line.discount or 0.0) / 100.0)
+                elif line.bank_disc_line:
+                    price = (line.price_unit - (line.bank_disc_line / line.qty)) * (1 - (line.discount or 0.0) / 100.0)
                 else:
                     price = line.price_unit * (1 - (line.discount or 0.0) / 100.0)
                 for tax in taxes.compute_all(price, cur, line.qty)['taxes']:
@@ -284,15 +298,21 @@ class PosOrderDiscount(models.Model):
 class PosOrderLineDiscount(models.Model):
     _inherit = 'pos.order.line'
 
+    flag_disc = fields.Char(string='Flag Disc Bank')
+
     global_disc_line = fields.Float(string='Global Disc Amount', default=0.0, readonly=True,)
 
-    @api.depends('price_unit', 'tax_ids', 'qty', 'discount', 'product_id')
+    bank_disc_line = fields.Float(string='Bank Disc Amount', default=0.0, readonly=True,)
+
+    @api.depends('price_unit', 'tax_ids', 'qty', 'discount', 'product_id', 'global_disc_line', 'bank_disc_line')
     def _compute_amount_line_all(self):
         for line in self:
             fpos = line.order_id.fiscal_position_id
             tax_ids_after_fiscal_position = fpos.map_tax(line.tax_ids, line.product_id, line.order_id.partner_id) if fpos else line.tax_ids
             if line.global_disc_line:
                 price = (line.price_unit - (line.global_disc_line /line.qty))  * (1 - (line.discount or 0.0) / 100.0)
+            elif line.bank_disc_line:
+                price = (line.price_unit - (line.bank_disc_line /line.qty))  * (1 - (line.discount or 0.0) / 100.0)
             else:
                 price = line.price_unit  * (1 - (line.discount or 0.0) / 100.0)
 
