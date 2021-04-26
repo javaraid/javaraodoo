@@ -182,13 +182,20 @@ odoo.define("pos_arkana_discount.discount", function (require) {
           label: _t("None"),
         },
       ];
+
+      if(self.pos.bank_discounts == undefined){
+        return{
+          label: _t("None"),
+        }
+      }
+
       var bank_discounts = _.map(
         self.pos.bank_discounts,
         function (bank_discount) {
-          return {
-            label: bank_discount.name,
-            item: bank_discount,
-          };
+            return {
+              label: bank_discount.name, 
+              item: bank_discount 
+            };
         }
       );
 
@@ -199,8 +206,6 @@ odoo.define("pos_arkana_discount.discount", function (require) {
         confirm: function (bank_discount) {
           var order = self.pos.get_order();
           order.bank_discount_id = bank_discount;
-
-          order.set_name_bank_disc(bank_discount.name);
 
           if (
             order.choose_disc != undefined &&
@@ -229,6 +234,10 @@ odoo.define("pos_arkana_discount.discount", function (require) {
             return;
           }
 
+          if (bank_discount != undefined){
+            order.set_name_bank_disc(bank_discount.name);
+          }
+
           order.set_bank_disc();
 
           order.trigger("change");
@@ -239,22 +248,18 @@ odoo.define("pos_arkana_discount.discount", function (require) {
       });
     },
     get_current_bank_discount_name: function () {
-      var name = _t("Bank Discount: None");
+      var name_display_bank = _t("Bank Discount: None");
       var order = this.pos.get_order();
 
       if (order) {
         var bank_discount = order.bank_discount_id;
 
         if (bank_discount) {
-          name = bank_discount.name;
+          name_display_bank = bank_discount.name;
         }
       }
-
-      if (order.choose_disc != "disc_bank") {
-        name = _t("Bank Discount: None");
-      }
-
-      return name;
+      return name_display_bank;
+    
     },
   });
 
@@ -424,44 +429,56 @@ odoo.define("pos_arkana_discount.discount", function (require) {
       var orderLines = this.get_orderlines();
       var summary_price = this.summary_for_bank_disc();
       
+      if(order.bank_discount_id != undefined){
 
-      var nilai_pos = order.get_total_with_tax();
-      
-      var min_trans = this.pos.get_order().bank_discount_id.min_amount;
-      
-      var max_trans = this.pos.get_order().bank_discount_id.max_amount;
-  
-      if (nilai_pos < min_trans) {
-        order.set_choose_disc(undefined);
-        this.pos.gui.show_popup("error", {
-          title: _t("Transaction cannot be continued"),
-          body: _t("Please Change Discount Bank"),
-        });
-        return;
-      }
-
-      if (min_trans < nilai_pos && nilai_pos < max_trans) {
-        var disc_bank_percernt = this.pos.get_order().bank_discount_id
-          .disc_percent;
-          this.disc_bank_amount = (disc_bank_percernt / 100.0) * nilai_pos;
-      }
-
-      if (nilai_pos > max_trans) {
-        this.disc_bank_amount = this.pos.get_order().bank_discount_id.disc_amount;
-      }
-
-      for (var i = 0; i < orderLines.length; i++){
-        var line = orderLines[i];
-
-        var bank_disc_line = 0;
-
-        var price = line.get_price_with_tax();
+        var nilai_pos = order.get_total_with_tax();
         
-        bank_disc_line = (price / summary_price) * this.disc_bank_amount;
+        var min_trans = this.pos.get_order().bank_discount_id.min_amount;
+        
+        var max_trans = this.pos.get_order().bank_discount_id.max_amount;
+    
+        if (nilai_pos < min_trans) {
+          order.set_choose_disc(undefined);
+          this.pos.gui.show_popup("error", {
+            title: _t("Transaction cannot be continued"),
+            body: _t("Please Change Discount Bank"),
+          });
+          return;
+        }
+  
+        if (min_trans < nilai_pos && nilai_pos < max_trans) {
+          var disc_bank_percernt = this.pos.get_order().bank_discount_id
+            .disc_percent;
+            this.disc_bank_amount = (disc_bank_percernt / 100.0) * nilai_pos;
+        }
+  
+        if (nilai_pos > max_trans) {
+          this.disc_bank_amount = this.pos.get_order().bank_discount_id.disc_amount;
+        }
+  
+        for (var i = 0; i < orderLines.length; i++){
+          var line = orderLines[i];
+  
+          var bank_disc_line = 0;
+  
+          var price = line.get_price_with_tax();
+          
+          bank_disc_line = (price / summary_price) * this.disc_bank_amount;
+  
+          line.set_bank_disc_line(bank_disc_line);
+        }
+      }else{
+  
+        for (var i = 0; i < orderLines.length; i++){
+          var line = orderLines[i];
+  
+  
+          line.set_bank_disc_line(0);
+        }
 
-        line.set_bank_disc_line(bank_disc_line);
+        order.disc_bank_amount = 0;
+
       }
-
     },
     summary_for_bank_disc: function () {
       return round_pr(this.orderlines.reduce((function(sum, orderLine) {
