@@ -8,6 +8,8 @@
             <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
             <field name="arch" type="xml">
                 <field name="fiscal_position_id" position="after">
+                    <field name="name_bank_disc"/>
+                    <field name="disc_bank_amount"/>
                     <field name="disc_type"/>
                     <field name="global_disc"/>
                 </field>

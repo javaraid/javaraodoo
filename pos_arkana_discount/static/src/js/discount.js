@@ -200,6 +200,8 @@ odoo.define("pos_arkana_discount.discount", function (require) {
           var order = self.pos.get_order();
           order.bank_discount_id = bank_discount;
 
+          order.set_name_bank_disc(bank_discount.name);
+
           if (
             order.choose_disc != undefined &&
             order.choose_disc != "disc_bank"
@@ -310,6 +312,10 @@ odoo.define("pos_arkana_discount.discount", function (require) {
         this.choose_disc = this.pos.choose_disc;
       }
 
+      if (!this.name_bank_disc) {
+        this.name_bank_disc = this.pos.name_bank_disc;
+      }
+
       if (!this.disc_bank_amount) {
         this.disc_bank_amount = this.pos.disc_bank_amount;
       }
@@ -359,6 +365,7 @@ odoo.define("pos_arkana_discount.discount", function (require) {
         : "";
       json.choose_disc = this.choose_disc ? this.choose_disc : "";
       json.bank_discount_id = this.bank_discount_id ? this.bank_discount_id.id : false;
+      json.name_bank_disc = this.name_bank_disc ? this.name_bank_disc : undefined;
       json.disc_bank_amount = this.disc_bank_amount ? this.disc_bank_amount : undefined;
       return json;
     },
@@ -381,6 +388,10 @@ odoo.define("pos_arkana_discount.discount", function (require) {
     },
     set_choose_disc: function (choose_disc) {
       this.choose_disc = choose_disc;
+      this.trigger("change", this);
+    },
+    set_name_bank_disc: function (name_bank){
+      this.name_bank_disc = name_bank;
       this.trigger("change", this);
     },
     get_total_with_tax_and_global_bank: function() {

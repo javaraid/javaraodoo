@@ -158,6 +158,12 @@
                                 <t t-esc="widget.format_currency(order.get_total_with_tax_and_global_bank())"/>
                             </td>
                         </t>
+                        <t t-if="order.get_disc_bank_amount() > 0 ">
+                            <td>Subtotal:</td>
+                            <td class="pos-right-align">
+                                <t t-esc="widget.format_currency(order.get_total_with_tax_and_global_bank())"/>
+                            </td>
+                        </t>
                     </tr>
                     <tr>
                         <t t-if="order.get_total_discount() > 0">

@@ -14,7 +14,9 @@ class PosOrderDiscount(models.Model):
 
     global_disc_amount = fields.Float(string='Global Discount Fixed', help="Dalam fixed", readonly=True,)
 
-    disc_bank_amount = fields.Float(string='Bank Discount Fixed', help="Dalam Fixed", readonly=True)
+    name_bank_disc = fields.Char(string='Discount Bank', readonly=True)
+
+    disc_bank_amount = fields.Float(string='Bank Discount Amount', help="Dalam Fixed", readonly=True)
 
 
     @api.model
@@ -23,6 +25,7 @@ class PosOrderDiscount(models.Model):
         fields['disc_type'] = ui_order.get('disc_type', False)
         fields['global_disc'] = ui_order.get('global_disc', 0.0)
         fields['global_disc_amount'] = ui_order.get('global_disc_amount', 0.0)
+        fields['name_bank_disc'] = ui_order.get('name_bank_disc', " ")
         fields['disc_bank_amount'] = ui_order.get('disc_bank_amount', 0.0)
         return fields
     
