@@ -18,6 +18,23 @@ class PosOrderDiscount(models.Model):
 
     disc_bank_amount = fields.Float(string='Bank Discount Amount', help="Dalam Fixed", readonly=True)
 
+    @api.multi
+    def refund(self):
+        res = super(PosOrderDiscount, self).refund()
+        order_to_update = self.browse(res['res_id'])
+        if order_to_update:
+            # nilai set - karena harusnya dari pos (js)
+            if order_to_update.disc_bank_amount:
+                order_to_update.disc_bank_amount = -1 * order_to_update.disc_bank_amount
+            if order_to_update.global_disc_amount:
+                order_to_update.global_disc_amount = -1 * order_to_update.global_disc_amount
+            # order line
+            for line in order_to_update.lines:
+                if line.global_disc_line:
+                    line.global_disc_line = -1 * line.global_disc_line
+                if line.bank_disc_line:
+                    line.bank_disc_line = -1 * line.bank_disc_line
+        return res
 
     @api.model
     def _order_fields(self, ui_order):

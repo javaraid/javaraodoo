@@ -236,6 +236,8 @@ odoo.define("pos_arkana_discount.discount", function (require) {
 
           if (bank_discount != undefined){
             order.set_name_bank_disc(bank_discount.name);
+          }else{
+            order.set_choose_disc(undefined);
           }
 
           order.set_bank_disc();
@@ -477,7 +479,7 @@ odoo.define("pos_arkana_discount.discount", function (require) {
         }
 
         order.disc_bank_amount = 0;
-
+        order.set_choose_disc(undefined);
       }
     },
     summary_for_bank_disc: function () {
