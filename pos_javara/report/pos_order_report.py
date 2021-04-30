@@ -3,7 +3,8 @@ from odoo import api, fields, models, tools, _
 class PosOrderReport(models.Model):
     _inherit = 'report.pos.order'
 
-    price_subtotal = fields.Float(digits=0, string='Subtotal w/o Tax')
+    price_subtotal = fields.Float(digits=0, string='Total UnTax')
+    price_sub_total = fields.Float(string='Gross Total Price')
     tender_type_id = fields.Many2one(
         comodel_name='pos.tender.type',
         string='Tender Type',

@@ -8,9 +8,11 @@ class AccountInvoiceReport(models.Model):
 
     invoice_id = fields.Many2one('account.invoice', 'Invoice Number', ondelete='cascade')
     origin = fields.Char('Source Document', readonly=True)
-    price_with_tax = fields.Float(string='Total With Tax', readonly=True)
-    total_without_discount = fields.Float('Total w/o Discount', digits=(16, 2), readonly=True, group_operator="sum")
+    price_with_tax = fields.Float(string='Total Price', readonly=True)
+    total_without_discount = fields.Float('Gross Total Price', digits=(16, 2), readonly=True, group_operator="sum")
     total_discount = fields.Float('Total Discount', digits=(16, 2), readonly=True, group_operator="sum")
+    price_total = fields.Float(string='Total UnTax')
+    user_currency_price_total = fields.Float(string='Total UnTax')
 
     def _select(self):
         return super(AccountInvoiceReport, self)._select() + """

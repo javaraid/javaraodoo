@@ -14,7 +14,7 @@ class SaleReport(models.Model):
     # invoiced_amount_percentage = fields.Float('% SL Invoiced vs Total', digits=(16, 2), readonly=True, group_operator="avg")
     # invoiced_qty_percentage = fields.Float('% SL Qty Invoiced vs Ordered', digits=(16, 2), readonly=True, group_operator="avg")
     # delivered_qty_percentage = fields.Float('% SL Qty Delivered vs Ordered', digits=(16, 2), readonly=True, group_operator="avg")
-    total_without_discount = fields.Float('Total w/o Discount', digits=(16, 2), readonly=True, group_operator="sum")
+    total_without_discount = fields.Float('Gross Total Price', digits=(16, 2), readonly=True, group_operator="sum")
     total_discount = fields.Float('Total Discount', digits=(16, 2), readonly=True, group_operator="sum")
 
     amt_invoiced_untax = fields.Float('Amount Invoiced Untaxed', readonly=True)

@@ -24,4 +24,4 @@ class PosOrder(models.Model):
 class PosOrderLine(models.Model):
     _inherit = 'pos.order.line'
 
-    price_subtotal = fields.Float(store=True)
+    price_subtotal = fields.Float(store=True, string='Total UnTax')
