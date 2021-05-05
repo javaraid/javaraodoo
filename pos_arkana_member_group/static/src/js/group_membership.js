@@ -19,8 +19,6 @@ odoo.define("pos_arkana_member_group.member_group", function (require) {
         return;
       }
 
-      order.set_choose_disc("membership");
-
       if (this.has_client_changed()) {
         var default_fiscal_position_id = _.findWhere(
           this.pos.fiscal_positions,
@@ -42,10 +40,29 @@ odoo.define("pos_arkana_member_group.member_group", function (require) {
               id: this.new_client.property_product_pricelist[0],
             }) || this.pos.default_pricelist
           );
-        } else {
+
+          order.set_choose_disc("membership");
+        } 
+        else {
           order.fiscal_position = default_fiscal_position_id;
           order.set_pricelist(this.pos.default_pricelist);
           order.set_choose_disc(undefined);
+        }
+      }
+
+      var self = this;
+      var order = this.pos.get_order();
+      var client = this.pos.get_client();
+
+      // Validasi Matching With Pricelist
+      if (pricelist.is_member) {
+        if (client) {
+          var member = this.pos.member_by_id[client.active_member_id[0]];
+          console.log(member);
+          if (member == undefined) {
+            order.set_choose_disc(undefined);
+          }
+          
         }
       }
     },
@@ -80,7 +97,15 @@ odoo.define("pos_arkana_member_group.member_group", function (require) {
                 "Pricelist is not for this member, Please select another Pricelist"
               ),
             });
+          } else if (member == undefined) {
+            return self.pos.gui.show_popup("error", {
+                  title: _t("Error: 'Pricelist Not For Customer'"),
+                  body: _t(
+                    "Pricelist is not for customer, Please select another Pricelist"
+                  ),
+                });
           }
+          
         }
       }
 

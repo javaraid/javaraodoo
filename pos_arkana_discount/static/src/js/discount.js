@@ -623,16 +623,16 @@ odoo.define("pos_arkana_discount.discount", function (require) {
       }
       if(disc_bank != undefined){
         if (this.pos.config.iface_tax_included === 'total') {
-          return this.get_price_with_tax() + (disc_bank / this.get_quantity());
+          return this.get_price_with_tax() + disc_bank;
         } else {
-          return this.get_base_price() + (disc_bank / this.get_quantity());
+          return this.get_base_price() + disc_bank;
         }
       }
       if(disc_global != undefined){
         if (this.pos.config.iface_tax_included === 'total') {
-          return this.get_price_with_tax() + (disc_global / this.get_quantity());
+          return this.get_price_with_tax() + disc_global;
         } else {
-          return this.get_base_price() + (disc_global / this.get_quantity());
+          return this.get_base_price() + disc_global;
         }
       }
       
